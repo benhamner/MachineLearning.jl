@@ -29,7 +29,6 @@ function train(x::Array{Float64, 2}, y::Vector{Int}, opts::NeuralNetOptions)
 
 	net = initialize_net(opts, classes, num_features)
 	for i=1:opts.num_passes
-		println(i)
 		for j=1:num_samples
 			actual = zeros(num_classes)
 			actual[classes_map[y[j]]] = 1.0
@@ -94,20 +93,4 @@ function initialize_net(opts::NeuralNetOptions, classes::Vector, num_features::I
 	end
 	push!(layers, initialize_layer(opts.hidden_layers[length(opts.hidden_layers)] + (opts.bias_unit?1:0), length(classes)))
 	NeuralNet(opts, layers, classes)
-end
-
-xs = randn(10000, 5)
-ys = int(map(x->x>0.0, xs[:,1]-xs[:,2]+3*xs[:,3]+xs[:,4].*xs[:,5]))
-opts = NeuralNetOptions()
-net = train(xs, ys, opts)
-
-for i=1:10
-	println(i, " ", predict(net, vec(xs[i,:]))[2], " ", ys[i])
-end
-
-xts = randn(10, 5)
-yts = int(map(x->x>0.0, xts[:,1]-xts[:,2]+3*xts[:,3]+xts[:,4].*xts[:,5]))
-
-for i=1:10
-	println(i, " ", predict(net, vec(xts[i,:]))[2], " ", yts[i])
 end
