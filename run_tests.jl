@@ -1,10 +1,11 @@
 tests = [
-    "neural_net"
+    "neural_net"]
 
 println("Running tests:")
+cd("test")
 
 for t in tests
-        test_fn = joinpath("test", "$t.jl")
+    test_fn = "$t.jl"
     println(" * $test_fn")
-    include(test_fn)
+    require(test_fn)
 end

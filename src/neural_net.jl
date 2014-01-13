@@ -3,7 +3,7 @@ type NeuralNetOptions
 	hidden_layers::Vector{Int} # sizes of hidden layers
 	num_passes::Int
 
-	NeuralNetOptions() = new(true, [100], 200)
+	NeuralNetOptions() = new(true, [100], 100)
 end
 
 type NeuralNetLayer
