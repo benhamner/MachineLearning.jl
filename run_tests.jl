@@ -1,4 +1,5 @@
 tests = [
+    "sample",
     "neural_net"]
 
 println("Running tests:")

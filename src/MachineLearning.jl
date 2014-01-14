@@ -8,9 +8,11 @@ export
 
     # methods
     neural_net_options,
-    train,
-    predict
+    predict,
+    split_train_test,
+    train
 
 include("neural_net.jl")
+include("sample.jl")
 
 end
