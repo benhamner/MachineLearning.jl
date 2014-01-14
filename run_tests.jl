@@ -1,6 +1,6 @@
 tests = [
-    "sample",
-    "neural_net"]
+    "neural_net",
+    "sample"]
 
 println("Running tests:")
 cd("test")
