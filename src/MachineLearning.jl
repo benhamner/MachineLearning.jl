@@ -7,6 +7,7 @@ export
     NeuralNetOptions,
 
     # methods
+    neural_net_options,
     train,
     predict
 
