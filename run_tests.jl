@@ -1,4 +1,5 @@
 tests = [
+    "metrics",
     "neural_net",
     "sample"]
 

@@ -5,8 +5,8 @@ type NeuralNetOptions
 end
 
 neural_net_options(;bias_unit::Bool=true,
-                   hidden_layers::Vector{Int}=[100],
-                   num_passes::Int=100) = NeuralNetOptions(bias_unit, hidden_layers, num_passes)
+                    hidden_layers::Vector{Int}=[100],
+                    num_passes::Int=100) = NeuralNetOptions(bias_unit, hidden_layers, num_passes)
 
 type NeuralNetLayer
     weights::Array{Float64, 2}
