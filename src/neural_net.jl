@@ -24,7 +24,7 @@ type NeuralNetOptions
 end
 
 function neural_net_options(;bias_unit::Bool=true,
-                            hidden_layers::Vector{Int}=[100],
+                            hidden_layers::Vector{Int}=[4],
                             learning_rate::Float64=1.0,
                             stop_criteria::NeuralNetStopCriteria=StopAfterValidationErrorStopsImproving())
     NeuralNetOptions(bias_unit, hidden_layers, learning_rate, stop_criteria)
@@ -185,10 +185,11 @@ function weights_to_net!(weights::Vector{Float64}, net::NeuralNet)
 end
 
 function cost(net::NeuralNet, x::Array{Float64,2}, actuals::Array{Float64,2}, weights::Vector{Float64})
-    println("Called Cost")
     weights_to_net!(weights, net)
     probs = predict_probs(net, x)
-    mean_log_loss(actuals, probs)
+    err = mean_log_loss(actuals, probs)
+    println("Cost: ", err, " Hash Weights: ", hash(weights))
+    err
 end
 
 function cost_gradient(net::NeuralNet, sample::Vector{Float64}, actual::Vector{Float64})
@@ -226,11 +227,12 @@ function cost_gradient(net::NeuralNet, sample::Vector{Float64}, actual::Vector{F
 end
 
 function cost_gradient!(net::NeuralNet, x::Array{Float64,2}, actuals::Array{Float64,2}, weights::Vector{Float64}, gradients::Vector{Float64})
-    println("Called Gradient")
     weights_to_net!(weights, net)
+    gradients[:]=0.0
     for i=1:size(x,1)
         gradients += cost_gradient(net, vec(x[i,:]), vec(actuals[i,:]))/size(x,1)
     end
+    println("Min G: ", minimum(gradients), " Max G: ", maximum(gradients), " Min Abs G: ", minimum(abs(gradients)), " Hash Weights: ", hash(weights))
 end
 
 function train_soph(x::Array{Float64, 2}, y::Vector, opts::NeuralNetOptions)
@@ -249,8 +251,8 @@ function train_soph(x::Array{Float64, 2}, y::Vector, opts::NeuralNetOptions)
 
     f = weights -> cost(net, x, actuals, weights)
     g! = (weights, gradients) -> cost_gradient!(net, x, actuals, weights, gradients)
-    # weights = optimize(f, g!, initial_weights, method=:cg)
-    res = optimize(f, initial_weights)
+    res = optimize(f, g!, initial_weights, method=:cg, show_trace=true)
+    #res = optimize(f, initial_weights)
     weights_to_net!(res.minimum, net)
     net
 end
