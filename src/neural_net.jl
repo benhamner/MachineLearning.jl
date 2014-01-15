@@ -1,4 +1,5 @@
 using .MachineLearning
+using Optim
 
 type StopAfterIteration
     max_iteration::Int
@@ -173,4 +174,83 @@ function initialize_net(opts::NeuralNetOptions, classes::Vector, num_features::I
         push!(layers, initialize_layer(opts.hidden_layers[length(opts.hidden_layers)] + (opts.bias_unit?1:0), length(classes)))
     end
     NeuralNet(opts, layers, classes)
+end
+
+function weights_to_net!(weights::Vector{Float64}, net::NeuralNet)
+    loc = 0
+    for layer = net.layers
+        layer.weights[:] = weights[loc+1:loc+length(layer.weights)]
+        loc += length(layer.weights)
+    end
+end
+
+function cost(net::NeuralNet, x::Array{Float64,2}, actuals::Array{Float64,2}, weights::Vector{Float64})
+    println("Called Cost")
+    weights_to_net!(weights, net)
+    probs = predict_probs(net, x)
+    mean_log_loss(actuals, probs)
+end
+
+function cost_gradient(net::NeuralNet, sample::Vector{Float64}, actual::Vector{Float64})
+    outputs = Array(Vector{Float64}, 0) # before passing through sigmoid
+    activations = Array(Vector{Float64}, 0)
+    push!(outputs, sample)
+    push!(activations, sigmoid(sample))
+    state = sample
+    for layer = net.layers
+        if net.options.bias_unit
+            state = [1.0;state]
+        end
+
+        push!(outputs, layer.weights*state)
+        state = sigmoid(outputs[length(outputs)])
+        push!(activations, state)
+    end
+
+    deltas = activations[length(activations)] - actual
+    gradients = Array(Float64,0)
+    for i=length(net.layers):-1:1
+        gradient = deltas*(net.options.bias_unit?hcat(1,activations[i]'):activations[i]')
+        if i>1
+            deltas = net.layers[i].weights'*deltas
+            if net.options.bias_unit
+                deltas = deltas[2:length(deltas)]
+            end
+            deltas = deltas.*sigmoid_gradient(outputs[i])
+        end
+        for g=reverse(vec(gradient))
+            push!(gradients, g)
+        end
+    end
+    reverse(gradients)
+end
+
+function cost_gradient!(net::NeuralNet, x::Array{Float64,2}, actuals::Array{Float64,2}, weights::Vector{Float64}, gradients::Vector{Float64})
+    println("Called Gradient")
+    weights_to_net!(weights, net)
+    for i=1:size(x,1)
+        gradients += cost_gradient(net, vec(x[i,:]), vec(actuals[i,:]))/size(x,1)
+    end
+end
+
+function train_soph(x::Array{Float64, 2}, y::Vector, opts::NeuralNetOptions)
+    num_features = size(x, 2)
+    classes = sort(unique(y))
+    classes_map = Dict(classes, [1:length(classes)])
+    net = initialize_net(opts, classes, num_features)
+    actuals = one_hot(y, classes_map)
+
+    initial_weights = Array(Float64, 0)
+    for layer=net.layers
+        for w=layer.weights
+            push!(initial_weights, w)
+        end
+    end
+
+    f = weights -> cost(net, x, actuals, weights)
+    g! = (weights, gradients) -> cost_gradient!(net, x, actuals, weights, gradients)
+    # weights = optimize(f, g!, initial_weights, method=:cg)
+    res = optimize(f, initial_weights)
+    weights_to_net!(res.minimum, net)
+    net
 end
