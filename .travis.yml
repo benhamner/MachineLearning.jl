@@ -10,6 +10,7 @@ before_install:
   - sudo apt-get install libpcre3-dev julia -y
 script:
   - julia -e 'versioninfo(); Pkg.init();'
+  - julia -e 'map(x -> Pkg.add(strip(x)), readlines(open("REQUIRE")));'
   - mkdir -p ~/.julia/MachineLearning.jl
   - cp -R ./* ~/.julia/MachineLearning.jl/
   - julia ./run_tests.jl
