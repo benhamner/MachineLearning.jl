@@ -5,6 +5,8 @@ export
     NeuralNet,
     NeuralNetLayer,
     NeuralNetOptions,
+    StopAfterIteration,
+    StopAfterValidationErrorStopsImproving,
 
     # methods
     accuracy,

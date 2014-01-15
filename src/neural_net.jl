@@ -1,12 +1,33 @@
+using .MachineLearning
+
+type StopAfterIteration
+    max_iteration::Int
+end
+StopAfterIteration() = StopAfterIteration(100)
+
+type StopAfterValidationErrorStopsImproving
+    validation_set_size::Float64
+    validation_iteration_window_size::Int
+    min_iteration::Int
+    max_iteration::Int
+end
+StopAfterValidationErrorStopsImproving() = StopAfterValidationErrorStopsImproving(0.2, 2, 10, 1000)
+
+NeuralNetStopCriteria = Union(StopAfterIteration, StopAfterValidationErrorStopsImproving)
+
 type NeuralNetOptions
     bias_unit::Bool # include a bias unit that always outputs a +1
     hidden_layers::Vector{Int} # sizes of hidden layers
-    num_passes::Int
+    learning_rate::Float64
+    stop_criteria::NeuralNetStopCriteria
 end
 
-neural_net_options(;bias_unit::Bool=true,
-                    hidden_layers::Vector{Int}=[100],
-                    num_passes::Int=100) = NeuralNetOptions(bias_unit, hidden_layers, num_passes)
+function neural_net_options(;bias_unit::Bool=true,
+                            hidden_layers::Vector{Int}=[100],
+                            learning_rate::Float64=1.0,
+                            stop_criteria::NeuralNetStopCriteria=StopAfterValidationErrorStopsImproving())
+    NeuralNetOptions(bias_unit, hidden_layers, learning_rate, stop_criteria)
+end
 
 type NeuralNetLayer
     weights::Array{Float64, 2}
@@ -21,21 +42,57 @@ end
 sigmoid(z::Vector{Float64}) = 1/(1+exp(-z))
 sigmoid_gradient(z::Vector{Float64}) = sigmoid(z) .* (1-sigmoid(z))
 
+function one_hot(y::Vector, classes_map::Dict)
+    values = zeros(length(y), length(classes_map))
+    for i=1:length(y)
+        values[i, classes_map[y[i]]] = 1.0
+    end
+    values
+end
+
 function train(x::Array{Float64, 2}, y::Vector, opts::NeuralNetOptions)
     num_features = size(x, 2)
-    num_samples = size(x, 1)
-    update_size = 1 / num_samples
     classes = sort(unique(y))
     classes_map = Dict(classes, [1:length(classes)])
     num_classes = length(classes)
     net = initialize_net(opts, classes, num_features)
-    for i=1:opts.num_passes
+
+    if typeof(opts.stop_criteria)==StopAfterValidationErrorStopsImproving
+        x, y, x_val, y_val = split_train_test(x, y, opts.stop_criteria.validation_set_size)
+        actuals_val = one_hot(y_val, classes_map)
+        validation_scores = Array(Float64, 0)
+    end
+
+    num_samples = size(x, 1)
+    actuals = one_hot(y, classes_map)
+    update_size = opts.learning_rate / num_samples
+
+    iteration=0
+    while true
+        iteration += 1
         for j=1:num_samples
-            actual = zeros(num_classes)
-            actual[classes_map[y[j]]] = 1.0
-            update_weights!(net, vec(x[j,:]), actual, update_size)
+            update_weights!(net, vec(x[j,:]), vec(actuals[j,:]), update_size)
+        end
+
+        if iteration >= opts.stop_criteria.max_iteration
+            break
+        end
+        if typeof(opts.stop_criteria)==StopAfterValidationErrorStopsImproving
+            preds = predict_probs(net, x_val)
+            err = mean_log_loss(actuals_val, preds)
+            #predst = predict_probs(net, x)
+            #errt = mean_log_loss(actuals, predst)
+            #println("Iteration: ", iteration, " Val Error: ", err, "Train Err: ", errt)
+            push!(validation_scores, err)
+            if iteration>=2*opts.stop_criteria.validation_iteration_window_size && iteration>opts.stop_criteria.min_iteration
+                ws = opts.stop_criteria.validation_iteration_window_size
+                if minimum(validation_scores[iteration-ws+1:iteration])>=maximum(validation_scores[iteration-2*ws+1:iteration-ws])
+                    break
+                end
+            end
         end
     end
+    println("Number of Iterations: ", iteration)
     net
 end
 
@@ -49,6 +106,14 @@ function predict_probs(net::NeuralNet, sample::Vector{Float64})
         state = sigmoid(layer.weights*state)
     end
     state
+end
+
+function predict_probs(net::NeuralNet, samples::Array{Float64, 2})
+    probs = Array(Float64, size(samples, 1), length(net.classes))
+    for i=1:size(samples, 1)
+        probs[i,:] = predict_probs(net, vec(samples[i,:]))
+    end
+    probs
 end
 
 function predict(net::NeuralNet, sample::Vector{Float64})
