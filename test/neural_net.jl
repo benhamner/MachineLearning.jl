@@ -9,7 +9,7 @@ x_train, y_train, x_test, y_test = split_train_test(x, y)
 
 # Checking gradients
 println("Checking Gradients")
-opts = neural_net_options(stop_criteria=StopAfterIteration(5))
+opts = neural_net_options(hidden_layers=[3], stop_criteria=StopAfterIteration(5))
 classes = sort(unique(y))
 classes_map = Dict(classes, [1:length(classes)])
 net = initialize_net(opts, classes, num_features)
@@ -27,7 +27,7 @@ for i=1:length(weights)
     c1 = cost(net, x, actuals, w1)
     c2 = cost(net, x, actuals, w2)
     err = abs(((c2-c1)/(2*epsilon)-gradients[i])/gradients[i])
-    println(i, "\t", err, "\t", (c2-c1)/(2*epsilon), "\t", gradients[i], "\t", weights[i])
+    #println(i, "\t", err, "\t", (c2-c1)/(2*epsilon), "\t", gradients[i], "\t", weights[i])
     @test err<epsilon
 end
 #@test err<epsilon
