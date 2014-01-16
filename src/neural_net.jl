@@ -182,6 +182,7 @@ function weights_to_net!(weights::Vector{Float64}, net::NeuralNet)
         layer.weights[:] = weights[loc+1:loc+length(layer.weights)]
         loc += length(layer.weights)
     end
+    @assert loc==length(weights)
 end
 
 function cost(net::NeuralNet, x::Array{Float64,2}, actuals::Array{Float64,2}, weights::Vector{Float64})
@@ -208,7 +209,7 @@ function cost_gradient(net::NeuralNet, sample::Vector{Float64}, actual::Vector{F
     end
 
     deltas = activations[length(activations)] - actual
-    gradients = Array(Float64,0)
+    layer_gradients = Array(Array{Float64,2},length(net.layers))
     for i=length(net.layers):-1:1
         gradient = deltas*(net.options.bias_unit?hcat(1,activations[i]'):activations[i]')
         if i>1
@@ -218,11 +219,15 @@ function cost_gradient(net::NeuralNet, sample::Vector{Float64}, actual::Vector{F
             end
             deltas = deltas.*sigmoid_gradient(outputs[i])
         end
-        for g=reverse(vec(gradient))
+        layer_gradients[i]=gradient
+    end
+    gradients = Array(Float64, 0)
+    for gradient=layer_gradients
+        for g=gradient
             push!(gradients, g)
         end
     end
-    reverse(gradients)
+    gradients
 end
 
 function cost_gradient!(net::NeuralNet, x::Array{Float64,2}, actuals::Array{Float64,2}, weights::Vector{Float64}, gradients::Vector{Float64})
@@ -253,7 +258,7 @@ function train_soph(x::Array{Float64, 2}, y::Vector, opts::NeuralNetOptions)
     f = weights -> cost(net, x, actuals, weights)
     println("Initial Cost: ", f(initial_weights))
     g! = (weights, gradients) -> cost_gradient!(net, x, actuals, weights, gradients)
-    res = optimize(f, g!, initial_weights, method=:cg, show_trace=true)
+    res = optimize(f, g!, initial_weights, method=:cg, ftol=1e-3, show_trace=true)
     #res = optimize(f, initial_weights)
     weights_to_net!(res.minimum, net)
     net
