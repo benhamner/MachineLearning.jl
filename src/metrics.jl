@@ -4,7 +4,7 @@ end
 
 function mean_log_loss(a::Array{Float64,2}, p::Array{Float64,2})
     @assert size(a)==size(p)
-    mean([log_loss(vec(a[i,:]), vec(p[i,:])) for i=1:size(a,2)])
+    -sum(a.*log(p)+(1.0-a).*log(1.0-p))/size(a,1)
 end
 
 function mean_squared_error(a::Array{Float64}, p::Array{Float64})

@@ -5,14 +5,15 @@ require("linear_data.jl")
 
 x, y = linear_data(2500, 5)
 x_train, y_train, x_test, y_test = split_train_test(x, y)
-opts = neural_net_options(learning_rate=10.0)
 
+opts = neural_net_options(learning_rate=10.0, stop_criteria=StopAfterIteration(5))
 net = train_soph(x_train, y_train, opts)
 yhat = predict(net, x_test)
 acc = accuracy(y_test, yhat)
 println("Linear Accuracy, Soph: ", acc)
 @test acc>0.8
 
+opts = neural_net_options(learning_rate=10.0)
 net = train(x_train, y_train, opts)
 yhat = predict(net, x_test)
 acc = accuracy(y_test, yhat)

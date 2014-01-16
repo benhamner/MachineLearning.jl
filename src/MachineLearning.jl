@@ -10,6 +10,8 @@ export
 
     # methods
     accuracy,
+    log_loss,
+    mean_log_loss,
     mean_squared_error,
     neural_net_options,
     predict,
