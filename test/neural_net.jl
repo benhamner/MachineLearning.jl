@@ -27,12 +27,17 @@ for i=1:length(weights)
     c1 = cost(net, x, actuals, w1)
     c2 = cost(net, x, actuals, w2)
     err = abs(((c2-c1)/(2*epsilon)-gradients[i])/gradients[i])
+    println(i, "\t", err, "\t", (c2-c1)/(2*epsilon), "\t", gradients[i], "\t", weights[i])
     @test err<epsilon
 end
+#@test err<epsilon
 
 println("Classification Tests")
 opts = neural_net_options(learning_rate=10.0, stop_criteria=StopAfterIteration(5))
 net = train_soph(x_train, y_train, opts)
+for layer=net.layers
+    println("Max Weight: ", maximum(layer.weights))
+end
 yhat = predict(net, x_test)
 acc = accuracy(y_test, yhat)
 println("Linear Accuracy, Soph: ", acc)

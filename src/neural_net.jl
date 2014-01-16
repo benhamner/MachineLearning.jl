@@ -196,10 +196,19 @@ function net_to_weights(net::NeuralNet)
 end
 
 function cost(net::NeuralNet, x::Array{Float64,2}, actuals::Array{Float64,2}, weights::Vector{Float64})
+    @assert size(x,1)==size(actuals,1)
     weights_to_net!(weights, net)
     probs = predict_probs(net, x)
     err = mean_log_loss(actuals, probs)
-    err
+    regularization = 0.0
+    for layer=net.layers
+        w = copy(layer.weights)
+        if net.options.bias_unit
+            w[:,1] = 0.0
+        end
+        regularization += sum(w.^2)/(2*size(x,1))
+    end
+    err + regularization
 end
 
 function cost_gradient(net::NeuralNet, sample::Vector{Float64}, actual::Vector{Float64})
@@ -240,6 +249,20 @@ function cost_gradient(net::NeuralNet, sample::Vector{Float64}, actual::Vector{F
     gradients
 end
 
+function regularization_gradient(net::NeuralNet)
+    gradients = Array(Float64, 0)
+    for layer=net.layers
+        regularization = copy(layer.weights)
+        if net.options.bias_unit
+            regularization[:,1]=0.0
+        end
+        for g=regularization
+            push!(gradients, g)
+        end
+    end
+    gradients
+end
+
 function cost_gradient!(net::NeuralNet, x::Array{Float64,2}, actuals::Array{Float64,2}, weights::Vector{Float64}, gradients::Vector{Float64})
     @assert size(x,1)==size(actuals,1)
     weights_to_net!(weights, net)
@@ -249,6 +272,10 @@ function cost_gradient!(net::NeuralNet, x::Array{Float64,2}, actuals::Array{Floa
         for j=1:length(delta)
             gradients[j] += delta[j]
         end
+    end
+    regularization = regularization_gradient(net)
+    for i=1:length(regularization)
+        gradients[i] += regularization[i]/size(x,1)
     end
 end
 
