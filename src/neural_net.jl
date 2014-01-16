@@ -24,7 +24,7 @@ type NeuralNetOptions
 end
 
 function neural_net_options(;bias_unit::Bool=true,
-                            hidden_layers::Vector{Int}=[100],
+                            hidden_layers::Vector{Int}=[20],
                             learning_rate::Float64=1.0,
                             stop_criteria::NeuralNetStopCriteria=StopAfterValidationErrorStopsImproving())
     NeuralNetOptions(bias_unit, hidden_layers, learning_rate, stop_criteria)
@@ -217,7 +217,6 @@ function cost_gradient(net::NeuralNet, sample::Vector{Float64}, actual::Vector{F
         state = sigmoid(outputs[length(outputs)])
         push!(activations, state)
     end
-    @assert state==predict_probs(net, sample)
 
     deltas = activations[length(activations)] - actual
     layer_gradients = Array(Array{Float64,2},length(net.layers))
@@ -231,7 +230,6 @@ function cost_gradient(net::NeuralNet, sample::Vector{Float64}, actual::Vector{F
             deltas = deltas.*sigmoid_gradient(outputs[i])
         end
         layer_gradients[i]=gradient
-        @assert size(gradient)==size(net.layers[i].weights)
     end
     gradients = Array(Float64, 0)
     for gradient=layer_gradients
@@ -264,7 +262,6 @@ function train_soph(x::Array{Float64, 2}, y::Vector, opts::NeuralNetOptions)
     initial_weights = net_to_weights(net)
 
     f = weights -> cost(net, x, actuals, weights)
-    println("Initial Cost: ", f(initial_weights))
     g! = (weights, gradients) -> cost_gradient!(net, x, actuals, weights, gradients)
     res = optimize(f, g!, initial_weights, method=:cg, show_trace=true)
     weights_to_net!(res.minimum, net)

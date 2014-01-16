@@ -3,25 +3,17 @@ using MachineLearning
 
 require("linear_data.jl")
 
-x, y = linear_data(2500, 3)
+num_features=5
+x, y = linear_data(2500, num_features)
 x_train, y_train, x_test, y_test = split_train_test(x, y)
 
 # Checking gradients
-opts = neural_net_options(hidden_layers=[5], stop_criteria=StopAfterIteration(5))
+println("Checking Gradients")
+opts = neural_net_options(stop_criteria=StopAfterIteration(5))
 classes = sort(unique(y))
 classes_map = Dict(classes, [1:length(classes)])
-#net = initialize_net(opts, classes, 3)
-net = train(x_train, y_train, opts)
-yhat = predict(net, x_test)
-acc = accuracy(y_test, yhat)
-println("Linear Accuracy, Valid Stop: ", acc)
-
-layer_weights = [copy(layer.weights) for layer=net.layers]
+net = initialize_net(opts, classes, num_features)
 weights = net_to_weights(net)
-weights_to_net!(weights, net)
-for i=1:length(net.layers)
-    @assert net.layers[i].weights==layer_weights[i]
-end
 
 actuals = one_hot(y, classes_map)
 epsilon = 1e-4
@@ -35,11 +27,10 @@ for i=1:length(weights)
     c1 = cost(net, x, actuals, w1)
     c2 = cost(net, x, actuals, w2)
     err = abs(((c2-c1)/(2*epsilon)-gradients[i])/gradients[i])
-    # min_err = minimum(abs(((c2-c1)/(2*epsilon)-gradients)./gradients))
-    # println(i, "\t", gradients[i], "\t", err, "\t", min_err)
     @test err<epsilon
 end
 
+println("Classification Tests")
 opts = neural_net_options(learning_rate=10.0, stop_criteria=StopAfterIteration(5))
 net = train_soph(x_train, y_train, opts)
 yhat = predict(net, x_test)
