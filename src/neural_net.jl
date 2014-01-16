@@ -188,7 +188,6 @@ function cost(net::NeuralNet, x::Array{Float64,2}, actuals::Array{Float64,2}, we
     weights_to_net!(weights, net)
     probs = predict_probs(net, x)
     err = mean_log_loss(actuals, probs)
-    println("Cost: ", err, " Hash Weights: ", hash(weights))
     err
 end
 
@@ -230,9 +229,11 @@ function cost_gradient!(net::NeuralNet, x::Array{Float64,2}, actuals::Array{Floa
     weights_to_net!(weights, net)
     gradients[:]=0.0
     for i=1:size(x,1)
-        gradients += cost_gradient(net, vec(x[i,:]), vec(actuals[i,:]))/size(x,1)
+        delta = cost_gradient(net, vec(x[i,:]), vec(actuals[i,:]))/size(x,1)
+        for j=1:length(delta)
+            gradients[j] += delta[j]
+        end
     end
-    println("Min G: ", minimum(gradients), " Max G: ", maximum(gradients), " Min Abs G: ", minimum(abs(gradients)), " Hash Weights: ", hash(weights))
 end
 
 function train_soph(x::Array{Float64, 2}, y::Vector, opts::NeuralNetOptions)
@@ -250,6 +251,7 @@ function train_soph(x::Array{Float64, 2}, y::Vector, opts::NeuralNetOptions)
     end
 
     f = weights -> cost(net, x, actuals, weights)
+    println("Initial Cost: ", f(initial_weights))
     g! = (weights, gradients) -> cost_gradient!(net, x, actuals, weights, gradients)
     res = optimize(f, g!, initial_weights, method=:cg, show_trace=true)
     #res = optimize(f, initial_weights)
