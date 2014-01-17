@@ -9,7 +9,7 @@ x_train, y_train, x_test, y_test = split_train_test(x, y)
 
 # Checking gradients
 println("Checking Gradients")
-opts = neural_net_options(hidden_layers=[3], stop_criteria=StopAfterIteration(5))
+opts = neural_net_options(hidden_layers=[3])
 classes = sort(unique(y))
 classes_map = Dict(classes, [1:length(classes)])
 net = initialize_net(opts, classes, num_features)
@@ -43,14 +43,14 @@ acc = accuracy(y_test, yhat)
 println("Linear Accuracy, Soph: ", acc)
 @test acc>0.8
 
-opts = neural_net_options(learning_rate=10.0)
+opts = neural_net_options(learning_rate=10.0, stop_criteria=StopAfterValidationErrorStopsImproving())
 net = train(x_train, y_train, opts)
 yhat = predict(net, x_test)
 acc = accuracy(y_test, yhat)
 println("Linear Accuracy, Valid Stop: ", acc)
 @test acc>0.8
 
-opts = neural_net_options(learning_rate=10.0, stop_criteria=StopAfterIteration(40))
+opts = neural_net_options(learning_rate=10.0)
 net = train(x_train, y_train, opts)
 yhat = predict(net, x_test)
 acc = accuracy(y_test, yhat)

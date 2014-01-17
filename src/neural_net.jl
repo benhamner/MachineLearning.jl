@@ -4,7 +4,7 @@ using Optim
 type StopAfterIteration
     max_iteration::Int
 end
-StopAfterIteration() = StopAfterIteration(100)
+StopAfterIteration() = StopAfterIteration(50)
 
 type StopAfterValidationErrorStopsImproving
     validation_set_size::Float64
@@ -26,7 +26,7 @@ end
 function neural_net_options(;bias_unit::Bool=true,
                             hidden_layers::Vector{Int}=[20],
                             learning_rate::Float64=1.0,
-                            stop_criteria::NeuralNetStopCriteria=StopAfterValidationErrorStopsImproving())
+                            stop_criteria::NeuralNetStopCriteria=StopAfterIteration())
     NeuralNetOptions(bias_unit, hidden_layers, learning_rate, stop_criteria)
 end
 
@@ -58,43 +58,51 @@ function train(x::Array{Float64, 2}, y::Vector, opts::NeuralNetOptions)
     num_classes = length(classes)
     net = initialize_net(opts, classes, num_features)
 
-    if typeof(opts.stop_criteria)==StopAfterValidationErrorStopsImproving
-        x, y, x_val, y_val = split_train_test(x, y, opts.stop_criteria.validation_set_size)
-        actuals_val = one_hot(y_val, classes_map)
-        validation_scores = Array(Float64, 0)
+    if typeof(opts.stop_criteria)==StopAfterIteration
+        train_preset_stop!(net, x, one_hot(y, classes_map))
+    elseif typeof(opts.stop_criteria)==StopAfterValidationErrorStopsImproving
+        x_train, y_train, x_val, y_val = split_train_test(x, y, opts.stop_criteria.validation_set_size)
+        train_valid_stop!(net, x_train, one_hot(y_train, classes_map), x_val, one_hot(y_val, classes_map))
     end
+    net
+end
 
-    num_samples = size(x, 1)
-    actuals = one_hot(y, classes_map)
-    update_size = opts.learning_rate / num_samples
-
-    iteration=0
-    while true
-        iteration += 1
+function train_preset_stop!(net::NeuralNet, x::Array{Float64,2}, actuals::Array{Float64,2})
+    num_samples = size(x,1)
+    update_size = net.options.learning_rate / num_samples
+    for iter=1:net.options.stop_criteria.max_iteration
         for j=1:num_samples
             update_weights!(net, vec(x[j,:]), vec(actuals[j,:]), update_size)
         end
+    end
+end
 
-        if iteration >= opts.stop_criteria.max_iteration
-            break
+function train_valid_stop!(net::NeuralNet,
+                           x_train::Array{Float64,2},
+                           a_train::Array{Float64},
+                           x_val::Array{Float64,2},
+                           a_val::Array{Float64,2})
+    num_samples = size(x_train,1)
+    update_size = net.options.learning_rate / num_samples
+    validation_scores = Array(Float64, 0)
+    
+    iteration = 0
+    while iteration<net.options.stop_criteria.max_iteration
+        iteration += 1
+        for j=1:num_samples
+            update_weights!(net, vec(x_train[j,:]), vec(a_train[j,:]), update_size)
         end
-        if typeof(opts.stop_criteria)==StopAfterValidationErrorStopsImproving
-            preds = predict_probs(net, x_val)
-            err = mean_log_loss(actuals_val, preds)
-            #predst = predict_probs(net, x)
-            #errt = mean_log_loss(actuals, predst)
-            #println("Iteration: ", iteration, " Val Error: ", err, "Train Err: ", errt)
-            push!(validation_scores, err)
-            if iteration>=2*opts.stop_criteria.validation_iteration_window_size && iteration>opts.stop_criteria.min_iteration
-                ws = opts.stop_criteria.validation_iteration_window_size
-                if minimum(validation_scores[iteration-ws+1:iteration])>=maximum(validation_scores[iteration-2*ws+1:iteration-ws])
-                    break
-                end
+        preds = predict_probs(net, x_val)
+        err = mean_log_loss(a_val, preds)
+        push!(validation_scores, err)
+        if iteration>=2*net.options.stop_criteria.validation_iteration_window_size && iteration>net.options.stop_criteria.min_iteration
+            ws = net.options.stop_criteria.validation_iteration_window_size
+            if minimum(validation_scores[iteration-ws+1:iteration])>=maximum(validation_scores[iteration-2*ws+1:iteration-ws])
+                break
             end
         end
     end
     println("Number of Iterations: ", iteration)
-    net
 end
 
 function predict_probs(net::NeuralNet, sample::Vector{Float64})
@@ -290,7 +298,7 @@ function train_soph(x::Array{Float64, 2}, y::Vector, opts::NeuralNetOptions)
 
     f = weights -> cost(net, x, actuals, weights)
     g! = (weights, gradients) -> cost_gradient!(net, x, actuals, weights, gradients)
-    res = optimize(f, g!, initial_weights, method=:cg, show_trace=true)
+    res = optimize(f, g!, initial_weights, method=:cg) #, show_trace=true)
     weights_to_net!(res.minimum, net)
     net
 end
