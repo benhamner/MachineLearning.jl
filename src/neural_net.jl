@@ -19,15 +19,17 @@ NeuralNetStopCriteria = Union(StopAfterIteration, StopAfterValidationErrorStopsI
 type NeuralNetOptions
     bias_unit::Bool # include a bias unit that always outputs a +1
     hidden_layers::Vector{Int} # sizes of hidden layers
+    train_method::Symbol
     learning_rate::Float64
     stop_criteria::NeuralNetStopCriteria
 end
 
 function neural_net_options(;bias_unit::Bool=true,
                             hidden_layers::Vector{Int}=[20],
+                            train_method::Symbol=:sgd,
                             learning_rate::Float64=1.0,
                             stop_criteria::NeuralNetStopCriteria=StopAfterIteration())
-    NeuralNetOptions(bias_unit, hidden_layers, learning_rate, stop_criteria)
+    NeuralNetOptions(bias_unit, hidden_layers, train_method, learning_rate, stop_criteria)
 end
 
 type NeuralNetLayer
@@ -58,11 +60,23 @@ function train(x::Array{Float64, 2}, y::Vector, opts::NeuralNetOptions)
     num_classes = length(classes)
     net = initialize_net(opts, classes, num_features)
 
-    if typeof(opts.stop_criteria)==StopAfterIteration
-        train_preset_stop!(net, x, one_hot(y, classes_map))
-    elseif typeof(opts.stop_criteria)==StopAfterValidationErrorStopsImproving
-        x_train, y_train, x_val, y_val = split_train_test(x, y, opts.stop_criteria.validation_set_size)
-        train_valid_stop!(net, x_train, one_hot(y_train, classes_map), x_val, one_hot(y_val, classes_map))
+    if opts.train_method==:sgd # stochastic gradient descent
+        if typeof(opts.stop_criteria)==StopAfterIteration
+            train_preset_stop!(net, x, one_hot(y, classes_map))
+        elseif typeof(opts.stop_criteria)==StopAfterValidationErrorStopsImproving
+            x_train, y_train, x_val, y_val = split_train_test(x, y, opts.stop_criteria.validation_set_size)
+            train_valid_stop!(net, x_train, one_hot(y_train, classes_map), x_val, one_hot(y_val, classes_map))
+        end
+    else
+        # use optimize from Optim.jl
+        actuals = one_hot(y, classes_map)
+        initial_weights = net_to_weights(net)
+
+        f = weights -> cost(net, x, actuals, weights)
+        g! = (weights, gradients) -> cost_gradient!(net, x, actuals, weights, gradients)
+        res = optimize(f, g!, initial_weights, method=opts.train_method)
+        weights_to_net!(res.minimum, net)
+        net
     end
     net
 end
@@ -285,20 +299,4 @@ function cost_gradient!(net::NeuralNet, x::Array{Float64,2}, actuals::Array{Floa
     for i=1:length(regularization)
         gradients[i] += regularization[i]/size(x,1)
     end
-end
-
-function train_soph(x::Array{Float64, 2}, y::Vector, opts::NeuralNetOptions)
-    num_features = size(x, 2)
-    classes = sort(unique(y))
-    classes_map = Dict(classes, [1:length(classes)])
-    net = initialize_net(opts, classes, num_features)
-    actuals = one_hot(y, classes_map)
-
-    initial_weights = net_to_weights(net)
-
-    f = weights -> cost(net, x, actuals, weights)
-    g! = (weights, gradients) -> cost_gradient!(net, x, actuals, weights, gradients)
-    res = optimize(f, g!, initial_weights, method=:cg) #, show_trace=true)
-    weights_to_net!(res.minimum, net)
-    net
 end
