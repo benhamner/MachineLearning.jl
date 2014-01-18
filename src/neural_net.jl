@@ -217,9 +217,8 @@ function net_to_weights(net::NeuralNet)
     weights
 end
 
-function cost(net::NeuralNet, x::Array{Float64,2}, actuals::Array{Float64,2}, weights::Vector{Float64})
+function cost(net::NeuralNet, x::Array{Float64,2}, actuals::Array{Float64,2})
     @assert size(x,1)==size(actuals,1)
-    weights_to_net!(weights, net)
     probs = predict_probs(net, x)
     err = mean_log_loss(actuals, probs)
     regularization = 0.0
@@ -231,6 +230,11 @@ function cost(net::NeuralNet, x::Array{Float64,2}, actuals::Array{Float64,2}, we
         regularization += sum(w.^2)/(2*size(x,1))
     end
     err + regularization
+end
+
+function cost(net::NeuralNet, x::Array{Float64,2}, actuals::Array{Float64,2}, weights::Vector{Float64})
+    weights_to_net!(weights, net)
+    cost(net, x, actuals)
 end
 
 function cost_gradient(net::NeuralNet, sample::Vector{Float64}, actual::Vector{Float64})
