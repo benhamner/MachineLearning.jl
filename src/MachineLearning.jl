@@ -2,6 +2,11 @@ module MachineLearning
 
 export
     # types
+    DecisionBranch,
+    DecisionNode,
+    DecisionLeaf,
+    DecisionTree,
+    DecisionTreeOptions,
     NeuralNet,
     NeuralNetLayer,
     NeuralNetOptions,
@@ -12,6 +17,7 @@ export
     accuracy,
     cost,
     cost_gradient!,
+    gini,
     initialize_net,
     log_loss,
     mean_log_loss,
@@ -20,11 +26,12 @@ export
     neural_net_options,
     one_hot,
     predict,
+    split_location,
     split_train_test,
     train,
-    train_soph,
     weights_to_net!
 
+include("decision_tree.jl")
 include("metrics.jl")
 include("neural_net.jl")
 include("sample.jl")
