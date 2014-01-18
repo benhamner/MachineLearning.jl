@@ -12,6 +12,7 @@ require("linear_data.jl")
 
 @test split_location([1,1,1,1,2,2,2,2,2],2)==(0.0, 4)
 @test split_location([1,2],2)==(0.0, 1)
+@test split_location([2,1,1,1,2,2,2,2,2],2)==(3/8, 4)
 
 num_features=5
 x, y = linear_data(2500, num_features)

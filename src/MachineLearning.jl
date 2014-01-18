@@ -12,11 +12,14 @@ export
     NeuralNetOptions,
     StopAfterIteration,
     StopAfterValidationErrorStopsImproving,
+    RandomForest,
+    RandomForestOptions,
 
     # methods
     accuracy,
     cost,
     cost_gradient!,
+    decision_tree_options,
     gini,
     initialize_net,
     log_loss,
@@ -26,6 +29,7 @@ export
     neural_net_options,
     one_hot,
     predict,
+    random_forest_options,
     split_location,
     split_train_test,
     train,
@@ -34,6 +38,7 @@ export
 include("decision_tree.jl")
 include("metrics.jl")
 include("neural_net.jl")
+include("random_forest.jl")
 include("sample.jl")
 
 end

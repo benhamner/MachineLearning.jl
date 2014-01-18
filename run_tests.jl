@@ -2,7 +2,8 @@ tests = [
     "decision_tree",
     "metrics",
     "neural_net",
-    "sample"]
+    "sample",
+    "random_forest"]
 
 println("Running tests:")
 cd("test")

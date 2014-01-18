@@ -1,7 +1,12 @@
 abstract DecisionNode
 
 type DecisionTreeOptions
+    features_per_split_fraction::Float64
+end
+DecisionTreeOptions() = DecisionTreeOptions(1.0)
 
+function decision_tree_options(;features_per_split_fraction::Float64=1.0)
+    DecisionTreeOptions(features_per_split_fraction)
 end
 
 type DecisionLeaf <: DecisionNode
@@ -18,6 +23,7 @@ end
 type DecisionTree
     root::DecisionNode
     classes::Vector
+    features_per_split::Int
     options::DecisionTreeOptions
 end
 
@@ -25,10 +31,12 @@ function train(x::Array{Float64,2}, y::Vector, opts::DecisionTreeOptions)
     classes = sort(unique(y))
     classes_map = Dict(classes, 1:length(classes))
     y_mapped = [classes_map[v] for v=y]
-    DecisionTree(train_branch(x, y_mapped, length(classes)), classes, opts)
+    features_per_split = int(opts.features_per_split_fraction*size(x,2))
+    features_per_split = max(1, size(x,2))
+    DecisionTree(train_branch(x, y_mapped, length(classes), features_per_split), classes, features_per_split, opts)
 end
 
-function train_branch(x::Array{Float64,2}, y::Vector{Int}, num_classes::Int)
+function train_branch(x::Array{Float64,2}, y::Vector{Int}, num_classes::Int, features_per_split::Int)
     if length(y)<=1
         probs = zeros(num_classes)
         for i=1:length(y)
@@ -40,7 +48,7 @@ function train_branch(x::Array{Float64,2}, y::Vector{Int}, num_classes::Int)
     score        = Inf
     best_feature = 1
     split_loc    = 1
-    for feature = 1:size(x,2)
+    for feature = shuffle([1:size(x,2)])[1:features_per_split]
         i_sorted = sortperm(x[:,feature])
         g, loc = split_location(y[i_sorted], num_classes)
         if g<score 
@@ -52,8 +60,8 @@ function train_branch(x::Array{Float64,2}, y::Vector{Int}, num_classes::Int)
     i_sorted   = sortperm(x[:,best_feature])
     left_locs  = i_sorted[1:split_loc]
     right_locs = i_sorted[split_loc+1:length(i_sorted)]
-    left       = train_branch(x[left_locs, :], y[left_locs],  num_classes)
-    right      = train_branch(x[right_locs,:], y[right_locs], num_classes)
+    left       = train_branch(x[left_locs, :], y[left_locs],  num_classes, features_per_split)
+    right      = train_branch(x[right_locs,:], y[right_locs], num_classes, features_per_split)
     DecisionBranch(best_feature, x[i_sorted[split_loc], best_feature], left, right)
 end
 
