@@ -118,3 +118,15 @@ end
 function predict(tree::DecisionTree, samples::Array{Float64, 2})
     [predict(tree, vec(samples[i,:])) for i=1:size(samples,1)]
 end
+
+function Base.length(tree::DecisionTree)
+    length(tree.root)
+end
+
+function Base.length(branch::DecisionBranch)
+    return 1+length(branch.left)+length(branch.right)
+end
+
+function Base.length(leaf::DecisionLeaf)
+    return 1
+end
