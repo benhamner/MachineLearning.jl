@@ -37,7 +37,7 @@ function train(x::Array{Float64,2}, y::Vector, opts::DecisionTreeOptions)
 end
 
 function train_branch(x::Array{Float64,2}, y::Vector{Int}, num_classes::Int, features_per_split::Int)
-    if length(y)<=1
+    if length(y)<=1 || length(unique(y))==1
         probs = zeros(num_classes)
         for i=1:length(y)
             probs[y[i]] += 1.0/length(y)
