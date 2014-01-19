@@ -29,6 +29,7 @@ export
     neural_net_options,
     one_hot,
     predict,
+    predict_probs,
     random_forest_options,
     split_location,
     split_train_test,
