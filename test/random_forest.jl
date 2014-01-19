@@ -11,4 +11,4 @@ forest = train(x_train, y_train, random_forest_options())
 yhat = predict(forest, x_test)
 acc = accuracy(y_test, yhat)
 println("Linear Accuracy: ", acc)
-@test acc>0.55
+@test acc>0.80

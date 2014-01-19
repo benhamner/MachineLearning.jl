@@ -57,27 +57,27 @@ function train_branch(x::Array{Float64,2}, y::Vector{Int}, num_classes::Int, fea
             split_loc    = loc
         end
     end
-    i_sorted   = sortperm(x[:,best_feature])
-    left_locs  = i_sorted[1:split_loc]
-    right_locs = i_sorted[split_loc+1:length(i_sorted)]
-    left       = train_branch(x[left_locs, :], y[left_locs],  num_classes, features_per_split)
-    right      = train_branch(x[right_locs,:], y[right_locs], num_classes, features_per_split)
-    DecisionBranch(best_feature, x[i_sorted[split_loc], best_feature], left, right)
+    i_sorted    = sortperm(x[:,best_feature])
+    left_locs   = i_sorted[1:split_loc]
+    right_locs  = i_sorted[split_loc+1:length(i_sorted)]
+    left        = train_branch(x[left_locs, :], y[left_locs],  num_classes, features_per_split)
+    right       = train_branch(x[right_locs,:], y[right_locs], num_classes, features_per_split)
+    split_value = x[i_sorted[split_loc], best_feature]
+    DecisionBranch(best_feature, split_value, left, right)
 end
 
 function split_location(y::Vector{Int}, num_classes::Int)
     counts_left  = zeros(num_classes)
-    counts_left[y[1]]=1
     counts_right = zeros(num_classes)
-    for i=2:length(y)
+    for i=1:length(y)
         counts_right[y[i]]+=1
     end
     loc   = 1
-    score = gini(counts_left)+gini(counts_right)
-    for i=2:length(y)-1
+    score = Inf
+    for i=1:length(y)-1
         counts_left[y[i]]+=1
         counts_right[y[i]]-=1
-        g = gini(counts_left)+gini(counts_right)
+        g = i/length(y)*gini(counts_left)+(length(y)-i)/length(y)*gini(counts_right)
         if g<score
             score = g
             loc   = i

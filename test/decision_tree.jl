@@ -12,7 +12,16 @@ require("linear_data.jl")
 
 @test split_location([1,1,1,1,2,2,2,2,2],2)==(0.0, 4)
 @test split_location([1,2],2)==(0.0, 1)
-@test split_location([2,1,1,1,2,2,2,2,2],2)==(3/8, 4)
+@test split_location([2,1,1,1,2,2,2,2,2],2)==(3/18, 4)
+
+x=randn(2500, 2)
+y=int(map(i->x[i,1]>0 || x[i,2]>0, 1:size(x,1)))
+x_train, y_train, x_test, y_test = split_train_test(x, y)
+tree = train(x_train, y_train, DecisionTreeOptions())
+yhat = predict(tree, x_test)
+acc = accuracy(y_test, yhat)
+println("Quadrant Accuracy: ", acc)
+@test acc>0.9
 
 num_features=5
 x, y = linear_data(2500, num_features)
@@ -22,4 +31,4 @@ tree = train(x_train, y_train, DecisionTreeOptions())
 yhat = predict(tree, x_test)
 acc = accuracy(y_test, yhat)
 println("Linear Accuracy: ", acc)
-@test acc>0.55
+@test acc>0.80
