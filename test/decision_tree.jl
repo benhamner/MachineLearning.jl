@@ -62,3 +62,10 @@ yhat = predict(tree, x_test)
 acc = accuracy(y_test, yhat)
 println("Linear Accuracy: ", acc)
 @test acc>0.80
+
+tree = train(x_train, y_train, decision_tree_options(minimum_split_size=50))
+println(tree)
+yhat = predict(tree, x_test)
+acc = accuracy(y_test, yhat)
+println("Linear Accuracy: ", acc)
+@test acc>0.80
