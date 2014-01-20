@@ -1,4 +1,5 @@
-using MachineLearning
+using .MachineLearning
+using StatsBase
 
 type RandomForestOptions
     num_trees::Int
@@ -37,13 +38,13 @@ function predict_probs(forest::RandomForest, samples::Array{Float64, 2})
     probs
 end
 
-function predict(forest::RandomForest, sample::Vector{Float64})
+function StatsBase.predict(forest::RandomForest, sample::Vector{Float64})
     probs = predict_probs(forest, sample)
     forest.classes[minimum(find(x->x==maximum(probs), probs))]
 end
 
-function predict(forest::RandomForest, samples::Array{Float64, 2})
-    [predict(forest, vec(samples[i,:])) for i=1:size(samples,1)]
+function StatsBase.predict(forest::RandomForest, samples::Array{Float64, 2})
+    [StatsBase.predict(forest, vec(samples[i,:])) for i=1:size(samples,1)]
 end
 
 function Base.show(io::IO, forest::RandomForest)

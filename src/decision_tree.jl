@@ -1,3 +1,5 @@
+using StatsBase
+
 abstract DecisionNode
 
 type DecisionTreeOptions
@@ -114,13 +116,13 @@ function predict_probs(tree::DecisionTree, samples::Array{Float64, 2})
     probs
 end
 
-function predict(tree::DecisionTree, sample::Vector{Float64})
+function StatsBase.predict(tree::DecisionTree, sample::Vector{Float64})
     probs = predict_probs(tree, sample)
     tree.classes[minimum(find(x->x==maximum(probs), probs))]
 end
 
-function predict(tree::DecisionTree, samples::Array{Float64, 2})
-    [predict(tree, vec(samples[i,:])) for i=1:size(samples,1)]
+function StatsBase.predict(tree::DecisionTree, samples::Array{Float64, 2})
+    [StatsBase.predict(tree, vec(samples[i,:])) for i=1:size(samples,1)]
 end
 
 function Base.length(tree::DecisionTree)

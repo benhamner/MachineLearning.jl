@@ -1,5 +1,6 @@
 using .MachineLearning
 using Optim
+using StatsBase
 
 type StopAfterIteration
     max_iteration::Int
@@ -139,13 +140,13 @@ function predict_probs(net::NeuralNet, samples::Array{Float64, 2})
     probs
 end
 
-function predict(net::NeuralNet, sample::Vector{Float64})
+function StatsBase.predict(net::NeuralNet, sample::Vector{Float64})
     probs = predict_probs(net, sample)
     net.classes[minimum(find(x->x==maximum(probs), probs))]
 end
 
-function predict(net::NeuralNet, samples::Array{Float64, 2})
-    [predict(net, vec(samples[i,:])) for i=1:size(samples,1)]
+function StatsBase.predict(net::NeuralNet, samples::Array{Float64, 2})
+    [StatsBase.predict(net, vec(samples[i,:])) for i=1:size(samples,1)]
 end
 
 function update_weights!(net::NeuralNet, sample::Vector{Float64}, actual::Vector{Float64}, update_size::Float64)
