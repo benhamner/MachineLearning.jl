@@ -304,3 +304,10 @@ function cost_gradient!(net::NeuralNet, x::Array{Float64,2}, actuals::Array{Floa
         gradients[i] += regularization[i]/size(x,1)
     end
 end
+
+function Base.show(io::IO, net::NeuralNet)
+    info = join(["Neural Network",
+                 @sprintf("    %d Hidden Layers",length(net.options.hidden_layers)),
+                 @sprintf("    %d Classes",length(net.classes))], "\n")
+    print(io, info)
+end

@@ -68,6 +68,7 @@ println("Nonlinear Accuracy, 1 Hidden Layer : ", acc)
 
 opts = neural_net_options(hidden_layers=[10;10], learning_rate=10.0)
 net = train(x_train, y_train, opts)
+println(net)
 yhat = predict(net, x_test)
 acc = accuracy(y_test, yhat)
 println("Nonlinear Accuracy, 2 Hidden Layers: ", acc)

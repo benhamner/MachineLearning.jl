@@ -45,3 +45,11 @@ end
 function predict(forest::RandomForest, samples::Array{Float64, 2})
     [predict(forest, vec(samples[i,:])) for i=1:size(samples,1)]
 end
+
+function Base.show(io::IO, forest::RandomForest)
+    info = join(["Random Forest",
+                 @sprintf("    %d Trees",length(forest.trees)),
+                 @sprintf("    %f Nodes per tree", mean([length(tree) for tree=forest.trees])),
+                 @sprintf("    %d Classes",length(forest.classes))], "\n")
+    print(io, info)
+end
