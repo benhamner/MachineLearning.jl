@@ -20,6 +20,7 @@ export
     cost,
     cost_gradient!,
     decision_tree_options,
+    depth,
     gini,
     initialize_net,
     log_loss,

@@ -35,6 +35,13 @@ tree = DecisionTree(branch4, [1,2], 1, DecisionTreeOptions())
 @test length(branch4)==9
 @test length(tree)==9
 
+@test depth(leaf1)==1
+@test depth(branch1)==2
+@test depth(branch2)==3
+@test depth(branch3)==2
+@test depth(branch4)==4
+@test depth(tree)==4
+
 x=randn(2500, 2)
 y=int(map(i->x[i,1]>0 || x[i,2]>0, 1:size(x,1)))
 x_train, y_train, x_test, y_test = split_train_test(x, y)

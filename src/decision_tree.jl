@@ -134,7 +134,19 @@ end
 
 function Base.show(io::IO, tree::DecisionTree)
     info = join(["Decision Tree",
-                 @sprintf("    %d Nodes",length(tree)),
+                 @sprintf("    %d Nodes, %d Nodes Deep",length(tree), depth(tree)),
                  @sprintf("    %d Classes",length(tree.classes))], "\n")
     print(io, info)
+end
+
+function depth(tree::DecisionTree)
+    depth(tree.root)
+end
+
+function depth(branch::DecisionBranch)
+    return 1+max(depth(branch.left),depth(branch.right))
+end
+
+function depth(leaf::DecisionLeaf)
+    return 1
 end
