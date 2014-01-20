@@ -21,6 +21,7 @@ export
     cost_gradient!,
     decision_tree_options,
     depth,
+    fit,
     gini,
     initialize_net,
     log_loss,
@@ -34,7 +35,6 @@ export
     random_forest_options,
     split_location,
     split_train_test,
-    train,
     weights_to_net!
 
 include("decision_tree.jl")
