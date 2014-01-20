@@ -53,7 +53,7 @@ function one_hot(y::Vector, classes_map::Dict)
     values
 end
 
-function train(x::Array{Float64, 2}, y::Vector, opts::NeuralNetOptions)
+function fit(x::Array{Float64, 2}, y::Vector, opts::NeuralNetOptions)
     num_features = size(x, 2)
     classes = sort(unique(y))
     classes_map = Dict(classes, [1:length(classes)])

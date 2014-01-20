@@ -14,12 +14,12 @@ type RandomForest
     options::RandomForestOptions
 end
 
-function train(x::Array{Float64,2}, y::Vector, opts::RandomForestOptions)
+function fit(x::Array{Float64,2}, y::Vector, opts::RandomForestOptions)
     tree_opts = decision_tree_options(features_per_split_fraction=0.5)
     trees = Array(DecisionTree, 0)
     for i=1:opts.num_trees
         shuffle_locs = rand(1:size(x,1), size(x,1))
-        tree = train(x[shuffle_locs,:], y[shuffle_locs], tree_opts)
+        tree = fit(x[shuffle_locs,:], y[shuffle_locs], tree_opts)
         push!(trees, tree)
     end
     RandomForest(trees, trees[1].classes, opts)

@@ -30,7 +30,7 @@ type DecisionTree
     options::DecisionTreeOptions
 end
 
-function train(x::Array{Float64,2}, y::Vector, opts::DecisionTreeOptions)
+function fit(x::Array{Float64,2}, y::Vector, opts::DecisionTreeOptions)
     classes = sort(unique(y))
     classes_map = Dict(classes, 1:length(classes))
     y_mapped = [classes_map[v] for v=y]

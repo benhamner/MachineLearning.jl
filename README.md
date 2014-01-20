@@ -11,7 +11,7 @@ API Introdution
     model = [2.0,1.0,-1.0]
     x_train = randn(1_000, 3)
     y_train = int(map(x->x>0, x_train*model))
-    net = train(x_train, y_train, neural_net_options())
+    net = fit(x_train, y_train, neural_net_options())
     sample = [1.0, 0.0, 0.0]
     println("Ground truth: ", int(dot(sample,model)>0))
     println("Prediction:   ", predict(net, sample))
