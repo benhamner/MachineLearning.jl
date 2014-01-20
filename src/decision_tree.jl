@@ -2,13 +2,11 @@ abstract DecisionNode
 
 type DecisionTreeOptions
     features_per_split_fraction::Float64
-    show_summary::Bool
 end
-DecisionTreeOptions() = DecisionTreeOptions(1.0, false)
+DecisionTreeOptions() = DecisionTreeOptions(1.0)
 
-function decision_tree_options(;features_per_split_fraction::Float64=1.0,
-                               show_summary::Bool=false)
-    DecisionTreeOptions(features_per_split_fraction, show_summary)
+function decision_tree_options(;features_per_split_fraction::Float64=1.0)
+    DecisionTreeOptions(features_per_split_fraction)
 end
 
 type DecisionLeaf <: DecisionNode
@@ -36,9 +34,6 @@ function train(x::Array{Float64,2}, y::Vector, opts::DecisionTreeOptions)
     features_per_split = int(opts.features_per_split_fraction*size(x,2))
     features_per_split = max(1, size(x,2))
     root = train_branch(x, y_mapped, length(classes), features_per_split)
-    if opts.show_summary
-        println("Tree Length: ", length(root))
-    end
     DecisionTree(root, classes, features_per_split, opts)
 end
 
@@ -135,4 +130,11 @@ end
 
 function Base.length(leaf::DecisionLeaf)
     return 1
+end
+
+function Base.show(io::IO, tree::DecisionTree)
+    info = join(["Decision Tree",
+                 @sprintf("    %d Nodes",length(tree)),
+                 @sprintf("    %d Classes",length(tree.classes))], "\n")
+    print(io, info)
 end
