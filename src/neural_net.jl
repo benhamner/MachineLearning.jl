@@ -1,5 +1,5 @@
 using .MachineLearning
-using Optim
+# using Optim
 using StatsBase
 
 type StopAfterIteration
