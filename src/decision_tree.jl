@@ -32,7 +32,7 @@ type DecisionTree
     options::DecisionTreeOptions
 end
 
-function fit(x::Array{Float64,2}, y::Vector, opts::DecisionTreeOptions)
+function fit(x::Matrix{Float64}, y::Vector, opts::DecisionTreeOptions)
     classes = sort(unique(y))
     classes_map = Dict(classes, 1:length(classes))
     y_mapped = [classes_map[v] for v=y]
@@ -42,7 +42,7 @@ function fit(x::Array{Float64,2}, y::Vector, opts::DecisionTreeOptions)
     DecisionTree(root, classes, features_per_split, opts)
 end
 
-function train_branch(x::Array{Float64,2}, y::Vector{Int}, opts::DecisionTreeOptions, num_classes::Int, features_per_split::Int)
+function train_branch(x::Matrix{Float64}, y::Vector{Int}, opts::DecisionTreeOptions, num_classes::Int, features_per_split::Int)
     if length(y)<opts.minimum_split_size || length(unique(y))==1
         probs = zeros(num_classes)
         for i=1:length(y)
@@ -108,7 +108,7 @@ function predict_probs(tree::DecisionTree, sample::Vector{Float64})
     node.probs
 end
 
-function predict_probs(tree::DecisionTree, samples::Array{Float64, 2})
+function predict_probs(tree::DecisionTree, samples::Matrix{Float64})
     probs = Array(Float64, size(samples, 1), length(tree.classes))
     for i=1:size(samples, 1)
         probs[i,:] = predict_probs(tree, vec(samples[i,:]))
@@ -121,7 +121,7 @@ function StatsBase.predict(tree::DecisionTree, sample::Vector{Float64})
     tree.classes[minimum(find(x->x==maximum(probs), probs))]
 end
 
-function StatsBase.predict(tree::DecisionTree, samples::Array{Float64, 2})
+function StatsBase.predict(tree::DecisionTree, samples::Matrix{Float64})
     [StatsBase.predict(tree, vec(samples[i,:])) for i=1:size(samples,1)]
 end
 

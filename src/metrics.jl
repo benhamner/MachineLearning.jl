@@ -4,7 +4,7 @@ function log_loss(a::Vector{Float64}, p::Vector{Float64})
     -sum(a.*log(probs)+(1.0-a).*log(1.0-probs))
 end
 
-function mean_log_loss(a::Array{Float64,2}, p::Array{Float64,2})
+function mean_log_loss(a::Matrix{Float64}, p::Matrix{Float64})
     @assert size(a)==size(p)
     probs = copy(p)
     probs[map(x->x<1e-10, probs)] = 1e-10

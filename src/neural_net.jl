@@ -34,7 +34,7 @@ function neural_net_options(;bias_unit::Bool=true,
 end
 
 type NeuralNetLayer
-    weights::Array{Float64, 2}
+    weights::Matrix{Float64}
 end
 
 type NeuralNet
@@ -54,7 +54,7 @@ function one_hot(y::Vector, classes_map::Dict)
     values
 end
 
-function fit(x::Array{Float64, 2}, y::Vector, opts::NeuralNetOptions)
+function fit(x::Matrix{Float64}, y::Vector, opts::NeuralNetOptions)
     num_features = size(x, 2)
     classes = sort(unique(y))
     classes_map = Dict(classes, [1:length(classes)])
@@ -82,7 +82,7 @@ function fit(x::Array{Float64, 2}, y::Vector, opts::NeuralNetOptions)
     net
 end
 
-function train_preset_stop!(net::NeuralNet, x::Array{Float64,2}, actuals::Array{Float64,2})
+function train_preset_stop!(net::NeuralNet, x::Matrix{Float64}, actuals::Matrix{Float64})
     num_samples = size(x,1)
     update_size = net.options.learning_rate / num_samples
     for iter=1:net.options.stop_criteria.max_iteration
@@ -93,10 +93,10 @@ function train_preset_stop!(net::NeuralNet, x::Array{Float64,2}, actuals::Array{
 end
 
 function train_valid_stop!(net::NeuralNet,
-                           x_train::Array{Float64,2},
-                           a_train::Array{Float64},
-                           x_val::Array{Float64,2},
-                           a_val::Array{Float64,2})
+                           x_train::Matrix{Float64},
+                           a_train::Matrix{Float64},
+                           x_val::Matrix{Float64},
+                           a_val::Matrix{Float64})
     num_samples = size(x_train,1)
     update_size = net.options.learning_rate / num_samples
     validation_scores = Array(Float64, 0)
@@ -132,7 +132,7 @@ function predict_probs(net::NeuralNet, sample::Vector{Float64})
     state
 end
 
-function predict_probs(net::NeuralNet, samples::Array{Float64, 2})
+function predict_probs(net::NeuralNet, samples::Matrix{Float64})
     probs = Array(Float64, size(samples, 1), length(net.classes))
     for i=1:size(samples, 1)
         probs[i,:] = predict_probs(net, vec(samples[i,:]))
@@ -145,7 +145,7 @@ function StatsBase.predict(net::NeuralNet, sample::Vector{Float64})
     net.classes[minimum(find(x->x==maximum(probs), probs))]
 end
 
-function StatsBase.predict(net::NeuralNet, samples::Array{Float64, 2})
+function StatsBase.predict(net::NeuralNet, samples::Matrix{Float64})
     [StatsBase.predict(net, vec(samples[i,:])) for i=1:size(samples,1)]
 end
 
@@ -218,7 +218,7 @@ function net_to_weights(net::NeuralNet)
     weights
 end
 
-function cost(net::NeuralNet, x::Array{Float64,2}, actuals::Array{Float64,2})
+function cost(net::NeuralNet, x::Matrix{Float64}, actuals::Matrix{Float64})
     @assert size(x,1)==size(actuals,1)
     probs = predict_probs(net, x)
     err = mean_log_loss(actuals, probs)
@@ -233,7 +233,7 @@ function cost(net::NeuralNet, x::Array{Float64,2}, actuals::Array{Float64,2})
     err + regularization
 end
 
-function cost(net::NeuralNet, x::Array{Float64,2}, actuals::Array{Float64,2}, weights::Vector{Float64})
+function cost(net::NeuralNet, x::Matrix{Float64}, actuals::Matrix{Float64}, weights::Vector{Float64})
     weights_to_net!(weights, net)
     cost(net, x, actuals)
 end
@@ -255,7 +255,7 @@ function cost_gradient(net::NeuralNet, sample::Vector{Float64}, actual::Vector{F
     end
 
     deltas = activations[length(activations)] - actual
-    layer_gradients = Array(Array{Float64,2},length(net.layers))
+    layer_gradients = Array(Matrix{Float64},length(net.layers))
     for i=length(net.layers):-1:1
         gradient = deltas*(net.options.bias_unit?hcat(1,activations[i]'):activations[i]')
         if i>1
@@ -290,7 +290,7 @@ function regularization_gradient(net::NeuralNet)
     gradients
 end
 
-function cost_gradient!(net::NeuralNet, x::Array{Float64,2}, actuals::Array{Float64,2}, weights::Vector{Float64}, gradients::Vector{Float64})
+function cost_gradient!(net::NeuralNet, x::Matrix{Float64}, actuals::Matrix{Float64}, weights::Vector{Float64}, gradients::Vector{Float64})
     @assert size(x,1)==size(actuals,1)
     weights_to_net!(weights, net)
     gradients[:]=0.0

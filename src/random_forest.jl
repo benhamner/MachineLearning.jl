@@ -15,7 +15,7 @@ type RandomForest
     options::RandomForestOptions
 end
 
-function fit(x::Array{Float64,2}, y::Vector, opts::RandomForestOptions)
+function fit(x::Matrix{Float64}, y::Vector, opts::RandomForestOptions)
     tree_opts = decision_tree_options(features_per_split_fraction=0.5)
     trees = Array(DecisionTree, 0)
     for i=1:opts.num_trees
@@ -30,7 +30,7 @@ function predict_probs(forest::RandomForest, sample::Vector{Float64})
     mean([predict_probs(tree, sample) for tree=forest.trees])
 end
 
-function predict_probs(forest::RandomForest, samples::Array{Float64, 2})
+function predict_probs(forest::RandomForest, samples::Matrix{Float64})
     probs = Array(Float64, size(samples, 1), length(forest.classes))
     for i=1:size(samples, 1)
         probs[i,:] = predict_probs(forest, vec(samples[i,:]))
@@ -43,7 +43,7 @@ function StatsBase.predict(forest::RandomForest, sample::Vector{Float64})
     forest.classes[minimum(find(x->x==maximum(probs), probs))]
 end
 
-function StatsBase.predict(forest::RandomForest, samples::Array{Float64, 2})
+function StatsBase.predict(forest::RandomForest, samples::Matrix{Float64})
     [StatsBase.predict(forest, vec(samples[i,:])) for i=1:size(samples,1)]
 end
 
