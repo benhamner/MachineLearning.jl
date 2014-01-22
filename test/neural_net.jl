@@ -31,15 +31,15 @@ for i=1:length(weights)
 end
 
 println("Classification Tests")
-# opts = neural_net_options(learning_rate=10.0, train_method=:cg)
-# net = fit(x_train, y_train, opts)
-# for layer=net.layers
-#     println("Max Weight: ", maximum(layer.weights))
-# end
-# yhat = predict(net, x_test)
-# acc = accuracy(y_test, yhat)
-# println("Linear Accuracy, Soph: ", acc)
-# @test acc>0.8
+opts = neural_net_options(learning_rate=10.0, train_method=:cg)
+net = fit(x_train, y_train, opts)
+for layer=net.layers
+    println("Max Weight: ", maximum(layer.weights))
+end
+yhat = predict(net, x_test)
+acc = accuracy(y_test, yhat)
+println("Linear Accuracy, Soph: ", acc)
+@test acc>0.8
 
 opts = neural_net_options(learning_rate=10.0, stop_criteria=StopAfterValidationErrorStopsImproving())
 net = fit(x_train, y_train, opts)

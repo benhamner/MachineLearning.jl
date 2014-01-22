@@ -1,5 +1,5 @@
 using .MachineLearning
-# using Optim
+using Optim
 using StatsBase
 
 type StopAfterIteration
@@ -267,42 +267,37 @@ function cost_gradient(net::NeuralNet, sample::Vector{Float64}, actual::Vector{F
         end
         layer_gradients[i]=gradient
     end
-    gradients = Array(Float64, 0)
-    for gradient=layer_gradients
-        for g=gradient
-            push!(gradients, g)
-        end
-    end
-    gradients
+    layer_gradients
 end
 
 function regularization_gradient(net::NeuralNet)
-    gradients = Array(Float64, 0)
-    for layer=net.layers
-        regularization = copy(layer.weights)
+    layer_gradients = [copy(layer.weights) for layer=net.layers]
+    for i=1:length(layer_gradients)
         if net.options.bias_unit
-            regularization[:,1]=0.0
-        end
-        for g=regularization
-            push!(gradients, g)
+            layer_gradients[i][:,1]=0.0
         end
     end
-    gradients
+    layer_gradients
 end
 
 function cost_gradient!(net::NeuralNet, x::Matrix{Float64}, actuals::Matrix{Float64}, weights::Vector{Float64}, gradients::Vector{Float64})
     @assert size(x,1)==size(actuals,1)
     weights_to_net!(weights, net)
     gradients[:]=0.0
+    layer_gradients = [0.0*layer.weights for layer=net.layers]
     for i=1:size(x,1)
         delta = cost_gradient(net, vec(x[i,:]), vec(actuals[i,:]))/size(x,1)
-        for j=1:length(delta)
-            gradients[j] += delta[j]
-        end
+        layer_gradients += delta
     end
     regularization = regularization_gradient(net)
-    for i=1:length(regularization)
-        gradients[i] += regularization[i]/size(x,1)
+    layer_gradients += regularization/size(x,1)
+
+    i=0
+    for gradient=layer_gradients
+        for g=gradient
+            i += 1
+            gradients[i] = g
+        end
     end
 end
 
