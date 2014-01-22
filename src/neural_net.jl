@@ -84,10 +84,9 @@ end
 
 function train_preset_stop!(net::NeuralNet, x::Matrix{Float64}, actuals::Matrix{Float64})
     num_samples = size(x,1)
-    update_size = net.options.learning_rate / num_samples
     for iter=1:net.options.stop_criteria.max_iteration
         for j=1:num_samples
-            update_weights!(net, vec(x[j,:]), vec(actuals[j,:]), update_size)
+            update_weights!(net, vec(x[j,:]), vec(actuals[j,:]), net.options.learning_rate, num_samples)
         end
     end
 end
@@ -98,14 +97,13 @@ function train_valid_stop!(net::NeuralNet,
                            x_val::Matrix{Float64},
                            a_val::Matrix{Float64})
     num_samples = size(x_train,1)
-    update_size = net.options.learning_rate / num_samples
     validation_scores = Array(Float64, 0)
     
     iteration = 0
     while iteration<net.options.stop_criteria.max_iteration
         iteration += 1
         for j=1:num_samples
-            update_weights!(net, vec(x_train[j,:]), vec(a_train[j,:]), update_size)
+            update_weights!(net, vec(x_train[j,:]), vec(a_train[j,:]), net.options.learning_rate, num_samples)
         end
         preds = predict_probs(net, x_val)
         err = mean_log_loss(a_val, preds)
@@ -149,33 +147,12 @@ function StatsBase.predict(net::NeuralNet, samples::Matrix{Float64})
     [StatsBase.predict(net, vec(samples[i,:])) for i=1:size(samples,1)]
 end
 
-function update_weights!(net::NeuralNet, sample::Vector{Float64}, actual::Vector{Float64}, update_size::Float64)
-    outputs = Array(Vector{Float64}, 0) # before passing through sigmoid
-    activations = Array(Vector{Float64}, 0)
-    push!(outputs, sample)
-    push!(activations, sample)
-    state = sample
-    for layer = net.layers
-        if net.options.bias_unit
-            state = [1.0;state]
-        end
+function update_weights!(net::NeuralNet, sample::Vector{Float64}, actual::Vector{Float64}, learning_rate::Float64, num_samples::Int)
+    layer_gradients = cost_gradient(net, sample, actual)/num_samples
+    regularization_gradients = regularization_gradient(net)/num_samples^2
 
-        push!(outputs, layer.weights*state)
-        state = sigmoid(outputs[length(outputs)])
-        push!(activations, state)
-    end
-
-    deltas = activations[length(activations)] - actual
-    for i=length(net.layers):-1:1
-        gradient = update_size*deltas*(net.options.bias_unit?hcat(1,activations[i]'):activations[i]')
-        if i>1
-            deltas = net.layers[i].weights'*deltas
-            if net.options.bias_unit
-            	deltas = deltas[2:length(deltas)]
-            end
-            deltas = deltas.*sigmoid_gradient(outputs[i])
-        end
-        net.layers[i].weights -= gradient
+    for i=1:length(net.layers)
+        net.layers[i].weights -= learning_rate*(layer_gradients[i] + regularization_gradients[i])
     end
 end
 
