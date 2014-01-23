@@ -7,7 +7,7 @@ num_features=5
 x, y = linear_data(2500, num_features)
 x_train, y_train, x_test, y_test = split_train_test(x, y)
 
-forest = fit(x_train, y_train, random_forest_options())
+forest = fit(x_train, y_train, random_forest_options(num_trees=10, display=true))
 println(forest)
 yhat = predict(forest, x_test)
 acc = accuracy(y_test, yhat)

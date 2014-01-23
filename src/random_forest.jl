@@ -3,10 +3,12 @@ using StatsBase
 
 type RandomForestOptions
     num_trees::Int
+    display::Bool
 end
 
-function random_forest_options(;num_trees::Int=100)
-    RandomForestOptions(num_trees)
+function random_forest_options(;num_trees::Int=100,
+                               display::Bool=false)
+    RandomForestOptions(num_trees, display)
 end
 
 type RandomForest
@@ -21,6 +23,9 @@ function fit(x::Matrix{Float64}, y::Vector, opts::RandomForestOptions)
     for i=1:opts.num_trees
         shuffle_locs = rand(1:size(x,1), size(x,1))
         tree = fit(x[shuffle_locs,:], y[shuffle_locs], tree_opts)
+        if opts.display
+            println("Tree ", i, "\tNodes: ", length(tree), "\tDepth: ", depth(tree))
+        end
         push!(trees, tree)
     end
     RandomForest(trees, trees[1].classes, opts)
