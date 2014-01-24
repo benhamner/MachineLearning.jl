@@ -42,6 +42,7 @@ export
     split_train_test,
     weights_to_net!
 
+include("types.jl")
 include("decision_tree.jl")
 include("metrics.jl")
 include("neural_net.jl")
