@@ -19,6 +19,7 @@ export
     SupervisedModel,
     SupervisedModelOptions,
     Transformer,
+    TransformerOptions,
 
     # methods
     accuracy,
