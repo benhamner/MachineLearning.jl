@@ -17,7 +17,7 @@ StopAfterValidationErrorStopsImproving() = StopAfterValidationErrorStopsImprovin
 
 NeuralNetStopCriteria = Union(StopAfterIteration, StopAfterValidationErrorStopsImproving)
 
-type NeuralNetOptions
+type NeuralNetOptions <: SupervisedModelOptions
     bias_unit::Bool # include a bias unit that always outputs a +1
     hidden_layers::Vector{Int} # sizes of hidden layers
     train_method::Symbol
@@ -37,7 +37,7 @@ type NeuralNetLayer
     weights::Matrix{Float64}
 end
 
-type NeuralNet
+type NeuralNet <: ClassificationModel
     options::NeuralNetOptions
     layers::Vector{NeuralNetLayer}
     classes::Vector

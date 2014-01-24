@@ -1,8 +1,9 @@
+using .MachineLearning
 using StatsBase
 
 abstract DecisionNode
 
-type DecisionTreeOptions
+type DecisionTreeOptions <: SupervisedModelOptions
     features_per_split_fraction::Float64
     minimum_split_size::Int
 end
@@ -25,7 +26,7 @@ type DecisionBranch <: DecisionNode
     right::DecisionNode
 end
 
-type DecisionTree
+type DecisionTree <: ClassificationModel
     root::DecisionNode
     classes::Vector
     features_per_split::Int

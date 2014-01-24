@@ -1,7 +1,7 @@
 using .MachineLearning
 using StatsBase
 
-type RandomForestOptions
+type RandomForestOptions <: SupervisedModelOptions
     num_trees::Int
     display::Bool
 end
@@ -11,7 +11,7 @@ function random_forest_options(;num_trees::Int=100,
     RandomForestOptions(num_trees, display)
 end
 
-type RandomForest
+type RandomForest <: ClassificationModel
     trees::Vector{DecisionTree}
     classes::Vector
     options::RandomForestOptions

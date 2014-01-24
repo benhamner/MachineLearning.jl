@@ -2,6 +2,7 @@ module MachineLearning
 
 export
     # types
+    ClassificationModel,
     DecisionBranch,
     DecisionNode,
     DecisionLeaf,
@@ -11,9 +12,13 @@ export
     NeuralNetLayer,
     NeuralNetOptions,
     StopAfterIteration,
-    StopAfterValidationErrorStopsImproving,
     RandomForest,
     RandomForestOptions,
+    RegressionModel,
+    StopAfterValidationErrorStopsImproving,
+    SupervisedModel,
+    SupervisedModelOptions,
+    Transformer,
 
     # methods
     accuracy,
