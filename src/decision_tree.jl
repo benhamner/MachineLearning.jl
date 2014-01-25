@@ -33,6 +33,10 @@ type DecisionTree <: ClassificationModel
     options::DecisionTreeOptions
 end
 
+function classes(tree::DecisionTree)
+    tree.classes
+end
+
 function fit(x::Matrix{Float64}, y::Vector, opts::DecisionTreeOptions)
     classes = sort(unique(y))
     classes_map = Dict(classes, 1:length(classes))
@@ -109,21 +113,9 @@ function predict_probs(tree::DecisionTree, sample::Vector{Float64})
     node.probs
 end
 
-function predict_probs(tree::DecisionTree, samples::Matrix{Float64})
-    probs = Array(Float64, size(samples, 1), length(tree.classes))
-    for i=1:size(samples, 1)
-        probs[i,:] = predict_probs(tree, vec(samples[i,:]))
-    end
-    probs
-end
-
 function StatsBase.predict(tree::DecisionTree, sample::Vector{Float64})
     probs = predict_probs(tree, sample)
     tree.classes[minimum(find(x->x==maximum(probs), probs))]
-end
-
-function StatsBase.predict(tree::DecisionTree, samples::Matrix{Float64})
-    [StatsBase.predict(tree, vec(samples[i,:])) for i=1:size(samples,1)]
 end
 
 function Base.length(tree::DecisionTree)

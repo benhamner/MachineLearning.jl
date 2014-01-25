@@ -17,6 +17,10 @@ type RandomForest <: ClassificationModel
     options::RandomForestOptions
 end
 
+function classes(forest::RandomForest)
+    forest.classes
+end
+
 function fit(x::Matrix{Float64}, y::Vector, opts::RandomForestOptions)
     tree_opts = decision_tree_options(features_per_split_fraction=0.5)
     trees = Array(DecisionTree, 0)
@@ -35,21 +39,9 @@ function predict_probs(forest::RandomForest, sample::Vector{Float64})
     mean([predict_probs(tree, sample) for tree=forest.trees])
 end
 
-function predict_probs(forest::RandomForest, samples::Matrix{Float64})
-    probs = Array(Float64, size(samples, 1), length(forest.classes))
-    for i=1:size(samples, 1)
-        probs[i,:] = predict_probs(forest, vec(samples[i,:]))
-    end
-    probs
-end
-
 function StatsBase.predict(forest::RandomForest, sample::Vector{Float64})
     probs = predict_probs(forest, sample)
     forest.classes[minimum(find(x->x==maximum(probs), probs))]
-end
-
-function StatsBase.predict(forest::RandomForest, samples::Matrix{Float64})
-    [StatsBase.predict(forest, vec(samples[i,:])) for i=1:size(samples,1)]
 end
 
 function Base.show(io::IO, forest::RandomForest)

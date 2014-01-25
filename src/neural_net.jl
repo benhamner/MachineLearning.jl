@@ -43,6 +43,10 @@ type NeuralNet <: ClassificationModel
     classes::Vector
 end
 
+function classes(net::NeuralNet)
+    net.classes
+end
+
 sigmoid(z::Vector{Float64}) = 1/(1+exp(-z))
 sigmoid_gradient(z::Vector{Float64}) = sigmoid(z) .* (1-sigmoid(z))
 
@@ -130,21 +134,9 @@ function predict_probs(net::NeuralNet, sample::Vector{Float64})
     state
 end
 
-function predict_probs(net::NeuralNet, samples::Matrix{Float64})
-    probs = Array(Float64, size(samples, 1), length(net.classes))
-    for i=1:size(samples, 1)
-        probs[i,:] = predict_probs(net, vec(samples[i,:]))
-    end
-    probs
-end
-
 function StatsBase.predict(net::NeuralNet, sample::Vector{Float64})
     probs = predict_probs(net, sample)
     net.classes[minimum(find(x->x==maximum(probs), probs))]
-end
-
-function StatsBase.predict(net::NeuralNet, samples::Matrix{Float64})
-    [StatsBase.predict(net, vec(samples[i,:])) for i=1:size(samples,1)]
 end
 
 function update_weights!(net::NeuralNet, sample::Vector{Float64}, actual::Vector{Float64}, learning_rate::Float64, num_samples::Int)
