@@ -3,7 +3,7 @@ tests = [
     "decision_tree",
     "metrics",
     "neural_net",
-    "sample",
+    "split",
     "random_forest"]
 
 println("Running tests:")
