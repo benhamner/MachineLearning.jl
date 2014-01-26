@@ -1,7 +1,3 @@
-using .MachineLearning
-using Optim
-using StatsBase
-
 type StopAfterIteration
     max_iteration::Int
 end

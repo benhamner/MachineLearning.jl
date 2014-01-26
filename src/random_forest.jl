@@ -1,6 +1,3 @@
-using .MachineLearning
-using StatsBase
-
 type RandomForestOptions <: SupervisedModelOptions
     num_trees::Int
     display::Bool

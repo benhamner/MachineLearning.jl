@@ -1,6 +1,3 @@
-using .MachineLearning
-using StatsBase
-
 abstract DecisionNode
 
 type DecisionTreeOptions <: SupervisedModelOptions

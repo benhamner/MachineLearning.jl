@@ -1,6 +1,3 @@
-using DataFrames
-using StatsBase
-
 abstract SupervisedModel
 abstract SupervisedModelOptions
 
