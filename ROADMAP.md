@@ -7,10 +7,10 @@ Short-term TODO's
 Longer term Roadmap
 ===================
 
-1. Feature transformers
-2. Pipeline support
-3. Principled supervised regression and classification types / support
-4. Performance benchmarking and optimization
-5. Robust sampling methods
-6. Build out metrics, potentially break out as separate repo
-7. Dataframe is key underlying datatype (as opposed to Matrix{Float64})
+1. Dataframe is key underlying datatype (as opposed to Matrix{Float64})
+2. Feature transformers
+3. Pipeline support
+4. Principled supervised regression and classification types / support
+5. Performance benchmarking and optimization
+6. Robust sampling methods
+7. Build out metrics, potentially break out as separate repo
