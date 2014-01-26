@@ -1,5 +1,6 @@
 using Base.Test
 using MachineLearning
+using RDatasets
 
 x = randn(1000,10)
 y = randn(1000)
@@ -30,3 +31,18 @@ x_train, y_train, x_test, y_test = split_train_test(x, y, 0.50)
 @test size(x_train, 1)==1
 x_train, y_train, x_test, y_test = split_train_test(x, y, 0.25)
 @test size(x_train, 1)==1
+
+iris = data("datasets", "iris")
+train, test = split_train_test(iris, 0.50)
+@test nrow(train)==75
+@test nrow(test) ==75
+train, test = split_train_test(iris, 2.0/3)
+@test nrow(train)==100
+@test nrow(test) ==50
+
+u_iris = unique(iris)
+train, test = split_train_test(u_iris, 2.0/3)
+data_map = Dict([u_iris[i,:] for i=1:nrow(u_iris)], 1:nrow(u_iris))
+rows = vcat([data_map[train[i,:]]::Int for i=1:nrow(train)], [data_map[test[i,:]]::Int for i=1:nrow(test)])
+@test rows != [1:nrow(u_iris)]
+@test sort(rows)==[1:nrow(u_iris)]

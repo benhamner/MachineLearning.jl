@@ -54,6 +54,6 @@ module MachineLearning
     include("metrics.jl")
     include("neural_net.jl")
     include("random_forest.jl")
-    include("sample.jl")
+    include("split.jl")
 
 end
