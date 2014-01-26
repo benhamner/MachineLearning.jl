@@ -12,6 +12,5 @@ Longer term Roadmap
 3. Principled supervised regression and classification types / support
 4. Performance benchmarking and optimization
 5. Robust sampling methods
-6. Robust splitting methods
-7. Build out metrics, potentially break out as separate repo
-8. DataFrame integration
+6. Build out metrics, potentially break out as separate repo
+7. Dataframe is key underlying datatype (as opposed to Matrix{Float64})
