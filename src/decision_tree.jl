@@ -40,7 +40,7 @@ end
 function fit(x::Matrix{Float64}, y::Vector, opts::DecisionTreeOptions)
     classes = sort(unique(y))
     classes_map = Dict(classes, 1:length(classes))
-    y_mapped = [classes_map[v] for v=y]
+    y_mapped = [classes_map[v]::Int for v=y]
     features_per_split = int(opts.features_per_split_fraction*size(x,2))
     features_per_split = max(1, size(x,2))
     root = train_branch(x, y_mapped, opts, length(classes), features_per_split)

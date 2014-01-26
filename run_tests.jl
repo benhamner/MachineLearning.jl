@@ -1,4 +1,5 @@
 tests = [
+    "common",
     "decision_tree",
     "metrics",
     "neural_net",

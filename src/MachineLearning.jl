@@ -28,6 +28,7 @@ export
     decision_tree_options,
     depth,
     fit,
+    float_matrix,
     gini,
     initialize_net,
     log_loss,
