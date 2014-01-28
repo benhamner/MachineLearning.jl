@@ -11,4 +11,8 @@ opts = neural_net_options(hidden_layers=[20], learning_rate=10.0, stop_criteria=
 f() = fit(x_train, y_train, opts)
 
 res = benchmark(f, "Neural Net", "Basic Train", 10)
-printtable(res)
+for (colname, val)=res
+    println(colname, "\t", val[1])
+end
+
+writetable("results/neural_net.csv", res)
