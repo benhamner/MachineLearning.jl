@@ -41,6 +41,34 @@ type NeuralNet <: ClassificationModel
     classes::Vector
 end
 
+type NeuralNetState # prevents us from making unnecessary allocations
+    outputs::Vector{Vector{Float64}}
+    activations::Vector{Vector{Float64}}
+    deltas::Vector{Vector{Float64}}
+    layer_gradients::Vector{Matrix{Float64}}
+end
+
+function initialize_neural_net_state(net::NeuralNet)
+    outputs = Array(Vector{Float64}, 0)
+    activations = Array(Vector{Float64}, 0)
+    deltas = Array(Vector{Float64}, 0)
+    layer_gradients = Array(Matrix{Float64}, 0)
+    num_features = size(net.layers[1].weights, 2)    
+
+    push!(outputs, Array(Float64, num_features))
+    push!(activations, Array(Float64, num_features))
+    push!(deltas, Array(Float64, num_features)) # note: deltas[1] never used
+    for layer = net.layers
+        num_nodes = size(layer, 1)
+        push!(outputs, Array(Float64, num_nodes))
+        push!(activations, Array(Float64, num_nodes))
+        push!(deltas, Array(Float64, num_nodes))
+        push!(layer_gradients, similar(layers))
+    end
+
+    NeuralNetState(outputs, activations, deltas, layer_gradients)
+end
+
 function classes(net::NeuralNet)
     net.classes
 end
