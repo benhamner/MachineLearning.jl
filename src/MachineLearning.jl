@@ -1,6 +1,7 @@
 module MachineLearning
     using
         DataFrames,
+        Devectorize,
         Optim,
         RDatasets,
         StatsBase

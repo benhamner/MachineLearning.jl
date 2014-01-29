@@ -73,8 +73,14 @@ function classes(net::NeuralNet)
     net.classes
 end
 
-sigmoid(z::Vector{Float64}) = 1/(1+exp(-z))
-sigmoid_gradient(z::Vector{Float64}) = sigmoid(z) .* (1-sigmoid(z))
+function sigmoid(z::Vector{Float64})
+    @devec res = 1./(1+exp(-z))
+end
+
+function sigmoid_gradient(z::Vector{Float64})
+    sz = sigmoid(z)
+    @devec res = sz .* (1-sz)
+end
 
 function one_hot(y::Vector, classes_map::Dict)
     values = zeros(length(y), length(classes_map))
