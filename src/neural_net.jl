@@ -53,17 +53,17 @@ function initialize_neural_net_state(net::NeuralNet)
     activations = Array(Vector{Float64}, 0)
     deltas = Array(Vector{Float64}, 0)
     layer_gradients = Array(Matrix{Float64}, 0)
-    num_features = size(net.layers[1].weights, 2)    
+    num_features = size(net.layers[1].weights, 2) - (net.options.bias_unit ? 1 : 0)    
 
     push!(outputs, Array(Float64, num_features))
     push!(activations, Array(Float64, num_features))
     push!(deltas, Array(Float64, num_features)) # note: deltas[1] never used
     for layer = net.layers
-        num_nodes = size(layer, 1)
+        num_nodes = size(layer.weights, 1)
         push!(outputs, Array(Float64, num_nodes))
         push!(activations, Array(Float64, num_nodes))
         push!(deltas, Array(Float64, num_nodes))
-        push!(layer_gradients, similar(layers))
+        push!(layer_gradients, similar(layer.weights))
     end
 
     NeuralNetState(outputs, activations, deltas, layer_gradients)
@@ -90,10 +90,11 @@ function fit(x::Matrix{Float64}, y::Vector, opts::NeuralNetOptions)
     classes_map = Dict(classes, [1:length(classes)])
     num_classes = length(classes)
     net = initialize_net(opts, classes, num_features)
+    state = initialize_neural_net_state(net)
 
     if opts.train_method==:sgd # stochastic gradient descent
         if typeof(opts.stop_criteria)==StopAfterIteration
-            train_preset_stop!(net, x, one_hot(y, classes_map))
+            train_preset_stop!(net, x, one_hot(y, classes_map), state)
         elseif typeof(opts.stop_criteria)==StopAfterValidationErrorStopsImproving
             x_train, y_train, x_val, y_val = split_train_test(x, y, opts.stop_criteria.validation_set_size)
             train_valid_stop!(net, x_train, one_hot(y_train, classes_map), x_val, one_hot(y_val, classes_map))
@@ -104,7 +105,7 @@ function fit(x::Matrix{Float64}, y::Vector, opts::NeuralNetOptions)
         initial_weights = net_to_weights(net)
 
         f = weights -> cost(net, x, actuals, weights)
-        g! = (weights, gradients) -> cost_gradient!(net, x, actuals, weights, gradients)
+        g! = (weights, gradients) -> cost_gradient_update_net!(net, x, actuals, weights, gradients)
         res = optimize(f, g!, initial_weights, method=opts.train_method)
         weights_to_net!(res.minimum, net)
         net
@@ -112,14 +113,14 @@ function fit(x::Matrix{Float64}, y::Vector, opts::NeuralNetOptions)
     net
 end
 
-function train_preset_stop!(net::NeuralNet, x::Matrix{Float64}, actuals::Matrix{Float64})
+function train_preset_stop!(net::NeuralNet, x::Matrix{Float64}, actuals::Matrix{Float64}, state::NeuralNetState)
     num_samples = size(x,1)
     for iter=1:net.options.stop_criteria.max_iteration
         if net.options.display
             println("Iteration ", iter)
         end
         for j=1:num_samples
-            update_weights!(net, vec(x[j,:]), vec(actuals[j,:]), net.options.learning_rate, num_samples)
+            update_weights!(net, vec(x[j,:]), vec(actuals[j,:]), net.options.learning_rate, num_samples, state)
         end
     end
 end
@@ -168,12 +169,12 @@ function StatsBase.predict(net::NeuralNet, sample::Vector{Float64})
     net.classes[minimum(find(x->x==maximum(probs), probs))]
 end
 
-function update_weights!(net::NeuralNet, sample::Vector{Float64}, actual::Vector{Float64}, learning_rate::Float64, num_samples::Int)
-    layer_gradients = cost_gradient(net, sample, actual)/num_samples
+function update_weights!(net::NeuralNet, sample::Vector{Float64}, actual::Vector{Float64}, learning_rate::Float64, num_samples::Int, state::NeuralNetState)
+    cost_gradient!(net, sample, actual, state)
     regularization_gradients = regularization_gradient(net)/num_samples^2
 
     for i=1:length(net.layers)
-        net.layers[i].weights -= learning_rate*(layer_gradients[i] + regularization_gradients[i])
+        net.layers[i].weights -= learning_rate*(state.layer_gradients[i]/num_samples + regularization_gradients[i])
     end
 end
 
@@ -236,36 +237,32 @@ function cost(net::NeuralNet, x::Matrix{Float64}, actuals::Matrix{Float64}, weig
     cost(net, x, actuals)
 end
 
-function cost_gradient(net::NeuralNet, sample::Vector{Float64}, actual::Vector{Float64})
-    outputs = Array(Vector{Float64}, 0) # before passing through sigmoid
-    activations = Array(Vector{Float64}, 0)
-    push!(outputs, sample)
-    push!(activations, sample)
-    state = sample
-    for layer = net.layers
+function cost_gradient!(net::NeuralNet, sample::Vector{Float64}, actual::Vector{Float64}, state::NeuralNetState)
+    copy!(state.outputs[1], sample)
+    copy!(state.activations[1], sample)
+
+    s = sample
+    for i=1:length(net.layers)
         if net.options.bias_unit
-            state = [1.0;state]
+            s = [1.0;s]
         end
 
-        push!(outputs, layer.weights*state)
-        state = sigmoid(outputs[length(outputs)])
-        push!(activations, state)
+        A_mul_B!(state.outputs[i+1], net.layers[i].weights, s)
+        s = sigmoid(state.outputs[i+1])
+        copy!(state.activations[i+1], s)
     end
 
-    deltas = activations[length(activations)] - actual
-    layer_gradients = Array(Matrix{Float64},length(net.layers))
+    deltas = (state.activations[length(state.activations)] - actual)
     for i=length(net.layers):-1:1
-        gradient = deltas*(net.options.bias_unit?hcat(1,activations[i]'):activations[i]')
+        A_mul_B!(state.layer_gradients[i], deltas'', net.options.bias_unit?hcat(1,state.activations[i]'):state.activations[i]')
         if i>1
             deltas = net.layers[i].weights'*deltas
             if net.options.bias_unit
                 deltas = deltas[2:length(deltas)]
             end
-            deltas = deltas.*sigmoid_gradient(outputs[i])
+            deltas = deltas.*sigmoid_gradient(state.outputs[i])
         end
-        layer_gradients[i]=gradient
     end
-    layer_gradients
 end
 
 function regularization_gradient(net::NeuralNet)
@@ -278,7 +275,7 @@ function regularization_gradient(net::NeuralNet)
     layer_gradients
 end
 
-function cost_gradient!(net::NeuralNet, x::Matrix{Float64}, actuals::Matrix{Float64}, weights::Vector{Float64}, gradients::Vector{Float64})
+function cost_gradient_update_net!(net::NeuralNet, x::Matrix{Float64}, actuals::Matrix{Float64}, weights::Vector{Float64}, gradients::Vector{Float64})
     @assert size(x,1)==size(actuals,1)
     weights_to_net!(weights, net)
     gradients[:]=0.0
