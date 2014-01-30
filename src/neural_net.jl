@@ -179,10 +179,10 @@ end
 
 function update_weights!(net::NeuralNet, sample::Vector{Float64}, actual::Vector{Float64}, learning_rate::Float64, num_samples::Int, state::NeuralNetState)
     cost_gradient!(net, sample, actual, state)
-    regularization_gradients = regularization_gradient(net)/num_samples^2
+    regularization_gradient!(net, state, 1.0/num_samples)
 
     for i=1:length(net.layers)
-        net.layers[i].weights -= learning_rate*(state.layer_gradients[i]/num_samples + regularization_gradients[i])
+        net.layers[i].weights -= learning_rate*state.layer_gradients[i]/num_samples
     end
 end
 
@@ -293,6 +293,13 @@ function regularization_gradient(net::NeuralNet)
         end
     end
     layer_gradients
+end
+
+function regularization_gradient!(net::NeuralNet, state::NeuralNetState, lambda::Float64)
+    for i=1:length(net.layers)
+        start_col = net.options.bias_unit ? 2 : 1
+        state.layer_gradients[i][:,start_col:end] += lambda*net.layers[i].weights[:,start_col:end]
+    end
 end
 
 function cost_gradient_update_net!(net::NeuralNet, x::Matrix{Float64}, actuals::Matrix{Float64}, weights::Vector{Float64}, gradients::Vector{Float64}, state::NeuralNetState)
