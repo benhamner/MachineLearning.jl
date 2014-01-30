@@ -14,4 +14,3 @@ script:
   - mkdir -p ~/.julia/MachineLearning.jl
   - cp -R ./* ~/.julia/MachineLearning.jl/
   - julia ./run_tests.jl
-  - julia ./run_benchmarks.jl
