@@ -1,4 +1,5 @@
 DataFrames
+Devectorize
 Optim
 RDatasets
 StatsBase
