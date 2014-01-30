@@ -1,6 +1,7 @@
 module MachineLearning
     using
         DataFrames,
+        Devectorize,
         Optim,
         RDatasets,
         StatsBase
@@ -30,12 +31,14 @@ module MachineLearning
         accuracy,
         cost,
         cost_gradient!,
+        cost_gradient_update_net!,
         decision_tree_options,
         depth,
         fit,
         float_matrix,
         gini,
         initialize_net,
+        initialize_neural_net_state,
         log_loss,
         mean_log_loss,
         mean_squared_error,
