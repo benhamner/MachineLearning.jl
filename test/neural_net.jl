@@ -13,6 +13,7 @@ opts = neural_net_options(hidden_layers=[3])
 classes = sort(unique(y))
 classes_map = Dict(classes, [1:length(classes)])
 net = initialize_net(opts, classes, num_features)
+state = initialize_neural_net_state(net)
 weights = net_to_weights(net)
 
 actuals = one_hot(y, classes_map)
@@ -23,7 +24,7 @@ for i=1:length(weights)
     w2 = copy(weights)
     w1[i] -= epsilon
     w2[i] += epsilon
-    cost_gradient!(net, x, actuals, weights, gradients)
+    cost_gradient_update_net!(net, x, actuals, weights, gradients, state)
     c1 = cost(net, x, actuals, w1)
     c2 = cost(net, x, actuals, w2)
     err = abs(((c2-c1)/(2*epsilon)-gradients[i])/gradients[i])

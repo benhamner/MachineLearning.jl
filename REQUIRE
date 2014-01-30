@@ -1,4 +1,6 @@
+Benchmark
 DataFrames
+Devectorize
 Optim
 RDatasets
 StatsBase

@@ -42,27 +42,28 @@ type NeuralNet <: ClassificationModel
 end
 
 type NeuralNetState # prevents us from making unnecessary allocations
-    outputs::Vector{Vector{Float64}}
-    activations::Vector{Vector{Float64}}
-    deltas::Vector{Vector{Float64}}
+    outputs::Vector{Matrix{Float64}}
+    activations::Vector{Matrix{Float64}}
+    deltas::Vector{Matrix{Float64}}
     layer_gradients::Vector{Matrix{Float64}}
 end
 
 function initialize_neural_net_state(net::NeuralNet)
-    outputs = Array(Vector{Float64}, 0)
-    activations = Array(Vector{Float64}, 0)
-    deltas = Array(Vector{Float64}, 0)
+    outputs = Array(Matrix{Float64}, 0)
+    activations = Array(Matrix{Float64}, 0)
+    deltas = Array(Matrix{Float64}, 0)
     layer_gradients = Array(Matrix{Float64}, 0)
-    num_features = size(net.layers[1].weights, 2) - (net.options.bias_unit ? 1 : 0)    
+    num_features = size(net.layers[1].weights, 2) - (net.options.bias_unit ? 1 : 0)
+    num_features_with_bias = size(net.layers[1].weights, 2)
 
-    push!(outputs, Array(Float64, num_features))
-    push!(activations, Array(Float64, num_features))
-    push!(deltas, Array(Float64, num_features)) # note: deltas[1] never used
-    for layer = net.layers
+    push!(outputs, Array(Float64, (num_features, 1)))
+    push!(activations, Array(Float64, (num_features_with_bias, 1)))
+    push!(deltas, Array(Float64, (num_features, 1))) # note: deltas[1] never used
+    for (i, layer) = enumerate(net.layers)
         num_nodes = size(layer.weights, 1)
-        push!(outputs, Array(Float64, num_nodes))
-        push!(activations, Array(Float64, num_nodes))
-        push!(deltas, Array(Float64, num_nodes))
+        push!(outputs, Array(Float64, (num_nodes, 1)))
+        push!(activations, Array(Float64, (num_nodes + (net.options.bias_unit && i<length(net.layers) ? 1 : 0), 1)))
+        push!(deltas, Array(Float64, (num_nodes, 1)))
         push!(layer_gradients, similar(layer.weights))
     end
 
@@ -73,11 +74,11 @@ function classes(net::NeuralNet)
     net.classes
 end
 
-function sigmoid(z::Vector{Float64})
+function sigmoid(z::Array{Float64})
     @devec res = 1./(1+exp(-z))
 end
 
-function sigmoid_gradient(z::Vector{Float64})
+function sigmoid_gradient(z::Array{Float64})
     sz = sigmoid(z)
     @devec res = sz .* (1-sz)
 end
@@ -103,7 +104,7 @@ function fit(x::Matrix{Float64}, y::Vector, opts::NeuralNetOptions)
             train_preset_stop!(net, x, one_hot(y, classes_map), state)
         elseif typeof(opts.stop_criteria)==StopAfterValidationErrorStopsImproving
             x_train, y_train, x_val, y_val = split_train_test(x, y, opts.stop_criteria.validation_set_size)
-            train_valid_stop!(net, x_train, one_hot(y_train, classes_map), x_val, one_hot(y_val, classes_map))
+            train_valid_stop!(net, x_train, one_hot(y_train, classes_map), x_val, one_hot(y_val, classes_map), state)
         end
     else
         # use optimize from Optim.jl
@@ -111,7 +112,7 @@ function fit(x::Matrix{Float64}, y::Vector, opts::NeuralNetOptions)
         initial_weights = net_to_weights(net)
 
         f = weights -> cost(net, x, actuals, weights)
-        g! = (weights, gradients) -> cost_gradient_update_net!(net, x, actuals, weights, gradients)
+        g! = (weights, gradients) -> cost_gradient_update_net!(net, x, actuals, weights, gradients, state)
         res = optimize(f, g!, initial_weights, method=opts.train_method)
         weights_to_net!(res.minimum, net)
         net
@@ -135,7 +136,8 @@ function train_valid_stop!(net::NeuralNet,
                            x_train::Matrix{Float64},
                            a_train::Matrix{Float64},
                            x_val::Matrix{Float64},
-                           a_val::Matrix{Float64})
+                           a_val::Matrix{Float64},
+                           state::NeuralNetState)
     num_samples = size(x_train,1)
     validation_scores = Array(Float64, 0)
     
@@ -143,7 +145,7 @@ function train_valid_stop!(net::NeuralNet,
     while iteration<net.options.stop_criteria.max_iteration
         iteration += 1
         for j=1:num_samples
-            update_weights!(net, vec(x_train[j,:]), vec(a_train[j,:]), net.options.learning_rate, num_samples)
+            update_weights!(net, vec(x_train[j,:]), vec(a_train[j,:]), net.options.learning_rate, num_samples, state)
         end
         preds = predict_probs(net, x_val)
         err = mean_log_loss(a_val, preds)
@@ -243,30 +245,42 @@ function cost(net::NeuralNet, x::Matrix{Float64}, actuals::Matrix{Float64}, weig
     cost(net, x, actuals)
 end
 
+function copy_range!(destination::Array, destination_start::Int, source::Array, source_start::Int)
+    for i=source_start:length(source)
+        destination[destination_start+i-source_start] = source[i]
+    end
+end
+
 function cost_gradient!(net::NeuralNet, sample::Vector{Float64}, actual::Vector{Float64}, state::NeuralNetState)
+    num_layers = length(net.layers)
     copy!(state.outputs[1], sample)
-    copy!(state.activations[1], sample)
-
-    s = sample
-    for i=1:length(net.layers)
-        if net.options.bias_unit
-            s = [1.0;s]
-        end
-
-        A_mul_B!(state.outputs[i+1], net.layers[i].weights, s)
-        s = sigmoid(state.outputs[i+1])
-        copy!(state.activations[i+1], s)
+    if net.options.bias_unit
+        state.activations[1][1] = 1.0
+        copy_range!(state.activations[1], 2, sample, 1)
+    else
+        copy!(state.activations[1], sample)
     end
 
-    deltas = (state.activations[length(state.activations)] - actual)
-    for i=length(net.layers):-1:1
-        A_mul_B!(state.layer_gradients[i], deltas'', net.options.bias_unit?hcat(1,state.activations[i]'):state.activations[i]')
+    for i=1:num_layers
+        A_mul_B!(state.outputs[i+1], net.layers[i].weights, state.activations[i])
+        if net.options.bias_unit && i<num_layers
+            state.activations[i+1][1] = 1.0
+            copy_range!(state.activations[i+1], 2, sigmoid(state.outputs[i+1]), 1)
+        else
+            copy!(state.activations[i+1], sigmoid(state.outputs[i+1]))
+        end
+    end
+
+    copy!(state.deltas[num_layers+1], state.activations[num_layers+1] - actual)
+    for i=num_layers:-1:1
+        A_mul_B!(state.layer_gradients[i], state.deltas[i+1], state.activations[i]')
         if i>1
-            deltas = net.layers[i].weights'*deltas
             if net.options.bias_unit
-                deltas = deltas[2:length(deltas)]
+                copy_range!(state.deltas[i], 1, net.layers[i].weights'*state.deltas[i+1], 2)
+            else
+                copy!(state.deltas[i], net.layers[i].weights'*state.deltas[i+1])
             end
-            deltas = deltas.*sigmoid_gradient(state.outputs[i])
+            copy!(state.deltas[i], state.deltas[i].*sigmoid_gradient(state.outputs[i]))
         end
     end
 end
@@ -281,14 +295,14 @@ function regularization_gradient(net::NeuralNet)
     layer_gradients
 end
 
-function cost_gradient_update_net!(net::NeuralNet, x::Matrix{Float64}, actuals::Matrix{Float64}, weights::Vector{Float64}, gradients::Vector{Float64})
+function cost_gradient_update_net!(net::NeuralNet, x::Matrix{Float64}, actuals::Matrix{Float64}, weights::Vector{Float64}, gradients::Vector{Float64}, state::NeuralNetState)
     @assert size(x,1)==size(actuals,1)
     weights_to_net!(weights, net)
     gradients[:]=0.0
     layer_gradients = [0.0*layer.weights for layer=net.layers]
     for i=1:size(x,1)
-        delta = cost_gradient(net, vec(x[i,:]), vec(actuals[i,:]))/size(x,1)
-        layer_gradients += delta
+        cost_gradient!(net, vec(x[i,:]), vec(actuals[i,:]), state)
+        layer_gradients += state.layer_gradients/size(x,1)
     end
     regularization = regularization_gradient(net)
     layer_gradients += regularization/size(x,1)
