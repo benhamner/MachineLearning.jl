@@ -20,6 +20,7 @@ type NeuralNetOptions <: SupervisedModelOptions
     learning_rate::Float64
     stop_criteria::NeuralNetStopCriteria
     display::Bool
+    track_cost::Bool
 end
 
 function neural_net_options(;bias_unit::Bool=true,
@@ -27,8 +28,9 @@ function neural_net_options(;bias_unit::Bool=true,
                             train_method::Symbol=:sgd,
                             learning_rate::Float64=1.0,
                             stop_criteria::NeuralNetStopCriteria=StopAfterIteration(),
-                            display::Bool=false)
-    NeuralNetOptions(bias_unit, hidden_layers, train_method, learning_rate, stop_criteria, display)
+                            display::Bool=false,
+                            track_cost=false)
+    NeuralNetOptions(bias_unit, hidden_layers, train_method, learning_rate, stop_criteria, display, track_cost)
 end
 
 type NeuralNetLayer
@@ -125,6 +127,9 @@ function train_preset_stop!(net::NeuralNet, x::Matrix{Float64}, actuals::Matrix{
     for iter=1:net.options.stop_criteria.max_iteration
         if net.options.display
             println("Iteration ", iter)
+        end
+        if net.options.track_cost
+            println("  Cost: ", cost(net, x, actuals))
         end
         for j=1:num_samples
             update_weights!(net, vec(x[j,:]), vec(actuals[j,:]), net.options.learning_rate, num_samples, state)

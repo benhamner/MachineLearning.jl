@@ -32,6 +32,13 @@ for i=1:length(weights)
 end
 
 println("Classification Tests")
+opts = neural_net_options(learning_rate=10.0, track_cost=true)
+net = fit(x_train, y_train, opts)
+yhat = predict(net, x_test)
+acc = accuracy(y_test, yhat)
+println("Linear Accuracy, Preset Stop: ", acc)
+@test acc>0.8
+
 opts = neural_net_options(learning_rate=10.0, train_method=:cg)
 net = fit(x_train, y_train, opts)
 for layer=net.layers
@@ -47,13 +54,6 @@ net = fit(x_train, y_train, opts)
 yhat = predict(net, x_test)
 acc = accuracy(y_test, yhat)
 println("Linear Accuracy, Valid Stop: ", acc)
-@test acc>0.8
-
-opts = neural_net_options(learning_rate=10.0)
-net = fit(x_train, y_train, opts)
-yhat = predict(net, x_test)
-acc = accuracy(y_test, yhat)
-println("Linear Accuracy, Preset Stop: ", acc)
 @test acc>0.8
 
 x = randn(2500, 5)
