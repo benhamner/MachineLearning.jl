@@ -3,9 +3,9 @@ type PipelineOptions <: SupervisedModelOptions
     model_options::SupervisedModelOptions
 end
 
-type Pipeline <: SupervisedModel
+type ClassificationPipeline <: ClassificationModel
     transformers::Vector{Transformer}
-    model::SupervisedModel
+    model::ClassificationModel
 end
 
 function fit(x::Matrix{Float64}, y::Vector, opts::PipelineOptions)
@@ -17,7 +17,13 @@ function fit(x::Matrix{Float64}, y::Vector, opts::PipelineOptions)
         push!(transformers, transformer)
     end
     model = fit(opts.model_options, x_transformed)
-    Pipeline(transformers, model)
+    ClassificationPipeline(transformers, model)
 end
 
-function predict()
+function StatsBase.predict_probs(pipeline::ClassificationPipeline, sample::Vector{Float64})
+
+end
+
+function StatsBase.predict(pipeline::ClassificationPipeline, sample::Vector{Float64})
+
+end
