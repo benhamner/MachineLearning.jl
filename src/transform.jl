@@ -14,6 +14,10 @@ function fit(opts::ZmuvOptions, x::Matrix{Float64})
     Zmuv(means, stds)
 end
 
+function transform(zmuv::Zmuv, x::Vector{Float64})
+    vec(transform(zmuv, x'))
+end
+
 function transform(zmuv::Zmuv, x::Matrix{Float64})
     res = broadcast(/, broadcast(-, x, zmuv.means), zmuv.stds)
     res[isnan(res)] = 0.0

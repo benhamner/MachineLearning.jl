@@ -4,6 +4,7 @@ using MachineLearning
 x = [1.0 2.0]
 zmuv = Zmuv([1.0 3.0],[1.0 1.0])
 @test transform(zmuv, x)==[0.0 -1.0]
+@test transform(zmuv, vec(x))==[0.0;-1.0]
 
 zmuv = Zmuv([1.0 3.0],[5.0 2.0])
 @test transform(zmuv, x)==[0.0 -0.5]
