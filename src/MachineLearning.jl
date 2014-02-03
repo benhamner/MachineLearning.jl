@@ -26,6 +26,8 @@ module MachineLearning
         SupervisedModelOptions,
         Transformer,
         TransformerOptions,
+        Zmuv,
+        ZmuvOptions,
 
         # methods
         accuracy,
@@ -50,6 +52,7 @@ module MachineLearning
         random_forest_options,
         split_location,
         split_train_test,
+        transform,
         weights_to_net!
 
     include("common.jl")
@@ -58,5 +61,6 @@ module MachineLearning
     include("neural_net.jl")
     include("random_forest.jl")
     include("split.jl")
+    include("transform.jl")
 
 end
