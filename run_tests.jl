@@ -4,8 +4,10 @@ tests = [
     "decision_tree",
     "metrics",
     "neural_net",
+    "pipeline",
     "split",
-    "random_forest"]
+    "random_forest",
+    "transform"]
 
 println("Running tests:")
 cd("test")

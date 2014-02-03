@@ -9,6 +9,7 @@ module MachineLearning
     export
         # types
         ClassificationModel,
+        ClassificationPipeline,
         DecisionBranch,
         DecisionNode,
         DecisionLeaf,
@@ -17,6 +18,7 @@ module MachineLearning
         NeuralNet,
         NeuralNetLayer,
         NeuralNetOptions,
+        PipelineOptions,
         StopAfterIteration,
         RandomForest,
         RandomForestOptions,
@@ -59,6 +61,7 @@ module MachineLearning
     include("decision_tree.jl")
     include("metrics.jl")
     include("neural_net.jl")
+    include("pipeline.jl")
     include("random_forest.jl")
     include("split.jl")
     include("transform.jl")
