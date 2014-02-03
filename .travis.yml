@@ -1,8 +1,6 @@
 language: cpp
 compiler:
   - clang
-notifications:
-  email: false
 before_install:
   - sudo add-apt-repository ppa:staticfloat/julia-deps -y
   - sudo add-apt-repository ppa:staticfloat/julianightlies -y
@@ -11,6 +9,6 @@ before_install:
 script:
   - julia -e 'versioninfo(); Pkg.init();'
   - julia -e 'map(x -> Pkg.add(strip(x)), readlines(open("REQUIRE")));'
-  - mkdir -p ~/.julia/MachineLearning.jl
-  - cp -R ./* ~/.julia/MachineLearning.jl/
+  - mkdir -p ~/.julia/MachineLearning
+  - cp -R ./* ~/.julia/MachineLearning/
   - julia ./run_tests.jl
