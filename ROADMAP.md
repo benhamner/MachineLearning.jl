@@ -2,7 +2,8 @@ Short-term TODO's
 =================
 
 1. Track & optionally show metadata and state during training 
-2. Regression support for RF/DT/Neural Nets
+2. Support minibatch sgd during neural net training
+3. Regression support for RF/DT/Neural Nets
 
 Longer term Roadmap
 ===================
