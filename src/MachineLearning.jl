@@ -42,7 +42,7 @@ module MachineLearning
         float_matrix,
         gini,
         initialize_net,
-        initialize_neural_net_state,
+        initialize_neural_net_temporary,
         log_loss,
         mean_log_loss,
         mean_squared_error,
