@@ -1,17 +1,17 @@
-type StopAfterIteration
+abstract NeuralNetStopCriteria
+
+type StopAfterIteration <: NeuralNetStopCriteria
     max_iteration::Int
 end
 StopAfterIteration() = StopAfterIteration(50)
 
-type StopAfterValidationErrorStopsImproving
+type StopAfterValidationErrorStopsImproving <: NeuralNetStopCriteria
     validation_set_size::Float64
     validation_iteration_window_size::Int
     min_iteration::Int
     max_iteration::Int
 end
 StopAfterValidationErrorStopsImproving() = StopAfterValidationErrorStopsImproving(0.2, 2, 10, 1000)
-
-NeuralNetStopCriteria = Union(StopAfterIteration, StopAfterValidationErrorStopsImproving)
 
 type NeuralNetOptions <: SupervisedModelOptions
     bias_unit::Bool # include a bias unit that always outputs a +1
