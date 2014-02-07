@@ -149,6 +149,12 @@ function train_valid_stop!(net::NeuralNet,
     iteration = 0
     while iteration<net.options.stop_criteria.max_iteration
         iteration += 1
+        if net.options.display
+            println("Iteration ", iteration)
+        end
+        if net.options.track_cost
+            println("  Training Cost: ", cost(net, x_train, a_train))
+        end
         for j=1:num_samples
             update_weights!(net, vec(x_train[j,:]), vec(a_train[j,:]), net.options.learning_rate, num_samples, temp)
         end
