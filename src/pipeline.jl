@@ -4,7 +4,7 @@ type PipelineOptions <: SupervisedModelOptions
 end
 
 # I have to write this since Julia types aren't covariant
-function PipelineOptions(transformer_options::Vector, model_options::SupervisedModelOptions)
+function PipelineOptionsAny(transformer_options::Vector, model_options::SupervisedModelOptions)
     transformer_opts = Array(TransformerOptions, 0)
     for opts = transformer_options
         push!(transformer_opts, opts)
@@ -18,7 +18,7 @@ type ClassificationPipeline <: ClassificationModel
 end
 
 # I have to write this since Julia types aren't covariant
-function ClassificationPipeline(transformers::Vector, model::ClassificationModel)
+function ClassificationPipelineAny(transformers::Vector, model::ClassificationModel)
     ts = Array(Transformer, 0)
     for transformer = transformers
         push!(ts, transformer)
