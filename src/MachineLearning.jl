@@ -10,6 +10,7 @@ module MachineLearning
         # types
         ClassificationModel,
         ClassificationPipeline,
+        ClassificationPipelineAny,
         DecisionBranch,
         DecisionNode,
         DecisionLeaf,
@@ -19,6 +20,7 @@ module MachineLearning
         NeuralNetLayer,
         NeuralNetOptions,
         PipelineOptions,
+        PipelineOptionsAny,
         StopAfterIteration,
         RandomForest,
         RandomForestOptions,
