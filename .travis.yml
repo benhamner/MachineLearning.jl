@@ -3,7 +3,7 @@ compiler:
   - clang
 env:
   matrix: 
-    - JULIAVERSION="juliareleases" 
+#    - JULIAVERSION="juliareleases" 
     - JULIAVERSION="julianightlies" 
 before_install:
   - sudo add-apt-repository ppa:staticfloat/julia-deps -y
