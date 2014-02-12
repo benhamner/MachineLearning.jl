@@ -9,9 +9,7 @@ Longer term Roadmap
 ===================
 
 1. Dataframe is key underlying datatype (as opposed to Matrix{Float64})
-2. Feature transformers
-3. Pipeline support
-4. Principled supervised regression and classification types / support
-5. Performance benchmarking and optimization
-6. Robust sampling methods
-7. Build out metrics, potentially break out as separate repo
+2. Principled supervised regression and classification types / support
+3. Performance benchmarking and optimization
+4. Robust sampling methods
+5. Build out metrics, potentially break out as separate repo
