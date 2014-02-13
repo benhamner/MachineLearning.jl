@@ -3,7 +3,6 @@ Short-term TODO's
 
 1. Track & optionally show metadata and state during training 
 2. Support minibatch sgd during neural net training
-3. Regression support for RF/DT/Neural Nets
 
 Longer term Roadmap
 ===================
@@ -13,3 +12,4 @@ Longer term Roadmap
 3. Performance benchmarking and optimization
 4. Robust sampling methods
 5. Build out metrics, potentially break out as separate repo
+6. Testing against more real world datasets
