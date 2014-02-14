@@ -14,6 +14,10 @@ type RandomForest <: ClassificationModel
     options::RandomForestOptions
 end
 
+type RandomForestTrainProcess
+    samples_in_trees::Matrix{Int}
+end
+
 function classes(forest::RandomForest)
     forest.classes
 end
