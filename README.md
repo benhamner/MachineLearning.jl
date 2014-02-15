@@ -15,4 +15,10 @@ API Introdution
     sample = [1.0, 0.0, 0.0]
     println("Ground truth: ", int(dot(sample,model)>0))
     println("Prediction:   ", predict(net, sample))
-  
+
+Algorithms Implemented
+======================
+
+ - Basic Decision Tree for Classification
+ - Basic Random Forest for Classification
+ - Basic Neural Network
