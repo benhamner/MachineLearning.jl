@@ -1,18 +1,22 @@
 abstract DecisionNode
 
-type DecisionTreeOptions <: SupervisedModelOptions
+type ClassificationTreeOptions <: SupervisedModelOptions
     features_per_split_fraction::Float64
     minimum_split_size::Int
 end
-DecisionTreeOptions() = DecisionTreeOptions(1.0, 2)
+ClassificationTreeOptions() = ClassificationTreeOptions(1.0, 2)
 
-function decision_tree_options(;features_per_split_fraction::Float64=1.0,
+function classification_tree_options(;features_per_split_fraction::Float64=1.0,
                                minimum_split_size::Int=2)
-    DecisionTreeOptions(features_per_split_fraction,
+    ClassificationTreeOptions(features_per_split_fraction,
                         minimum_split_size)
 end
 
-type DecisionLeaf <: DecisionNode
+type RegressionLeaf <: DecisionNode
+    value::Float64
+end
+
+type ClassificationLeaf <: DecisionNode
     probs::Vector{Float64}
 end
 
@@ -23,34 +27,34 @@ type DecisionBranch <: DecisionNode
     right::DecisionNode
 end
 
-type DecisionTree <: ClassificationModel
+type ClassificationTree <: ClassificationModel
     root::DecisionNode
     classes::Vector
     features_per_split::Int
-    options::DecisionTreeOptions
+    options::ClassificationTreeOptions
 end
 
-function classes(tree::DecisionTree)
+function classes(tree::ClassificationTree)
     tree.classes
 end
 
-function fit(x::Matrix{Float64}, y::Vector, opts::DecisionTreeOptions)
+function fit(x::Matrix{Float64}, y::Vector, opts::ClassificationTreeOptions)
     classes = sort(unique(y))
     classes_map = Dict(classes, 1:length(classes))
     y_mapped = [classes_map[v]::Int for v=y]
     features_per_split = int(opts.features_per_split_fraction*size(x,2))
     features_per_split = max(1, size(x,2))
     root = train_branch(x, y_mapped, opts, length(classes), features_per_split)
-    DecisionTree(root, classes, features_per_split, opts)
+    ClassificationTree(root, classes, features_per_split, opts)
 end
 
-function train_branch(x::Matrix{Float64}, y::Vector{Int}, opts::DecisionTreeOptions, num_classes::Int, features_per_split::Int)
+function train_branch(x::Matrix{Float64}, y::Vector{Int}, opts::ClassificationTreeOptions, num_classes::Int, features_per_split::Int)
     if length(y)<opts.minimum_split_size || length(unique(y))==1
         probs = zeros(num_classes)
         for i=1:length(y)
             probs[y[i]] += 1.0/length(y)
         end
-        return DecisionLeaf(probs)
+        return ClassificationLeaf(probs)
     end
 
     score        = Inf
@@ -98,7 +102,7 @@ function gini(counts::Vector{Float64})
     1-sum((counts/sum(counts)).^2)
 end
 
-function predict_probs(tree::DecisionTree, sample::Vector{Float64})
+function predict_probs(tree::ClassificationTree, sample::Vector{Float64})
     node = tree.root
     while typeof(node)==DecisionBranch
         if sample[node.feature]<=node.value
@@ -110,12 +114,12 @@ function predict_probs(tree::DecisionTree, sample::Vector{Float64})
     node.probs
 end
 
-function StatsBase.predict(tree::DecisionTree, sample::Vector{Float64})
+function StatsBase.predict(tree::ClassificationTree, sample::Vector{Float64})
     probs = predict_probs(tree, sample)
     tree.classes[minimum(find(x->x==maximum(probs), probs))]
 end
 
-function Base.length(tree::DecisionTree)
+function Base.length(tree::ClassificationTree)
     length(tree.root)
 end
 
@@ -123,18 +127,18 @@ function Base.length(branch::DecisionBranch)
     return 1+length(branch.left)+length(branch.right)
 end
 
-function Base.length(leaf::DecisionLeaf)
+function Base.length(leaf::ClassificationLeaf)
     return 1
 end
 
-function Base.show(io::IO, tree::DecisionTree)
-    info = join(["Decision Tree",
+function Base.show(io::IO, tree::ClassificationTree)
+    info = join(["Classification Tree",
                  @sprintf("    %d Nodes, %d Nodes Deep",length(tree), depth(tree)),
                  @sprintf("    %d Classes",length(tree.classes))], "\n")
     print(io, info)
 end
 
-function depth(tree::DecisionTree)
+function depth(tree::ClassificationTree)
     depth(tree.root)
 end
 
@@ -142,6 +146,6 @@ function depth(branch::DecisionBranch)
     return 1+max(depth(branch.left),depth(branch.right))
 end
 
-function depth(leaf::DecisionLeaf)
+function depth(leaf::ClassificationLeaf)
     return 1
 end

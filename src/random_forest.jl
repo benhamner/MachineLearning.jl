@@ -9,7 +9,7 @@ function random_forest_options(;num_trees::Int=100,
 end
 
 type RandomForest <: ClassificationModel
-    trees::Vector{DecisionTree}
+    trees::Vector{ClassificationTree}
     classes::Vector
     options::RandomForestOptions
 end
@@ -23,8 +23,8 @@ function classes(forest::RandomForest)
 end
 
 function fit(x::Matrix{Float64}, y::Vector, opts::RandomForestOptions)
-    tree_opts = decision_tree_options(features_per_split_fraction=0.5)
-    trees = Array(DecisionTree, 0)
+    tree_opts = classification_tree_options(features_per_split_fraction=0.5)
+    trees = Array(ClassificationTree, 0)
     for i=1:opts.num_trees
         shuffle_locs = rand(1:size(x,1), size(x,1))
         tree = fit(x[shuffle_locs,:], y[shuffle_locs], tree_opts)
