@@ -3,7 +3,7 @@ using MachineLearning
 using RDatasets
 
 options = [random_forest_options(),
-           decision_tree_options(),
+           classification_tree_options(),
            neural_net_options()]
 
 datasets = [("datasets", "iris", "Species", 0.8)]

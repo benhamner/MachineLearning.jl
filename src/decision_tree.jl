@@ -97,8 +97,8 @@ function train_classification_branch(x::Matrix{Float64}, y::Vector{Int}, opts::C
     i_sorted    = sortperm(x[:,best_feature])
     left_locs   = i_sorted[1:split_loc]
     right_locs  = i_sorted[split_loc+1:length(i_sorted)]
-    left        = train_branch(x[left_locs, :], y[left_locs],  opts, num_classes, features_per_split)
-    right       = train_branch(x[right_locs,:], y[right_locs], opts, num_classes, features_per_split)
+    left        = train_classification_branch(x[left_locs, :], y[left_locs],  opts, num_classes, features_per_split)
+    right       = train_classification_branch(x[right_locs,:], y[right_locs], opts, num_classes, features_per_split)
     split_value = x[i_sorted[split_loc], best_feature]
     DecisionBranch(best_feature, split_value, left, right)
 end
