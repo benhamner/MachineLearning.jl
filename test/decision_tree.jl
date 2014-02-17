@@ -10,9 +10,9 @@ require("linear_data.jl")
 @test_approx_eq gini([1.0,1,1]) 2/3
 @test_approx_eq gini([1.0,1,2]) 5/8
 
-@test split_location([1,1,1,1,2,2,2,2,2],2)==(0.0, 4)
-@test split_location([1,2],2)==(0.0, 1)
-@test split_location([2,1,1,1,2,2,2,2,2],2)==(3/18, 4)
+@test classification_split_location([1,1,1,1,2,2,2,2,2],2)==(0.0, 4)
+@test classification_split_location([1,2],2)==(0.0, 1)
+@test classification_split_location([2,1,1,1,2,2,2,2,2],2)==(3/18, 4)
 
 leaf1 = ClassificationLeaf([1.0,0.0])
 leaf2 = ClassificationLeaf([0.5,0.5])

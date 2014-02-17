@@ -35,6 +35,7 @@ module MachineLearning
 
         # methods
         accuracy,
+        classification_split_location,
         classification_tree_options,
         cost,
         cost_gradient!,
@@ -54,7 +55,7 @@ module MachineLearning
         predict,
         predict_probs,
         random_forest_options,
-        split_location,
+        regression_split_location,
         split_train_test,
         transform,
         weights_to_net!
