@@ -18,8 +18,8 @@ type RegressionTreeOptions <: SupervisedModelOptions
 end
 RegressionTreeOptions() = RegressionTreeOptions(1.0, 2)
 
-function Regression_tree_options(;features_per_split_fraction::Float64=1.0,
-                               minimum_split_size::Int=2)
+function regression_tree_options(;features_per_split_fraction::Float64=1.0,
+                               minimum_split_size::Int=5)
     RegressionTreeOptions(features_per_split_fraction,
                         minimum_split_size)
 end
@@ -105,7 +105,7 @@ end
 
 function train_regression_branch(x::Matrix{Float64}, y::Vector{Float64}, opts::RegressionTreeOptions, features_per_split::Int)
     if length(y)<opts.minimum_split_size
-        return ClassificationLeaf(mean(y))
+        return RegressionLeaf(mean(y))
     end
 
     score        = Inf
@@ -113,7 +113,7 @@ function train_regression_branch(x::Matrix{Float64}, y::Vector{Float64}, opts::R
     split_loc    = 1
     for feature = shuffle([1:size(x,2)])[1:features_per_split]
         i_sorted = sortperm(x[:,feature])
-        g, loc = regression_split_location(y[i_sorted], num_classes)
+        g, loc = regression_split_location(y[i_sorted])
         if g<score 
             score        = g
             best_feature = feature
@@ -123,8 +123,8 @@ function train_regression_branch(x::Matrix{Float64}, y::Vector{Float64}, opts::R
     i_sorted    = sortperm(x[:,best_feature])
     left_locs   = i_sorted[1:split_loc]
     right_locs  = i_sorted[split_loc+1:length(i_sorted)]
-    left        = train_branch(x[left_locs, :], y[left_locs],  opts, features_per_split)
-    right       = train_branch(x[right_locs,:], y[right_locs], opts, features_per_split)
+    left        = train_regression_branch(x[left_locs, :], y[left_locs],  opts, features_per_split)
+    right       = train_regression_branch(x[right_locs,:], y[right_locs], opts, features_per_split)
     split_value = x[i_sorted[split_loc], best_feature]
     DecisionBranch(best_feature, split_value, left, right)
 end
@@ -149,21 +149,29 @@ function classification_split_location(y::Vector{Int}, num_classes::Int)
     score, loc
 end
 
-# TODO:: finish this function
-function regression_split_location(y::Vector{Int})
-    counts_left  = zeros(num_classes)
-    counts_right = zeros(num_classes)
-    for i=1:length(y)
-        counts_right[y[i]]+=1
-    end
+function streaming_mse(x_sum::Float64, x_squared_sum::Float64, n::Int)
+    x_bar = x_sum/n
+    x_bar^2 + x_squared_sum/n - 2*x_bar*x_sum/n
+end
+
+function regression_split_location(y::Vector{Float64})
+    sum_left  = 0.0
+    sum_right = sum(y)
+    squared_sum_left  = 0.0
+    squared_sum_right = sum(y.^2)
+
     loc   = 1
     score = Inf
     for i=1:length(y)-1
-        counts_left[y[i]]+=1
-        counts_right[y[i]]-=1
-        g = i/length(y)*gini(counts_left)+(length(y)-i)/length(y)*gini(counts_right)
-        if g<score
-            score = g
+        sum_left  += y[i]
+        sum_right -= y[i]
+        squared_sum_left  += y[i]^2
+        squared_sum_right -= y[i]^2
+
+        mse = streaming_mse(sum_left,  squared_sum_left,  i) +
+              streaming_mse(sum_right, squared_sum_right, i)
+        if mse<score
+            score = mse
             loc   = i
         end
     end
@@ -189,6 +197,18 @@ end
 function StatsBase.predict(tree::ClassificationTree, sample::Vector{Float64})
     probs = predict_probs(tree, sample)
     tree.classes[minimum(find(x->x==maximum(probs), probs))]
+end
+
+function StatsBase.predict(tree::RegressionTree, sample::Vector{Float64})
+    node = tree.root
+    while typeof(node)==DecisionBranch
+        if sample[node.feature]<=node.value
+            node=node.left
+        else
+            node=node.right
+        end
+    end
+    node.value
 end
 
 function Base.length(tree::ClassificationTree)

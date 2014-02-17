@@ -56,7 +56,9 @@ module MachineLearning
         predict_probs,
         random_forest_options,
         regression_split_location,
+        regression_tree_options,
         split_train_test,
+        streaming_mse,
         transform,
         weights_to_net!
 
@@ -68,5 +70,4 @@ module MachineLearning
     include("random_forest.jl")
     include("split.jl")
     include("transform/zmuv.jl")
-
 end
