@@ -2,7 +2,7 @@ using Base.Test
 using MachineLearning
 using RDatasets
 
-options = [random_forest_options(),
+options = [classification_forest_options(),
            classification_tree_options(),
            neural_net_options()]
 

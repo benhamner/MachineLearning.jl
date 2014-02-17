@@ -8,6 +8,8 @@ module MachineLearning
 
     export
         # types
+        ClassificationForest,
+        ClassificationForestOptions,
         ClassificationModel,
         ClassificationModelOptions,
         ClassificationLeaf,
@@ -23,8 +25,8 @@ module MachineLearning
         PipelineOptions,
         PipelineOptionsAny,
         StopAfterIteration,
-        RandomForest,
-        RandomForestOptions,
+        RegressionForest,
+        RegressionForestOptions,
         RegressionModel,
         RegressionModelOptions,
         StopAfterValidationErrorStopsImproving,
@@ -37,6 +39,7 @@ module MachineLearning
 
         # methods
         accuracy,
+        classification_forest_options,
         classification_split_location,
         classification_tree_options,
         cost,
@@ -56,7 +59,7 @@ module MachineLearning
         one_hot,
         predict,
         predict_probs,
-        random_forest_options,
+        regression_forest_options,
         regression_split_location,
         regression_tree_options,
         split_train_test,

@@ -1,4 +1,5 @@
 abstract DecisionNode
+abstract DecisionLeaf <: DecisionNode
 
 type ClassificationTreeOptions <: ClassificationModelOptions
     features_per_split_fraction::Float64
@@ -24,11 +25,11 @@ function regression_tree_options(;features_per_split_fraction::Float64=1.0,
                         minimum_split_size)
 end
 
-type ClassificationLeaf <: DecisionNode
+type ClassificationLeaf <: DecisionLeaf
     probs::Vector{Float64}
 end
 
-type RegressionLeaf <: DecisionNode
+type RegressionLeaf <: DecisionLeaf
     value::Float64
 end
 
@@ -215,11 +216,15 @@ function Base.length(tree::ClassificationTree)
     length(tree.root)
 end
 
+function Base.length(tree::RegressionTree)
+    length(tree.root)
+end
+
 function Base.length(branch::DecisionBranch)
     return 1+length(branch.left)+length(branch.right)
 end
 
-function Base.length(leaf::ClassificationLeaf)
+function Base.length(leaf::DecisionLeaf)
     return 1
 end
 
@@ -234,10 +239,14 @@ function depth(tree::ClassificationTree)
     depth(tree.root)
 end
 
+function depth(tree::RegressionTree)
+    depth(tree.root)
+end
+
 function depth(branch::DecisionBranch)
     return 1+max(depth(branch.left),depth(branch.right))
 end
 
-function depth(leaf::ClassificationLeaf)
+function depth(leaf::DecisionLeaf)
     return 1
 end
