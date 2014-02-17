@@ -4,6 +4,9 @@ abstract SupervisedModelOptions
 abstract ClassificationModel <: SupervisedModel
 abstract RegressionModel     <: SupervisedModel
 
+abstract ClassificationModelOptions <: SupervisedModelOptions
+abstract RegressionModelOptions     <: SupervisedModelOptions
+
 abstract Transformer
 abstract TransformerOptions
 

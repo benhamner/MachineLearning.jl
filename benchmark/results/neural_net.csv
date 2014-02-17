@@ -1,2 +1,2 @@
 "Category","Benchmark","Iterations","TotalWall","AverageWall","MaxWall","MinWall","Timestamp","JuliaHash","CodeHash","OS","CPUCores"
-"Neural Net","Basic Train",10,1.5868556409999999,0.15868556409999998,0.221231083,0.143493734,"2014-01-30 00:30:22","05c6461b55d9a66f05ead24926f5ee062b920d6b","NA","Windows",4
+"Neural Net","Basic Train",10,1.487572792,0.14875727919999998,0.180593821,0.136609573,"2014-02-16 20:41:04","05c6461b55d9a66f05ead24926f5ee062b920d6b","NA","Windows",4

@@ -1,6 +1,6 @@
 abstract DecisionNode
 
-type ClassificationTreeOptions <: SupervisedModelOptions
+type ClassificationTreeOptions <: ClassificationModelOptions
     features_per_split_fraction::Float64
     minimum_split_size::Int
 end
@@ -12,7 +12,7 @@ function classification_tree_options(;features_per_split_fraction::Float64=1.0,
                         minimum_split_size)
 end
 
-type RegressionTreeOptions <: SupervisedModelOptions
+type RegressionTreeOptions <: RegressionModelOptions
     features_per_split_fraction::Float64
     minimum_split_size::Int
 end

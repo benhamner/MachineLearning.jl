@@ -1,4 +1,4 @@
-type RandomForestOptions <: SupervisedModelOptions
+type RandomForestOptions <: ClassificationModelOptions
     num_trees::Int
     display::Bool
 end

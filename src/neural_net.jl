@@ -13,7 +13,7 @@ type StopAfterValidationErrorStopsImproving <: NeuralNetStopCriteria
 end
 StopAfterValidationErrorStopsImproving() = StopAfterValidationErrorStopsImproving(0.2, 2, 10, 1000)
 
-type NeuralNetOptions <: SupervisedModelOptions
+type NeuralNetOptions <: ClassificationModelOptions
     bias_unit::Bool # include a bias unit that always outputs a +1
     hidden_layers::Vector{Int} # sizes of hidden layers
     train_method::Symbol
