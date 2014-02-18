@@ -4,6 +4,9 @@ abstract SupervisedModelOptions
 abstract ClassificationModel <: SupervisedModel
 abstract RegressionModel     <: SupervisedModel
 
+abstract ClassificationModelOptions <: SupervisedModelOptions
+abstract RegressionModelOptions     <: SupervisedModelOptions
+
 abstract Transformer
 abstract TransformerOptions
 
@@ -49,4 +52,8 @@ end
 function StatsBase.predict(model::DataFrameClassificationModel, df::DataFrame)
     samples = float_matrix(df[model.colnames])
     predict(model.model, samples)
+end
+
+function StatsBase.predict(model::RegressionModel, samples::Matrix{Float64})
+    [StatsBase.predict(model, vec(samples[i,:])) for i=1:size(samples,1)]
 end

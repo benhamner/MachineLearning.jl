@@ -1,5 +1,6 @@
 DataFrames
 Devectorize
+Distributions
 Optim
 RDatasets
 StatsBase

@@ -3,7 +3,7 @@ abstract NeuralNetStopCriteria
 type StopAfterIteration <: NeuralNetStopCriteria
     max_iteration::Int
 end
-StopAfterIteration() = StopAfterIteration(50)
+StopAfterIteration() = StopAfterIteration(100)
 
 type StopAfterValidationErrorStopsImproving <: NeuralNetStopCriteria
     validation_set_size::Float64
@@ -13,7 +13,7 @@ type StopAfterValidationErrorStopsImproving <: NeuralNetStopCriteria
 end
 StopAfterValidationErrorStopsImproving() = StopAfterValidationErrorStopsImproving(0.2, 2, 10, 1000)
 
-type NeuralNetOptions <: SupervisedModelOptions
+type NeuralNetOptions <: ClassificationModelOptions
     bias_unit::Bool # include a bias unit that always outputs a +1
     hidden_layers::Vector{Int} # sizes of hidden layers
     train_method::Symbol
@@ -24,9 +24,9 @@ type NeuralNetOptions <: SupervisedModelOptions
 end
 
 function neural_net_options(;bias_unit::Bool=true,
-                            hidden_layers::Vector{Int}=[20],
+                            hidden_layers::Vector{Int}=[50],
                             train_method::Symbol=:sgd,
-                            learning_rate::Float64=1.0,
+                            learning_rate::Float64=10.0,
                             stop_criteria::NeuralNetStopCriteria=StopAfterIteration(),
                             display::Bool=false,
                             track_cost=false)
