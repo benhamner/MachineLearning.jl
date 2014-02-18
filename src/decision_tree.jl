@@ -47,7 +47,7 @@ type ClassificationTree <: ClassificationModel
     options::ClassificationTreeOptions
 end
 
-type RegressionTree <: ClassificationModel
+type RegressionTree <: RegressionModel
     root::DecisionNode
     features_per_split::Int
     options::RegressionTreeOptions

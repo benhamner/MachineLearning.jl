@@ -2,12 +2,15 @@ module MachineLearning
     using
         DataFrames,
         Devectorize,
+        Distributions,
         Optim,
         RDatasets,
         StatsBase
 
     export
         # types
+        Bart,
+        BartOptions,
         ClassificationForest,
         ClassificationForestOptions,
         ClassificationModel,
@@ -39,6 +42,7 @@ module MachineLearning
 
         # methods
         accuracy,
+        bart_options,
         classification_forest_options,
         classification_split_location,
         classification_tree_options,
@@ -56,6 +60,7 @@ module MachineLearning
         mean_squared_error,
         net_to_weights,
         neural_net_options,
+        nonterminal_node_prior,
         one_hot,
         predict,
         predict_probs,
@@ -69,6 +74,7 @@ module MachineLearning
 
     include("common.jl")
     include("decision_tree.jl")
+    include("bart.jl")
     include("metrics.jl")
     include("neural_net.jl")
     include("pipeline.jl")
