@@ -55,10 +55,11 @@ end
 
 function initialize_bart(x::Matrix{Float64}, y::Vector{Float64}, opts::BartOptions)
     trees = Array(BartTree, 0)
+    y_bar = mean(y)
     for i=1:opts.num_trees
-        push!(trees, BartTree(RegressionLeaf(0.0)))
+        push!(trees, BartTree(RegressionLeaf(y_bar)))
     end
-    sigma_hat = sigma_prior(x, y),
+    sigma_hat = sigma_prior(x, y)
     Bart(trees, 1.0, sigma_hat, opts)
 end
 
@@ -79,4 +80,11 @@ end
 
 function fit_predict(x_train::Matrix{Float64}, y_train::Vector{Float64}, opts::BartOptions, x_test::Matrix{Float64})
     bart = initialize_bart(x_train, y_train, opts)
+    for i=1:opts.num_draws
+        draw_sigma!(bart)
+        y_hat = predict()
+        for i=1:opts.num_trees
+            draw_tree_structure!(bart.trees[i], )
+        end
+    end
 end
