@@ -9,6 +9,7 @@ module MachineLearning
 
     export
         # types
+        AbstractRegressionTree,
         Bart,
         BartOptions,
         ClassificationForest,

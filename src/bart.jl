@@ -82,9 +82,15 @@ function fit_predict(x_train::Matrix{Float64}, y_train::Vector{Float64}, opts::B
     bart = initialize_bart(x_train, y_train, opts)
     for i=1:opts.num_draws
         draw_sigma!(bart)
-        y_hat = predict()
+        y_hat = predict(bart, x_train)
         for i=1:opts.num_trees
-            draw_tree_structure!(bart.trees[i], )
+            residuals = y_train-y_hat+predict(bart.trees[i], x_train)
+            draw_tree_structure!(bart.trees[i], residuals)
+            draw_leaf_values!(bart.trees[i], x_train, residuals)
         end
     end
+end
+
+function StatsBase.predict(bart::Bart, sample::Vector{Float64})
+    sum([predict(tree, sample) for tree=bart.trees])
 end

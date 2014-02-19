@@ -47,7 +47,8 @@ type ClassificationTree <: ClassificationModel
     options::ClassificationTreeOptions
 end
 
-type RegressionTree <: RegressionModel
+abstract AbstractRegressionTree <: RegressionModel
+type RegressionTree <:  AbstractRegressionTree
     root::DecisionNode
     features_per_split::Int
     options::RegressionTreeOptions
@@ -200,7 +201,7 @@ function StatsBase.predict(tree::ClassificationTree, sample::Vector{Float64})
     tree.classes[minimum(find(x->x==maximum(probs), probs))]
 end
 
-function StatsBase.predict(tree::RegressionTree, sample::Vector{Float64})
+function StatsBase.predict(tree::AbstractRegressionTree, sample::Vector{Float64})
     node = tree.root
     while typeof(node)==DecisionBranch
         if sample[node.feature]<=node.value
@@ -216,7 +217,7 @@ function Base.length(tree::ClassificationTree)
     length(tree.root)
 end
 
-function Base.length(tree::RegressionTree)
+function Base.length(tree::AbstractRegressionTree)
     length(tree.root)
 end
 
@@ -239,7 +240,7 @@ function depth(tree::ClassificationTree)
     depth(tree.root)
 end
 
-function depth(tree::RegressionTree)
+function depth(tree::AbstractRegressionTree)
     depth(tree.root)
 end
 
