@@ -31,6 +31,7 @@ type BartTree
     root::DecisionNode
 end
 
+# This is really a single iteration / state.
 type Bart <: RegressionModel
     trees::Vector{BartTree}
     sigma::Float64
@@ -78,6 +79,14 @@ function draw_sigma!(bart::Bart)
     bart.sigma = sigma
 end
 
+function draw_tree_structure!(tree::BartTree, x::Matrix{Float64}, r::Vector{Float64})
+
+end
+
+function draw_leaf_values!(tree::BartTree, x::Matrix{Float64}, r::Vector{Float64})
+
+end
+
 function fit_predict(x_train::Matrix{Float64}, y_train::Vector{Float64}, opts::BartOptions, x_test::Matrix{Float64})
     bart = initialize_bart(x_train, y_train, opts)
     for i=1:opts.num_draws
@@ -85,8 +94,11 @@ function fit_predict(x_train::Matrix{Float64}, y_train::Vector{Float64}, opts::B
         y_hat = predict(bart, x_train)
         for i=1:opts.num_trees
             residuals = y_train-y_hat+predict(bart.trees[i], x_train)
-            draw_tree_structure!(bart.trees[i], residuals)
+            draw_tree_structure!(bart.trees[i], x_train, residuals)
             draw_leaf_values!(bart.trees[i], x_train, residuals)
+        end
+        if i>opts.burn_in
+            # store predictions
         end
     end
 end
