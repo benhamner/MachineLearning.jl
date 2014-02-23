@@ -87,6 +87,13 @@ function draw_leaf_values!(tree::BartTree, x::Matrix{Float64}, r::Vector{Float64
 
 end
 
+function posterior_mu_sigma(prior_mu, a, sigma_hat, y_bar, num_observations)
+    b = num_observations / sigma_hat^2
+    posterior_mu = b*y_bar/(a+b)
+    posterior_sigma = 1 / sqrt(a+b)
+    posterior_mu, posterior_sigma
+end
+
 function fit_predict(x_train::Matrix{Float64}, y_train::Vector{Float64}, opts::BartOptions, x_test::Matrix{Float64})
     bart = initialize_bart(x_train, y_train, opts)
     for i=1:opts.num_draws
