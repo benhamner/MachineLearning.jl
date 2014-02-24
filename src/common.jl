@@ -16,7 +16,7 @@ type DataFrameClassificationModel
 end
 
 function float_matrix(df::DataFrame)
-    columns = names(df)
+    columns = colnames(df)
     res = Array(Float64, (nrow(df), ncol(df)))
     for (i,(name,col)) = enumerate(df)
         res[:,i] = col
@@ -26,10 +26,10 @@ end
 
 function fit(df::DataFrame, target_column::String, opts::SupervisedModelOptions)
     y = [x for x=df[target_column]]
-    colnames = filter(x->x!=target_column, names(df))
-    x = float_matrix(df[colnames])
+    columns = filter(x->x!=target_column, colnames(df))
+    x = float_matrix(df[columns])
     model = fit(x, y, opts)
-    DataFrameClassificationModel(model, colnames)
+    DataFrameClassificationModel(model, columns)
 end
 
 function predict_probs(model::ClassificationModel, samples::Matrix{Float64})
