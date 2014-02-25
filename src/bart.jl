@@ -1,3 +1,8 @@
+type BartLeaf <: DecisionLeaf
+    value::Float64
+    train_data_indices::Vector{Int}
+end
+
 type BartTreeTransformationProbabilies
     grow_terminal_node::Float64
     prune_terminal_node_pair::Float64
@@ -27,7 +32,7 @@ function bart_options(;num_trees::Int=10,
     BartOptions(num_trees, burn_in, num_draws, alpha, beta, k, transform_probabilities)
 end
 
-type BartTree
+type BartTree <: AbstractRegressionTree
     root::DecisionNode
 end
 
@@ -58,7 +63,7 @@ function initialize_bart(x::Matrix{Float64}, y::Vector{Float64}, opts::BartOptio
     trees = Array(BartTree, 0)
     y_bar = mean(y)
     for i=1:opts.num_trees
-        push!(trees, BartTree(RegressionLeaf(y_bar)))
+        push!(trees, BartTree(BartLeaf(y_bar, [1:size(x,1)])))
     end
     sigma_hat = sigma_prior(x, y)
     Bart(trees, 1.0, sigma_hat, opts)
@@ -79,11 +84,7 @@ function draw_sigma!(bart::Bart)
     bart.sigma = sigma
 end
 
-function draw_tree_structure!(tree::BartTree, x::Matrix{Float64}, r::Vector{Float64})
-
-end
-
-function draw_leaf_values!(tree::BartTree, x::Matrix{Float64}, r::Vector{Float64})
+function update_tree!(tree::BartTree, x::Matrix{Float64}, r::Vector{Float64})
 
 end
 
@@ -101,8 +102,7 @@ function fit_predict(x_train::Matrix{Float64}, y_train::Vector{Float64}, opts::B
         y_hat = predict(bart, x_train)
         for i=1:opts.num_trees
             residuals = y_train-y_hat+predict(bart.trees[i], x_train)
-            draw_tree_structure!(bart.trees[i], x_train, residuals)
-            draw_leaf_values!(bart.trees[i], x_train, residuals)
+            update_tree!(bart.trees[i], x_train, residuals)
         end
         if i>opts.burn_in
             # store predictions
