@@ -2,9 +2,10 @@ Short-term TODO's
 =================
 
 1. BART for regression
-2. Track & optionally show metadata and state during training 
-3. Support minibatch sgd during neural net training
-4. Supervised regression support for neural nets
+2. Support categorical predictors
+3. Track & optionally show metadata and state during training 
+4. Support minibatch sgd during neural net training
+5. Supervised regression support for neural nets
 
 Longer term Roadmap
 ===================
