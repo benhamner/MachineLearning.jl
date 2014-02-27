@@ -7,6 +7,11 @@ type BartTreeTransformationProbabilies
     node_birth_death::Float64
     change_decision_rule::Float64
     swap_decision_rule::Float64
+
+    function BartTreeTransformationProbabilies(n, c, s)
+        assert(n+c+s==1.0)
+        new(n, c, s)
+    end
 end
 BartTreeTransformationProbabilies() = BartTreeTransformationProbabilies(0.5, 0.4, 0.1)
 
@@ -83,8 +88,38 @@ function draw_sigma!(bart::Bart)
     bart.sigma = sigma
 end
 
-function update_tree!(tree::BartTree, x::Matrix{Float64}, r::Vector{Float64})
+function update_tree!(tree::BartTree, opts::BartOptions, x::Matrix{Float64}, r::Vector{Float64})
+    select_action = rand()
+    if select_action < opts.transform_probabilities.node_birth_death
+        alpha = node_birth_death!(tree, x, r)
+    elseif select_action < opts.transform_probabilities.node_birth_death + opts.transform_probabilities.change_decision_rule
+        alpha = change_decision_rule!(tree, x, r)
+    else
+        alpha = swap_decision_rule!(tree, x, r)
+    end
+    alpha
+end
 
+function probability_node_birth(tree:BartTree)
+    if typeof(tree.root) == BartLeaf
+        probability_birth = 1.0
+    else
+        error("Not implemented yet")
+    end
+
+    probability_birth
+end
+
+function node_birth_death!(tree::BartTree, x::Matrix{Float64}, r::Vector{Float64})
+    error("Not implemented yet")
+end
+
+function change_decision_rule!(tree::BartTree, x::Matrix{Float64}, r::Vector{Float64})
+    error("Not implemented yet")
+end
+
+function swap_decision_rule!(tree::BartTree, x::Matrix{Float64}, r::Vector{Float64})
+    error("Not implemented yet")
 end
 
 function posterior_mu_sigma(prior_mu, a, sigma_hat, y_bar, num_observations)
@@ -101,7 +136,7 @@ function fit_predict(x_train::Matrix{Float64}, y_train::Vector{Float64}, opts::B
         y_hat = predict(bart, x_train)
         for i=1:opts.num_trees
             residuals = y_train-y_hat+predict(bart.trees[i], x_train)
-            update_tree!(bart.trees[i], x_train, residuals)
+            update_tree!(bart.trees[i], bart.options, x_train, residuals)
         end
         if i>opts.burn_in
             # store predictions
