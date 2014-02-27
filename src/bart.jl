@@ -4,12 +4,11 @@ type BartLeaf <: DecisionLeaf
 end
 
 type BartTreeTransformationProbabilies
-    grow_terminal_node::Float64
-    prune_terminal_node_pair::Float64
+    node_birth_death::Float64
     change_decision_rule::Float64
     swap_decision_rule::Float64
 end
-BartTreeTransformationProbabilies() = BartTreeTransformationProbabilies(0.25, 0.25, 0.4, 0.1)
+BartTreeTransformationProbabilies() = BartTreeTransformationProbabilies(0.5, 0.4, 0.1)
 
 type BartOptions <: RegressionModelOptions
     num_trees::Int
