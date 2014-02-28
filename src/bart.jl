@@ -129,12 +129,32 @@ function all_leaf_nodes!(leaf::BartLeaf, leaf_nodes::Vector{BartLeaf})
     push!(leaf_nodes, leaf)
 end
 
+function depth(tree::BartTree, leaf::BartLeaf)
+    depth(tree.root, leaf)
+end
+
+function depth(node::DecisionBranch, leaf::BartLeaf)
+    error("Not implemented yet")
+end
+
+function growth_prior(tree::BartTree, leaf::BartLeaf, opts::BartOptions)
+    leaf_depth = depth(tree, leaf)
+end
+
+function node_birth!(tree::BartTree, leaf::BartLeaf, x::Matrix{Float64}, r::Vector{Float64})
+    error("Not implemented yet")
+end
+
+function node_death!(tree::BartTree, x::Matrix{Float64}, r::Vector{Float64})
+    error("Not implemented yet")
+end
+
 function node_birth_death!(tree::BartTree, x::Matrix{Float64}, r::Vector{Float64})
     probability_birth, birth_node = probability_node_birth(tree)
     if rand() < probability_birth
-        error("Not implemented yet")
-    else # node_death
-        error("Not implemented yet")
+        node_birth!(tree, birth_node, x, r)
+    else
+        node_death!(tree, x, r)
     end
 end
 
