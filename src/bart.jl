@@ -100,18 +100,42 @@ function update_tree!(tree::BartTree, opts::BartOptions, x::Matrix{Float64}, r::
     alpha
 end
 
-function probability_node_birth(tree:BartTree)
+function probability_node_birth(tree::BartTree)
     if typeof(tree.root) == BartLeaf
         probability_birth = 1.0
+        birth_node = tree.root
     else
-        error("Not implemented yet")
+        probability_birth = 0.5
+        leaf_nodes = all_leaf_nodes(tree)
+        i = rand(1:length(leaf_nodes))
+        birth_node = leaf_nodes[i]
     end
 
-    probability_birth
+    probability_birth, birth_node
+end
+
+function all_leaf_nodes(tree::BartTree)
+    leaf_nodes = Array(BartLeaf, 0)
+    all_leaf_nodes!(tree.root, leaf_nodes)
+    leaf_nodes
+end
+
+function all_leaf_nodes!(branch::DecisionBranch, leaf_nodes::Vector{BartLeaf})
+    all_leaf_nodes!(branch.left,  leaf_nodes)
+    all_leaf_nodes!(branch.right, leaf_nodes)
+end
+
+function all_leaf_nodes!(leaf::BartLeaf, leaf_nodes::Vector{BartLeaf})
+    push!(leaf_nodes, leaf)
 end
 
 function node_birth_death!(tree::BartTree, x::Matrix{Float64}, r::Vector{Float64})
-    error("Not implemented yet")
+    probability_birth, birth_node = probability_node_birth(tree)
+    if rand() < probability_birth
+        error("Not implemented yet")
+    else # node_death
+        error("Not implemented yet")
+    end
 end
 
 function change_decision_rule!(tree::BartTree, x::Matrix{Float64}, r::Vector{Float64})
