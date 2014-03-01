@@ -91,7 +91,7 @@ end
 function update_tree!(tree::BartTree, opts::BartOptions, x::Matrix{Float64}, r::Vector{Float64})
     select_action = rand()
     if select_action < opts.transform_probabilities.node_birth_death
-        alpha = node_birth_death!(tree, x, r)
+        alpha = node_birth_death!(tree, x, r, opts)
     elseif select_action < opts.transform_probabilities.node_birth_death + opts.transform_probabilities.change_decision_rule
         alpha = change_decision_rule!(tree, x, r)
     else
@@ -133,15 +133,38 @@ function depth(tree::BartTree, leaf::BartLeaf)
     depth(tree.root, leaf)
 end
 
-function depth(node::DecisionBranch, leaf::BartLeaf)
-    error("Not implemented yet")
+function depth(branch::DecisionBranch, leaf::BartLeaf)
+    left_depth  = depth(branch.left)
+    right_depth = depth(branch.right)
+    left_depth  = left_depth > 0  ? left_depth  + 1 : 0
+    right_depth = right_depth > 0 ? right_depth + 1 : 0
+    max(left_depth, right_depth)
+end
+
+function depth(leaf2::BartLeaf, leaf::BartLeaf)
+    leaf==leaf2 ? 1 : 0
+end
+
+function parent(tree::BartTree, leaf::BartLeaf)
+    parent(tree.root, leaf)
+end
+
+function parent(branch::DecisionBranch, leaf::BartLeaf)
+    if branch.left==leaf || branch.right==leaf
+        this_parent = branch
+    else
+        error("Not implemented yet")
+    end
 end
 
 function growth_prior(tree::BartTree, leaf::BartLeaf, opts::BartOptions)
     leaf_depth = depth(tree, leaf)
+    branch_prior = nonterminal_node_prior(opts, leaf_depth)
+    length(leaf.train_data_indices) >= 5 ? branch_prior : 0.001*branch_prior
 end
 
-function node_birth!(tree::BartTree, leaf::BartLeaf, x::Matrix{Float64}, r::Vector{Float64})
+function node_birth!(tree::BartTree, leaf::BartLeaf, x::Matrix{Float64}, r::Vector{Float64}, opts::BartOptions)
+    branch_prior = growth_prior(tree, leaf, opts)
     error("Not implemented yet")
 end
 
@@ -149,10 +172,10 @@ function node_death!(tree::BartTree, x::Matrix{Float64}, r::Vector{Float64})
     error("Not implemented yet")
 end
 
-function node_birth_death!(tree::BartTree, x::Matrix{Float64}, r::Vector{Float64})
+function node_birth_death!(tree::BartTree, x::Matrix{Float64}, r::Vector{Float64}, opts::BartOptions)
     probability_birth, birth_node = probability_node_birth(tree)
     if rand() < probability_birth
-        node_birth!(tree, birth_node, x, r)
+        node_birth!(tree, birth_node, x, r, opts)
     else
         node_death!(tree, x, r)
     end
