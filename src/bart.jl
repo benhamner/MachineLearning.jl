@@ -124,18 +124,24 @@ end
 
 function probability_node_birth(tree::BartTree)
     if typeof(tree.root) == BartLeaf
-        probability_birth = 1.0
-        birth_node = tree.root
+        return 1.0
+    else
+        return 0.5
+    end
+end
+
+function birth_node(tree::BartTree)
+    if typeof(tree.root) == BartLeaf
+        leaf = tree.root
         leaf_node_probability = 1.0
     else
-        probability_birth = 0.5
         leaf_nodes = all_leaf_nodes(tree)
         i = rand(1:length(leaf_nodes))
-        birth_node = leaf_nodes[i]
-        leaf_node_probability = 1.0/length(leaf_nodes)
+        leaf = leaf_nodes[i]
+        leaf_probability = 1.0/length(leaf_nodes)
     end
 
-    probability_birth, birth_node, leaf_node_probability
+    leaf, leaf_probability
 end
 
 function all_leaf_nodes(tree::BartTree)
@@ -151,6 +157,25 @@ end
 
 function all_leaf_nodes!(leaf::BartLeaf, leaf_nodes::Vector{BartLeaf})
     push!(leaf_nodes, leaf)
+end
+
+function all_nog_nodes(tree::BartTree)
+    nog_nodes = Array(DecisionBranch, 0)
+    all_nog_nodes!(tree.root, nog_nodes)
+    nog_nodes
+end
+
+function all_nog_nodes!(branch::DecisionBranch, nog_nodes::Vector{DecisionBranch})
+    if typeof(branch.left)==BartLeaf && typeof(branch.right)==BartLeaf
+        push!(nog_nodes, branch)
+    else
+        all_nog_nodes!(branch.left,  nog_nodes)
+        all_nog_nodes!(branch.right, nog_nodes)
+    end
+end
+
+function all_nog_nodes!(leaf::BartLeaf, nog_nodes::Vector{DecisionBranch})
+    # no action
 end
 
 function depth(tree::BartTree, leaf::BartLeaf)
@@ -178,20 +203,20 @@ function data_or_none(a, b)
     val
 end
 
-function parent(tree::BartTree, leaf::BartLeaf)
-    parent(tree.root, leaf)
+function parent(tree::BartTree, node::DecisionNode)
+    parent(tree.root, node)
 end
 
-function parent(branch::DecisionBranch, leaf::BartLeaf)
-    if branch.left==leaf || branch.right==leaf
+function parent(branch::DecisionBranch, node::DecisionNode)
+    if branch.left==node || branch.right==node
         this_parent = branch
     else
-        this_parent = data_or_none(parent(branch.left, leaf), parent(branch.right, leaf))
+        this_parent = data_or_none(parent(branch.left, node), parent(branch.right, node))
     end
     this_parent
 end
 
-function parent(leaf2::BartLeaf, leaf::BartLeaf)
+function parent(leaf::BartLeaf, node::DecisionNode)
     None
 end
 
@@ -231,7 +256,8 @@ function count_nodes_with_two_leaf_children(tree::BartTree)
     count_nodes_with_two_leaf_children(tree.root)
 end
  
-function node_birth!(tree::BartTree, leaf::BartLeaf, x::Matrix{Float64}, r::Vector{Float64}, probability_birth::Float64, leaf_node_probability::Float64, opts::BartOptions)
+function node_birth!(tree::BartTree, x::Matrix{Float64}, r::Vector{Float64}, probability_birth::Float64, opts::BartOptions)
+    leaf, leaf_node_probability = birth_node(tree)
     leaf_depth    = depth(tree, leaf)
     leaf_prior    = growth_prior(leaf, leaf_depth, opts)
     ll_before     = log_likelihood(leaf)
@@ -245,48 +271,91 @@ function node_birth!(tree::BartTree, leaf::BartLeaf, x::Matrix{Float64}, r::Vect
     right_leaf    = BartLeaf(r, right_indices)
     branch        = DecisionBranch(split_feature, split_value, left_leaf, right_leaf)
 
-    parent_branch = parent(tree, leaf)
-    if leaf==parent_branch.left
-        parent_branch.left  = branch
-    else
-        parent_branch.right = branch
-    end
-    
     left_prior    = growth_prior(left_leaf , leaf_depth+1, opts)
     right_prior   = growth_prior(right_leaf, leaf_depth+1, opts)
     ll_after      = log_likelihood(branch)
 
-    p_nog = 1.0/count_nodes_with_two_leaf_children(tree)
-    p_dy  = 1.0-probability_node_birth(tree)[1]
+    parent_branch = parent(tree, leaf)
+    num_nog_nodes = count_nodes_with_two_leaf_children(tree)
+    if parent_branch == None 
+        num_nog_nodes += 1
+    elseif typeof(parent_branch.left) != BartLeaf || typeof(parent_branch.right) != BartLeaf
+        num_nog_nodes += 1
+    end
+
+    p_nog = 1.0/num_nog_nodes
+    p_dy  = 0.5 #1.0-probability_node_birth(tree)
 
     alpha1 = (leaf_prior*(1.0-left_prior)*(1.0-right_prior)*p_dy*p_nog)/((1.0-leaf_prior)*probability_birth*leaf_node_probability)
-    alpha  = alpha1 * exp(Ly-Lx)
+    alpha  = alpha1 * exp(ll_after-ll_before)
 
     if rand()<alpha
+        if parent_branch == None
+            tree.root = branch
+        else
+            if leaf==parent_branch.left
+                parent_branch.left  = branch
+            else
+                parent_branch.right = branch
+            end
+        end
         updated = true
     else
-        if branch==parent_branch.left
-            parent_branch.left  = leaf
-        else
-            parent_branch.right = leaf
-        end
         updated = false
     end
 
     alpha, updated
-    error("Not implemented yet")
 end
 
-function node_death!(tree::BartTree, x::Matrix{Float64}, r::Vector{Float64})
-    error("Not implemented yet")
+function death_node(tree::BartTree)
+    nog_nodes = all_nog_nodes(tree)
+    nog_nodes[rand(1:length(nog_nodes))], 1.0/length(nog_nodes)
+end
+
+function node_death!(tree::BartTree, r::Vector{Float64}, probability_death::Float64, opts::BartOptions)
+    branch, p_nog = death_node(tree)
+    leaf_depth    = depth(tree, branch.left)
+    left_prior    = growth_prior(branch.left, leaf_depth, opts)
+    right_prior   = growth_prior(branch.left, leaf_depth, opts)
+    ll_before     = log_likelihood(branch)
+    leaf          = BartLeaf(r, sort(vcat(branch.left.train_data_indices, branch.right.train_data_indices)))
+    ll_after      = log_likelihood(leaf)
+
+    parent_branch = parent(tree, branch)
+    if parent_branch == None
+        probability_birth_after = 1.0
+    else
+        probability_birth_after = 0.5
+    end
+    prior_grow = growth_prior(leaf, leaf_depth-1, opts)
+    probability_birth_leaf = 1.0 / (length(all_leaf_nodes(tree))-1)
+
+    alpha1 = ((1.0-prior_grow)*probability_birth_after*probability_birth_leaf)/(prior_grow*(1.0-left_prior)*(1.0-right_prior)*probability_death*p_nog)
+    alpha  = alpha1*exp(ll_after-ll_before)
+
+    if rand()<alpha
+        if parent_branch == None 
+            tree.root = leaf
+        else
+            if parent_branch.left == branch
+                parent_branch.left =  leaf
+            else
+                parent_branch.right = leaf
+            end
+        end
+        updated = true
+    else
+        updated = false
+    end
 end
 
 function node_birth_death!(tree::BartTree, x::Matrix{Float64}, r::Vector{Float64}, opts::BartOptions)
-    probability_birth, birth_node, leaf_node_probability = probability_node_birth(tree)
+    probability_birth = probability_node_birth(tree)
     if rand() < probability_birth
-        alpha, updated = node_birth!(tree, birth_node, x, r, probability_birth, leaf_node_probability, opts)
+        alpha, updated = node_birth!(tree, x, r, probability_birth, opts)
     else
-        alpha, updated = node_death!(tree, x, r)
+        probability_death = 1.0 - probability_birth
+        alpha, updated = node_death!(tree, r, probability_death, opts)
     end
     alpha, updated
 end
