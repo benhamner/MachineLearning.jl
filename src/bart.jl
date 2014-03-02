@@ -51,7 +51,7 @@ type BartOptions <: RegressionModelOptions
 end
 BartOptions() = BartOptions(10, 200, 1000, 0.95, 2.0, BartTreeTransformationProbabilies())
 
-function bart_options(;num_trees::Int=10,
+function bart_options(;num_trees::Int=200,
                       burn_in::Int=200,
                       num_draws::Int=1000,
                       alpha::Float64=0.95,
