@@ -37,7 +37,7 @@ net = fit(x_train, y_train, opts)
 yhat = predict(net, x_test)
 acc = accuracy(y_test, yhat)
 println("Linear Accuracy, Preset Stop: ", acc)
-@test acc>0.8
+@test acc>0.7
 
 opts = neural_net_options(learning_rate=10.0, train_method=:cg)
 net = fit(x_train, y_train, opts)
@@ -47,14 +47,14 @@ end
 yhat = predict(net, x_test)
 acc = accuracy(y_test, yhat)
 println("Linear Accuracy, Soph: ", acc)
-@test acc>0.8
+@test acc>0.7
 
 opts = neural_net_options(learning_rate=10.0, stop_criteria=StopAfterValidationErrorStopsImproving())
 net = fit(x_train, y_train, opts)
 yhat = predict(net, x_test)
 acc = accuracy(y_test, yhat)
 println("Linear Accuracy, Valid Stop: ", acc)
-@test acc>0.8
+@test acc>0.7
 
 x = randn(2500, 5)
 y = int(map(x->x>0.0, x[:,1]-x[:,2]+3*x[:,3]+x[:,4].*x[:,5]+0.2*randn(2500)))
@@ -65,7 +65,7 @@ net = fit(x_train, y_train, opts)
 yhat = predict(net, x_test)
 acc = accuracy(y_test, yhat)
 println("Nonlinear Accuracy, 1 Hidden Layer : ", acc)
-@test acc>0.80
+@test acc>0.70
 
 opts = neural_net_options(hidden_layers=[10;10], learning_rate=10.0)
 net = fit(x_train, y_train, opts)
@@ -73,11 +73,11 @@ println(net)
 yhat = predict(net, x_test)
 acc = accuracy(y_test, yhat)
 println("Nonlinear Accuracy, 2 Hidden Layers: ", acc)
-@test acc>0.80
+@test acc>0.70
 
 opts = neural_net_options(hidden_layers=Array(Int, 0), learning_rate=10.0)
 net = fit(x_train, y_train, opts)
 yhat = predict(net, x_test)
 acc = accuracy(y_test, yhat)
 println("Nonlinear Accuracy, 0 Hidden Layers: ", acc)
-@test acc>0.80
+@test acc>0.70
