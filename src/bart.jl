@@ -38,7 +38,7 @@ type BartTreeTransformationProbabilies
     end
 end
 # BartTreeTransformationProbabilies() = BartTreeTransformationProbabilies(0.5, 0.4, 0.1)
-BartTreeTransformationProbabilies() = BartTreeTransformationProbabilies(1.0, 0.0, 0.0)
+BartTreeTransformationProbabilies() = BartTreeTransformationProbabilies(0.6, 0.4, 0.0)
 
 type BartOptions <: RegressionModelOptions
     num_trees::Int
@@ -122,7 +122,8 @@ function update_tree!(bart::Bart, tree::BartTree, x::Matrix{Float64}, r::Vector{
     if select_action < bart.options.transform_probabilities.node_birth_death
         alpha, updated = node_birth_death!(bart, tree, x, r)
     elseif select_action < bart.options.transform_probabilities.node_birth_death + bart.options.transform_probabilities.change_decision_rule
-        alpha, updated = change_decision_rule!(tree, x, r)
+        alpha, updated = change_decision_rule!(bart, tree, x, r)
+        # println("Changed Decision Rule", "\talpha: ", alpha, "\tupdated: ", updated)
     else
         alpha, updated = swap_decision_rule!(tree, x, r)
     end
@@ -185,11 +186,30 @@ function all_nog_nodes!(leaf::BartLeaf, nog_nodes::Vector{DecisionBranch})
     # no action
 end
 
-function depth(tree::BartTree, leaf::BartLeaf)
-    depth(tree.root, leaf)
+function all_branches(tree::BartTree)
+    branches = Array(DecisionBranch, 0)
+    all_branches!(tree.root, branches)
+    branches
 end
 
-function depth(branch::DecisionBranch, leaf::BartLeaf)
+function all_branches!(branch::DecisionBranch, branches::Vector{DecisionBranch})
+    push!(branches, branch)
+    all_branches!(branch.left,  branches)
+    all_branches!(branch.right, branches)
+end
+
+function all_branches!(leaf::BartLeaf, branches::Vector{DecisionBranch})
+    # no action
+end
+
+function depth(tree::BartTree, node::DecisionNode)
+    depth(tree.root, node)
+end
+
+function depth(branch::DecisionBranch, node::DecisionNode)
+    if node==branch
+        return 1
+    end
     left_depth  = depth(branch.left)
     right_depth = depth(branch.right)
     left_depth  = left_depth > 0  ? left_depth  + 1 : 0
@@ -197,8 +217,8 @@ function depth(branch::DecisionBranch, leaf::BartLeaf)
     max(left_depth, right_depth)
 end
 
-function depth(leaf2::BartLeaf, leaf::BartLeaf)
-    leaf==leaf2 ? 1 : 0
+function depth(leaf::BartLeaf, node::BartLeaf)
+    node==leaf ? 1 : 0
 end
 
 function data_or_none(a, b)
@@ -227,9 +247,10 @@ function parent(leaf::BartLeaf, node::DecisionNode)
     None
 end
 
-function growth_prior(leaf::BartLeaf, leaf_depth::Int, opts::BartOptions)
-    branch_prior = nonterminal_node_prior(opts, leaf_depth)
-    length(leaf.train_data_indices) >= 5 ? branch_prior : 0.001*branch_prior
+function growth_prior(node::DecisionNode, depth::Int, opts::BartOptions)
+    indices = train_data_indices(node)
+    branch_prior = nonterminal_node_prior(opts, depth)
+    length(indices) >= 5 ? branch_prior : 0.001*branch_prior
 end
 
 function log_likelihood(leaf::BartLeaf, params::BartLeafParameters)
@@ -372,8 +393,92 @@ function node_birth_death!(bart::Bart, tree::BartTree, x::Matrix{Float64}, r::Ve
     alpha, updated
 end
 
-function change_decision_rule!(tree::BartTree, x::Matrix{Float64}, r::Vector{Float64})
-    error("Not implemented yet")
+function train_data_indices(branch::DecisionBranch)
+    indices = Array(Int, 0)
+    train_data_indices!(branch, indices)
+    sort(indices)
+end
+
+function train_data_indices(leaf::DecisionLeaf)
+    leaf.train_data_indices
+end
+
+function train_data_indices!(branch::DecisionBranch, indices::Vector{Int})
+    train_data_indices!(branch.left,  indices)
+    train_data_indices!(branch.right, indices)
+end
+
+function train_data_indices!(leaf::BartLeaf, indices::Vector{Int})
+    for i=leaf.train_data_indices
+        push!(indices, i)
+    end
+end
+
+function fix_data!(branch::DecisionBranch, x::Matrix{Float64}, r::Vector{Float64}, indices::Vector{Int})
+    feature       = x[indices, branch.feature]
+    left_indices  = indices[map(z->z<=branch.value, feature)]
+    right_indices = indices[map(z->z >branch.value, feature)]
+    fix_data!(branch, branch.left,  true,  x, r, left_indices)
+    fix_data!(branch, branch.right, false, x, r, right_indices)
+end
+
+function fix_data!(parent::DecisionBranch, branch::DecisionBranch, left_child::Bool, x::Matrix{Float64}, r::Vector{Float64}, indices::Vector{Int})
+    fix_data!(branch, x, r, indices)
+end
+
+function fix_data!(parent::DecisionBranch, leaf::BartLeaf, left_child::Bool, x::Matrix{Float64}, r::Vector{Float64}, indices::Vector{Int})
+    if left_child
+        parent.left  = BartLeaf(r, indices)
+    else
+        parent.right = BartLeaf(r, indices)
+    end
+end
+
+function log_node_prior(branch::DecisionBranch, branch_depth::Int, opts::BartOptions)
+    indices = train_data_indices(branch)
+    prior = log(growth_prior(branch, branch_depth, opts)) - log(length(indices))
+    prior + log_node_prior(branch.left, branch_depth+1, opts) + log_node_prior(branch.right, branch_depth+1, opts)
+end
+
+function log_node_prior(leaf::DecisionLeaf, leaf_depth::Int, opts::BartOptions)
+    log(1.0 - growth_prior(leaf, leaf_depth, opts))
+end
+
+function change_decision_rule!(bart::Bart, tree::BartTree, x::Matrix{Float64}, r::Vector{Float64})
+    branches = all_branches(tree)
+    if length(branches)==0
+        return 0.0, false
+    end
+
+    branch       = branches[rand(1:length(branches))]
+    branch_depth = depth(tree, branch)
+    indices      = train_data_indices(branch)
+
+    old_feature  = branch.feature
+    old_value    = branch.value
+    ll_before    = log_likelihood(branch, bart.leaf_parameters)
+    prior_before = log_node_prior(branch, branch_depth, bart.options)
+
+    features = [1:size(x,2)]
+    splice!(features, branch.feature)
+    new_feature = features[rand(1:length(features))]
+    new_value   = x[indices[rand(1:length(indices))], new_feature]
+
+    fix_data!(branch, x, r, indices)
+    ll_after    = log_likelihood(branch, bart.leaf_parameters)
+    prior_after = log_node_prior(branch, branch_depth, bart.options)
+
+    alpha = exp(prior_after + ll_after - prior_before - ll_before)
+
+    if rand()<alpha
+        updated = true
+    else
+        branch.feature = old_feature
+        branch.value   = old_value
+        fix_data!(branch, x, r, indices)
+        updated = false
+    end
+
     alpha, updated
 end
 
