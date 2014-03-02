@@ -32,7 +32,7 @@ x_train, y_train, x_test, y_test = split_train_test(x, y, 0.50)
 x_train, y_train, x_test, y_test = split_train_test(x, y, 0.25)
 @test size(x_train, 1)==1
 
-iris = data("datasets", "iris")
+iris = dataset("datasets", "iris")
 train, test = split_train_test(iris, 0.50)
 @test nrow(train)==75
 @test nrow(test) ==75
