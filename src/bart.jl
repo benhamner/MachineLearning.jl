@@ -89,17 +89,19 @@ function sigma_prior(x::Matrix{Float64}, y::Vector{Float64})
     sigma_hat = std(x*linear_model-y)
 end
 
-function initialize_bart(x::Matrix{Float64}, y::Vector{Float64}, opts::BartOptions)
+function initialize_bart(x::Matrix{Float64}, y::Vector{Float64}, y_min, y_max, opts::BartOptions)
     trees = Array(BartTree, 0)
     for i=1:opts.num_trees
         push!(trees, BartTree(BartLeaf(y/opts.num_trees, [1:size(x,1)])))
     end
     sigma  = sigma_prior(x, y)
     nu     = 3.0
+    k      = 2.0
+    musig  = 0.5/(k*sqrt(opts.num_trees)
     q      = 0.90
     lambda = sigma^2.0*quantile(NoncentralChisq(nu, 1.0), q)/nu
-    params = BartLeafParameters(sigma, sigma, nu, lambda)
-    bart = Bart(trees, params, minimum(y), maximum(y), opts)
+    params = BartLeafParameters(sigma, musig, nu, lambda)
+    bart = Bart(trees, params, y_min, y_max, opts)
     for tree=bart.trees
         update_leaf_values!(tree, bart.leaf_parameters)
     end
@@ -392,13 +394,19 @@ function update_leaf_value!(leaf::BartLeaf, params::BartLeafParameters)
     leaf.value = post_mu + post_sigma*randn()
 end
 
+function normalize(y::Vector{Float64}, y_min, y_max)
+    (y - y_min) / (y_max - y_min) - 0.5
+end
+
 function normalize(bart::Bart, y::Vector{Float64})
-    (y - bart.y_min) / (bart.y_max - bart.y_min) - 0.5
+    normalize(y, bart.y_min, bart.y_max)
 end
 
 function fit_predict(x_train::Matrix{Float64}, y_train::Vector{Float64}, opts::BartOptions, x_test::Matrix{Float64})
-    bart = initialize_bart(x_train, y_train, opts)
-    y_train = normalize(bart, y_train)
+    y_min = minimum(y)
+    y_max = maximum(y)
+    y_train = normalize(y_train, y_min, y_max)
+    bart = initialize_bart(x_train, y_train, y_min, y_max, opts)
 
     y_train_current = normalize(bart, predict(bart, x_train))
     y_test_current  = normalize(bart, predict(bart, x_test))
