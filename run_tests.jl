@@ -1,5 +1,6 @@
 tests = [
     "accuracy",
+    "bart",
     "common",
     "decision_tree",
     "metrics",
