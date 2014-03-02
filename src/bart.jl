@@ -51,7 +51,7 @@ type BartOptions <: RegressionModelOptions
 end
 BartOptions() = BartOptions(10, 200, 1000, 0.95, 2.0, BartTreeTransformationProbabilies())
 
-function bart_options(;num_trees::Int=200,
+function bart_options(;num_trees::Int=10,
                       burn_in::Int=200,
                       num_draws::Int=1000,
                       alpha::Float64=0.95,
@@ -92,12 +92,15 @@ end
 function initialize_bart(x::Matrix{Float64}, y::Vector{Float64}, y_min, y_max, opts::BartOptions)
     trees = Array(BartTree, 0)
     for i=1:opts.num_trees
-        push!(trees, BartTree(BartLeaf(y/opts.num_trees, [1:size(x,1)])))
+        push!(trees, BartTree(BartLeaf(y, [1:size(x,1)])))
     end
     sigma  = sigma_prior(x, y)
+    println("Sigma Hat: ", sigma)
+    println("Std Y: ", sqrt(mean(y.^2)))
     nu     = 3.0
     k      = 2.0
-    musig  = 0.5/(k*sqrt(opts.num_trees)
+    musig  = 0.5/(k*sqrt(opts.num_trees))
+    println("MuSig: ", musig)
     q      = 0.90
     lambda = sigma^2.0*quantile(NoncentralChisq(nu, 1.0), q)/nu
     params = BartLeafParameters(sigma, musig, nu, lambda)
@@ -294,7 +297,7 @@ function node_birth!(bart::Bart, tree::BartTree, x::Matrix{Float64}, r::Vector{F
 
     alpha1 = (leaf_prior*(1.0-left_prior)*(1.0-right_prior)*p_dy*p_nog)/((1.0-leaf_prior)*probability_birth*leaf_node_probability)
     alpha  = alpha1 * exp(ll_after-ll_before)
-    #println(alpha1, "\t", exp(ll_after-ll_before), "\t", ll_after, "\t", ll_before)
+    # println(alpha1, "\t", exp(ll_after-ll_before), "\t", ll_after, "\t", ll_before)
 
     if rand()<alpha
         if parent_branch == None
@@ -403,8 +406,8 @@ function normalize(bart::Bart, y::Vector{Float64})
 end
 
 function fit_predict(x_train::Matrix{Float64}, y_train::Vector{Float64}, opts::BartOptions, x_test::Matrix{Float64})
-    y_min = minimum(y)
-    y_max = maximum(y)
+    y_min = minimum(y_train)
+    y_max = maximum(y_train)
     y_train = normalize(y_train, y_min, y_max)
     bart = initialize_bart(x_train, y_train, y_min, y_max, opts)
 

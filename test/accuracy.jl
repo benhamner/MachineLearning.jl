@@ -6,7 +6,7 @@ options = [classification_forest_options(),
            classification_tree_options(),
            neural_net_options()]
 
-datasets = [("datasets", "iris", "Species", 0.8)]
+datasets = [("datasets", "iris", :Species, 0.8)]
 
 for (pkg, dataset_name, colname, acc_threshold) = datasets
     println("- Dataset ", dataset_name)

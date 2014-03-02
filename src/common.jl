@@ -12,21 +12,21 @@ abstract TransformerOptions
 
 type DataFrameClassificationModel
     model::ClassificationModel
-    colnames::Vector
+    colnames::Vector{Symbol}
 end
 
 function float_matrix(df::DataFrame)
-    columns = colnames(df)
+    columns = names(df)
     res = Array(Float64, (nrow(df), ncol(df)))
-    for (i,(name,col)) = enumerate(df)
+    for (i,(name,col)) = enumerate(eachcol(df))
         res[:,i] = col
     end
     res
 end
 
-function fit(df::DataFrame, target_column::String, opts::SupervisedModelOptions)
+function fit(df::DataFrame, target_column::Symbol, opts::SupervisedModelOptions)
     y = [x for x=df[target_column]]
-    columns = filter(x->x!=target_column, colnames(df))
+    columns = filter(x->x!=target_column, names(df))
     x = float_matrix(df[columns])
     model = fit(x, y, opts)
     DataFrameClassificationModel(model, columns)
