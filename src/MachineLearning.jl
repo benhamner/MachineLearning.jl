@@ -53,6 +53,7 @@ module MachineLearning
         cost_gradient_update_net!,
         depth,
         fit,
+        fit_predict,
         float_matrix,
         gini,
         initialize_net,

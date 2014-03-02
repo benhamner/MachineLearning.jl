@@ -14,3 +14,13 @@ probability_three_terminal_nodes = 2.0*(1 - probability_one_terminal_node) * (1 
 @test_throws BartTreeTransformationProbabilies(0.4, 0.3, 0.2)
 # Shouldn't throw an error
 transform_probabilities = BartTreeTransformationProbabilies(0.4, 0.3, 0.3)
+
+model = randn(10)
+model[3] = 100.0
+x     = randn(2500, 10)
+y     = x*model + randn(2500)
+x_train, y_train, x_test, y_test = split_train_test(x, y)
+yhat = fit_predict(x_train, y_train, bart_options(), x_test)
+correlation = cor(y_test, yhat)
+println("Linear Pearson Correlation: ", correlation)
+@test correlation>0.80

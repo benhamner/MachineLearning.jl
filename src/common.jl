@@ -55,5 +55,5 @@ function StatsBase.predict(model::DataFrameClassificationModel, df::DataFrame)
 end
 
 function StatsBase.predict(model::RegressionModel, samples::Matrix{Float64})
-    [StatsBase.predict(model, vec(samples[i,:])) for i=1:size(samples,1)]
+    [StatsBase.predict(model, vec(samples[i,:]))::Float64 for i=1:size(samples,1)]
 end
