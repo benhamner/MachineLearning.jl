@@ -536,7 +536,9 @@ function fit_predict(x_train::Matrix{Float64}, y_train::Vector{Float64}, opts::B
         end
         update_sigma!(bart, y_train_current - y_train)
         num_leaves = [length(all_leaf_nodes(tree)) for tree=bart.trees]
-        println("i: ", i, "\tSigma: ", bart.leaf_parameters.sigma, "\tUpdates:", updates, "\tMaxLeafNodes: ", maximum(num_leaves), "\tMeanLeafNodes: ", mean(num_leaves))
+        if log(2, i) % 1 == 0.0
+            println("i: ", i, "\tSigma: ", bart.leaf_parameters.sigma, "\tUpdates:", updates, "\tMaxLeafNodes: ", maximum(num_leaves), "\tMeanLeafNodes: ", mean(num_leaves))
+        end
     end
     y_test_hat /= opts.num_draws - opts.burn_in
     y_test_hat
