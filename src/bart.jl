@@ -135,13 +135,7 @@ function update_tree!(bart::Bart, tree::BartTree, x::Matrix{Float64}, r::Vector{
     alpha, updated
 end
 
-function probability_node_birth(tree::BartTree)
-    if typeof(tree.tree.root) == BartLeaf
-        return 1.0
-    else
-        return 0.5
-    end
-end
+probability_node_birth(tree::BartTree) = typeof(tree.tree.root) == BartLeaf ? 1.0 : 0.5
 
 function birth_node(tree::BartTree)
     if typeof(tree.tree.root) == BartLeaf
@@ -158,18 +152,18 @@ function birth_node(tree::BartTree)
 end
 
 function all_leaf_nodes(tree::BartTree)
+    function all_leaf_nodes!(branch::DecisionBranch, leaf_nodes::Vector{BartLeaf})
+        all_leaf_nodes!(branch.left,  leaf_nodes)
+        all_leaf_nodes!(branch.right, leaf_nodes)
+    end
+
+    function all_leaf_nodes!(leaf::BartLeaf, leaf_nodes::Vector{BartLeaf})
+        push!(leaf_nodes, leaf)
+    end
+
     leaf_nodes = Array(BartLeaf, 0)
     all_leaf_nodes!(tree.tree.root, leaf_nodes)
     leaf_nodes
-end
-
-function all_leaf_nodes!(branch::DecisionBranch, leaf_nodes::Vector{BartLeaf})
-    all_leaf_nodes!(branch.left,  leaf_nodes)
-    all_leaf_nodes!(branch.right, leaf_nodes)
-end
-
-function all_leaf_nodes!(leaf::BartLeaf, leaf_nodes::Vector{BartLeaf})
-    push!(leaf_nodes, leaf)
 end
 
 function grand_branch(branch::DecisionBranch)
@@ -177,38 +171,32 @@ function grand_branch(branch::DecisionBranch)
 end
 
 function all_nog_nodes(tree::BartTree)
+    function all_nog_nodes!(branch::DecisionBranch, nog_nodes::Vector{DecisionBranch})
+        if !grand_branch(branch)
+            push!(nog_nodes, branch)
+        else
+            all_nog_nodes!(branch.left,  nog_nodes)
+            all_nog_nodes!(branch.right, nog_nodes)
+        end
+    end
+    all_nog_nodes!(leaf::BartLeaf, nog_nodes::Vector{DecisionBranch}) = Nothing()
+    
     nog_nodes = Array(DecisionBranch, 0)
     all_nog_nodes!(tree.tree.root, nog_nodes)
     nog_nodes
 end
 
-function all_nog_nodes!(branch::DecisionBranch, nog_nodes::Vector{DecisionBranch})
-    if !grand_branch(branch)
-        push!(nog_nodes, branch)
-    else
-        all_nog_nodes!(branch.left,  nog_nodes)
-        all_nog_nodes!(branch.right, nog_nodes)
-    end
-end
-
-function all_nog_nodes!(leaf::BartLeaf, nog_nodes::Vector{DecisionBranch})
-    # no action
-end
-
 function all_branches(tree::BartTree)
+    function all_branches!(branch::DecisionBranch, branches::Vector{DecisionBranch})
+        push!(branches, branch)
+        all_branches!(branch.left,  branches)
+        all_branches!(branch.right, branches)
+    end
+    all_branches!(leaf::BartLeaf, branches::Vector{DecisionBranch}) = Nothing()
+
     branches = Array(DecisionBranch, 0)
     all_branches!(tree.tree.root, branches)
     branches
-end
-
-function all_branches!(branch::DecisionBranch, branches::Vector{DecisionBranch})
-    push!(branches, branch)
-    all_branches!(branch.left,  branches)
-    all_branches!(branch.right, branches)
-end
-
-function all_branches!(leaf::BartLeaf, branches::Vector{DecisionBranch})
-    # no action
 end
 
 function depth(tree::BartTree, node::DecisionNode)
