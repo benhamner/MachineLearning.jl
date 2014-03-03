@@ -12,9 +12,14 @@ type BartLeaf <: DecisionLeaf
     train_data_indices::Vector{Int}
 
     function BartLeaf(r::Vector{Float64}, train_data_indices::Vector{Int})
-        leaf_r  = r[train_data_indices]
-        r_mean  = mean(leaf_r)
-        r_sigma = sum((leaf_r-r_mean).^2)
+        if length(train_data_indices)==0
+            r_mean  = 0.0
+            r_sigma = 1.0
+        else
+            leaf_r  = r[train_data_indices]
+            r_mean  = mean(leaf_r)
+            r_sigma = sum((leaf_r-r_mean).^2)
+        end
 
         new(0.0, r_mean, r_sigma, train_data_indices)
     end
@@ -37,8 +42,7 @@ type BartTreeTransformationProbabilies
         new(n, c, s)
     end
 end
-# BartTreeTransformationProbabilies() = BartTreeTransformationProbabilies(0.5, 0.4, 0.1)
-BartTreeTransformationProbabilies() = BartTreeTransformationProbabilies(0.6, 0.4, 0.0)
+BartTreeTransformationProbabilies() = BartTreeTransformationProbabilies(0.5, 0.4, 0.1)
 
 type BartOptions <: RegressionModelOptions
     num_trees::Int
@@ -125,7 +129,8 @@ function update_tree!(bart::Bart, tree::BartTree, x::Matrix{Float64}, r::Vector{
         alpha, updated = change_decision_rule!(bart, tree, x, r)
         # println("Changed Decision Rule", "\talpha: ", alpha, "\tupdated: ", updated)
     else
-        alpha, updated = swap_decision_rule!(tree, x, r)
+        alpha, updated = swap_decision_rule!(bart, tree, x, r)
+        # println("Swapped Decision Rule", "\talpha: ", alpha, "\tupdated: ", updated)
     end
     alpha, updated
 end
@@ -167,6 +172,10 @@ function all_leaf_nodes!(leaf::BartLeaf, leaf_nodes::Vector{BartLeaf})
     push!(leaf_nodes, leaf)
 end
 
+function grand_branch(branch::DecisionBranch)
+    typeof(branch.left)==DecisionBranch || typeof(branch.right)==DecisionBranch
+end
+
 function all_nog_nodes(tree::BartTree)
     nog_nodes = Array(DecisionBranch, 0)
     all_nog_nodes!(tree.root, nog_nodes)
@@ -174,7 +183,7 @@ function all_nog_nodes(tree::BartTree)
 end
 
 function all_nog_nodes!(branch::DecisionBranch, nog_nodes::Vector{DecisionBranch})
-    if typeof(branch.left)==BartLeaf && typeof(branch.right)==BartLeaf
+    if !grand_branch(branch)
         push!(nog_nodes, branch)
     else
         all_nog_nodes!(branch.left,  nog_nodes)
@@ -250,7 +259,13 @@ end
 function growth_prior(node::DecisionNode, depth::Int, opts::BartOptions)
     indices = train_data_indices(node)
     branch_prior = nonterminal_node_prior(opts, depth)
-    length(indices) >= 5 ? branch_prior : 0.001*branch_prior
+    if length(indices) >= 5
+        return branch_prior
+    elseif length(indices) > 0
+        return 0.001*branch_prior
+    else
+        return 0.0
+    end
 end
 
 function log_likelihood(leaf::BartLeaf, params::BartLeafParameters)
@@ -415,9 +430,14 @@ function train_data_indices!(leaf::BartLeaf, indices::Vector{Int})
 end
 
 function fix_data!(branch::DecisionBranch, x::Matrix{Float64}, r::Vector{Float64}, indices::Vector{Int})
-    feature       = x[indices, branch.feature]
-    left_indices  = indices[map(z->z<=branch.value, feature)]
-    right_indices = indices[map(z->z >branch.value, feature)]
+    if length(indices)==0
+        left_indices  = indices
+        right_indices = indices
+    else
+        feature       = x[indices, branch.feature]
+        left_indices  = indices[map(z->z<=branch.value, feature)]
+        right_indices = indices[map(z->z >branch.value, feature)]
+    end
     fix_data!(branch, branch.left,  true,  x, r, left_indices)
     fix_data!(branch, branch.right, false, x, r, right_indices)
 end
@@ -468,7 +488,7 @@ function change_decision_rule!(bart::Bart, tree::BartTree, x::Matrix{Float64}, r
     ll_after    = log_likelihood(branch, bart.leaf_parameters)
     prior_after = log_node_prior(branch, branch_depth, bart.options)
 
-    alpha = exp(prior_after + ll_after - prior_before - ll_before)
+    alpha = isnan(ll_after + prior_after) ? 0.0 : exp(prior_after + ll_after - prior_before - ll_before)
 
     if rand()<alpha
         updated = true
@@ -482,8 +502,67 @@ function change_decision_rule!(bart::Bart, tree::BartTree, x::Matrix{Float64}, r
     alpha, updated
 end
 
-function swap_decision_rule!(tree::BartTree, x::Matrix{Float64}, r::Vector{Float64})
-    error("Not implemented yet")
+function all_grand_branches(tree::BartTree)
+    function all_grand_branches!(branch::DecisionBranch, grand_branches::Vector{DecisionBranch})
+        if grand_branch(branch)
+            push!(grand_branches, branch)
+            all_grand_branches!(branch.left,  grand_branches)
+            all_grand_branches!(branch.right, grand_branches)
+        end
+    end
+
+    function all_grand_branches!(leaf::DecisionLeaf, grand_branches::Vector{DecisionBranch})
+        # Do nothing
+    end
+
+    grand_branches = Array(DecisionBranch, 0)
+    all_grand_branches!(tree.root, grand_branches)
+    grand_branches
+end
+
+function swap_decision_rule!(branch::DecisionBranch, child::DecisionBranch, x::Matrix{Float64}, r::Vector{Float64}, indices::Vector{Int})
+    feature        = branch.feature
+    value          = branch.value
+    branch.feature = child.feature
+    branch.value   = child.value
+    child.feature  = feature
+    child.value    = value
+    fix_data!(branch, x, r, indices)
+end
+
+function swap_decision_rule!(bart::Bart, tree::BartTree, x::Matrix{Float64}, r::Vector{Float64})
+    branches = all_grand_branches(tree)
+    if length(branches)==0
+        return 0.0, false
+    end
+
+    branch       = branches[rand(1:length(branches))]
+    branch_depth = depth(tree, branch)
+    indices      = train_data_indices(branch)
+
+    if typeof(branch.left) == BartLeaf || (rand() < 0.5 && typeof(branch.right) == DecisionBranch)
+        child = branch.right
+    else
+        child = branch.left
+    end
+
+    ll_before    = log_likelihood(branch, bart.leaf_parameters)
+    prior_before = log_node_prior(branch, branch_depth, bart.options)
+
+    swap_decision_rule!(branch, child, x, r, indices)
+
+    ll_after    = log_likelihood(branch, bart.leaf_parameters)
+    prior_after = log_node_prior(branch, branch_depth, bart.options)
+
+    alpha = isnan(ll_after + prior_after) ? 0.0 : exp(prior_after + ll_after - prior_before - ll_before)
+
+    if rand()<alpha
+        updated = true
+    else
+        swap_decision_rule!(branch, child, x, r, indices)
+        updated = false
+    end
+
     alpha, updated
 end
 
