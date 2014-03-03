@@ -18,7 +18,6 @@ function valid_node{T}(branch::Branch{T})
 end
 
 function valid_node{T}(leaf::Leaf{T})
-    @assert typeof(leaf.value) <: Float64
     true
 end
 
