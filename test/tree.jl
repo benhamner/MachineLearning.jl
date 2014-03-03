@@ -11,16 +11,17 @@ type BadLeaf   <: Tree{Bad} end
 @test_throws valid_tree(BadTree())
 
 abstract Good
+typealias GoodNode Node{Good}
 
 type GoodTree <: Tree{Good}
-    root::Node{Good}
+    root::GoodNode
 end
 
 type GoodBranch <: Branch{Good}
     feature::Int
     value::Float64
-    left::Node{Good}
-    right::Node{Good}
+    left::GoodNode
+    right::GoodNode
 end
 
 type GoodLeaf <: Leaf{Good}
