@@ -8,7 +8,8 @@ tests = [
     "pipeline",
     "split",
     "random_forest",
-    "transform/zmuv"]
+    "transform/zmuv",
+    "tree"]
 
 println("Running tests:")
 cd("test")

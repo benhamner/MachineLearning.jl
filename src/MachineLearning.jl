@@ -13,6 +13,7 @@ module MachineLearning
         Bart,
         BartOptions,
         BartTreeTransformationProbabilies,
+        Branch,
         ClassificationForest,
         ClassificationForestOptions,
         ClassificationModel,
@@ -24,9 +25,11 @@ module MachineLearning
         ClassificationTreeOptions,
         DecisionBranch,
         DecisionNode,
+        Leaf,
         NeuralNet,
         NeuralNetLayer,
         NeuralNetOptions,
+        Node,
         PipelineOptions,
         PipelineOptionsAny,
         StopAfterIteration,
@@ -39,6 +42,7 @@ module MachineLearning
         SupervisedModelOptions,
         Transformer,
         TransformerOptions,
+        Tree,
         Zmuv,
         ZmuvOptions,
 
@@ -73,9 +77,12 @@ module MachineLearning
         split_train_test,
         streaming_mse,
         transform,
+        valid_tree,
+        valid_node,
         weights_to_net!
 
     include("common.jl")
+    include("tree.jl")
     include("decision_tree.jl")
     include("bart.jl")
     include("metrics.jl")
