@@ -66,7 +66,7 @@ function bart_options(;num_trees::Int=10,
 end
 
 type BartTree <: AbstractRegressionTree
-    root::DecisionNode
+    tree::DecisionTree
 end
 
 # This is really a single iteration / state.
@@ -96,7 +96,7 @@ end
 function initialize_bart(x::Matrix{Float64}, y::Vector{Float64}, y_min, y_max, opts::BartOptions)
     trees = Array(BartTree, 0)
     for i=1:opts.num_trees
-        push!(trees, BartTree(BartLeaf(y, [1:size(x,1)])))
+        push!(trees, BartTree(DecisionTree(BartLeaf(y, [1:size(x,1)]))))
     end
     sigma  = sigma_prior(x, y)
     println("Sigma Hat: ", sigma)
@@ -136,7 +136,7 @@ function update_tree!(bart::Bart, tree::BartTree, x::Matrix{Float64}, r::Vector{
 end
 
 function probability_node_birth(tree::BartTree)
-    if typeof(tree.root) == BartLeaf
+    if typeof(tree.tree.root) == BartLeaf
         return 1.0
     else
         return 0.5
@@ -144,8 +144,8 @@ function probability_node_birth(tree::BartTree)
 end
 
 function birth_node(tree::BartTree)
-    if typeof(tree.root) == BartLeaf
-        leaf = tree.root
+    if typeof(tree.tree.root) == BartLeaf
+        leaf = tree.tree.root
         leaf_probability = 1.0
     else
         leaf_nodes = all_leaf_nodes(tree)
@@ -159,7 +159,7 @@ end
 
 function all_leaf_nodes(tree::BartTree)
     leaf_nodes = Array(BartLeaf, 0)
-    all_leaf_nodes!(tree.root, leaf_nodes)
+    all_leaf_nodes!(tree.tree.root, leaf_nodes)
     leaf_nodes
 end
 
@@ -178,7 +178,7 @@ end
 
 function all_nog_nodes(tree::BartTree)
     nog_nodes = Array(DecisionBranch, 0)
-    all_nog_nodes!(tree.root, nog_nodes)
+    all_nog_nodes!(tree.tree.root, nog_nodes)
     nog_nodes
 end
 
@@ -197,7 +197,7 @@ end
 
 function all_branches(tree::BartTree)
     branches = Array(DecisionBranch, 0)
-    all_branches!(tree.root, branches)
+    all_branches!(tree.tree.root, branches)
     branches
 end
 
@@ -212,7 +212,7 @@ function all_branches!(leaf::BartLeaf, branches::Vector{DecisionBranch})
 end
 
 function depth(tree::BartTree, node::DecisionNode)
-    depth(tree.root, node)
+    depth(tree.tree.root, node)
 end
 
 function depth(branch::DecisionBranch, node::DecisionNode)
@@ -240,7 +240,7 @@ function data_or_none(a, b)
 end
 
 function parent(tree::BartTree, node::DecisionNode)
-    parent(tree.root, node)
+    parent(tree.tree.root, node)
 end
 
 function parent(branch::DecisionBranch, node::DecisionNode)
@@ -298,7 +298,7 @@ function count_nodes_with_two_leaf_children(branch::DecisionBranch)
 end
 
 function count_nodes_with_two_leaf_children(tree::BartTree)
-    count_nodes_with_two_leaf_children(tree.root)
+    count_nodes_with_two_leaf_children(tree.tree.root)
 end
  
 function node_birth!(bart::Bart, tree::BartTree, x::Matrix{Float64}, r::Vector{Float64}, probability_birth::Float64)
@@ -337,7 +337,7 @@ function node_birth!(bart::Bart, tree::BartTree, x::Matrix{Float64}, r::Vector{F
 
     if rand()<alpha
         if parent_branch == None
-            tree.root = branch
+            tree.tree.root = branch
         else
             if leaf==parent_branch.left
                 parent_branch.left  = branch
@@ -381,7 +381,7 @@ function node_death!(bart::Bart, tree::BartTree, r::Vector{Float64}, probability
 
     if rand()<alpha
         if parent_branch == None 
-            tree.root = leaf
+            tree.tree.root = leaf
         else
             if parent_branch.left == branch
                 parent_branch.left =  leaf
@@ -516,7 +516,7 @@ function all_grand_branches(tree::BartTree)
     end
 
     grand_branches = Array(DecisionBranch, 0)
-    all_grand_branches!(tree.root, grand_branches)
+    all_grand_branches!(tree.tree.root, grand_branches)
     grand_branches
 end
 

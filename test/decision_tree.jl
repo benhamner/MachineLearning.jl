@@ -25,7 +25,7 @@ branch2 = DecisionBranch(1, 0.2, branch1, leaf3)
 branch3 = DecisionBranch(1, 0.3, leaf4, leaf5)
 branch4 = DecisionBranch(1, 0.4, branch2, branch3)
 
-tree = ClassificationTree(branch4, [1,2], 1, ClassificationTreeOptions())
+tree = ClassificationTree(DecisionTree(branch4), [1,2], 1, ClassificationTreeOptions())
 
 @test length(leaf1)==1
 @test length(leaf2)==1

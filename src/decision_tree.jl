@@ -1,5 +1,9 @@
-abstract DecisionNode
-abstract DecisionLeaf <: DecisionNode
+abstract Decision
+typealias DecisionNode   Node{Decision}
+typealias DecisionLeaf   Leaf{Decision}
+type DecisionTree <: Tree{Decision}
+    root::DecisionNode
+end
 
 type ClassificationTreeOptions <: ClassificationModelOptions
     features_per_split_fraction::Float64
@@ -33,7 +37,7 @@ type RegressionLeaf <: DecisionLeaf
     value::Float64
 end
 
-type DecisionBranch <: DecisionNode
+type DecisionBranch <: Branch{Decision}
     feature::Int
     value::Float64
     left::DecisionNode
@@ -41,7 +45,7 @@ type DecisionBranch <: DecisionNode
 end
 
 type ClassificationTree <: ClassificationModel
-    root::DecisionNode
+    tree::DecisionTree
     classes::Vector
     features_per_split::Int
     options::ClassificationTreeOptions
@@ -49,7 +53,7 @@ end
 
 abstract AbstractRegressionTree <: RegressionModel
 type RegressionTree <:  AbstractRegressionTree
-    root::DecisionNode
+    tree::DecisionTree
     features_per_split::Int
     options::RegressionTreeOptions
 end
@@ -65,14 +69,14 @@ function fit(x::Matrix{Float64}, y::Vector, opts::ClassificationTreeOptions)
     features_per_split = int(opts.features_per_split_fraction*size(x,2))
     features_per_split = max(1, size(x,2))
     root = train_classification_branch(x, y_mapped, opts, length(classes), features_per_split)
-    ClassificationTree(root, classes, features_per_split, opts)
+    ClassificationTree(DecisionTree(root), classes, features_per_split, opts)
 end
 
 function fit(x::Matrix{Float64}, y::Vector{Float64}, opts::RegressionTreeOptions)
     features_per_split = int(opts.features_per_split_fraction*size(x,2))
     features_per_split = max(1, size(x,2))
     root = train_regression_branch(x, y, opts, features_per_split)
-    RegressionTree(root, features_per_split, opts)
+    RegressionTree(DecisionTree(root), features_per_split, opts)
 end
 
 function train_classification_branch(x::Matrix{Float64}, y::Vector{Int}, opts::ClassificationTreeOptions, num_classes::Int, features_per_split::Int)
@@ -185,7 +189,7 @@ function gini(counts::Vector{Float64})
 end
 
 function predict_probs(tree::ClassificationTree, sample::Vector{Float64})
-    node = tree.root
+    node = tree.tree.root
     while typeof(node)==DecisionBranch
         if sample[node.feature]<=node.value
             node=node.left
@@ -202,7 +206,7 @@ function StatsBase.predict(tree::ClassificationTree, sample::Vector{Float64})
 end
 
 function StatsBase.predict(tree::AbstractRegressionTree, sample::Vector{Float64})
-    node = tree.root
+    node = tree.tree.root
     while typeof(node)==DecisionBranch
         if sample[node.feature]<=node.value
             node=node.left
@@ -214,19 +218,11 @@ function StatsBase.predict(tree::AbstractRegressionTree, sample::Vector{Float64}
 end
 
 function Base.length(tree::ClassificationTree)
-    length(tree.root)
+    length(tree.tree)
 end
 
 function Base.length(tree::AbstractRegressionTree)
-    length(tree.root)
-end
-
-function Base.length(branch::DecisionBranch)
-    return 1+length(branch.left)+length(branch.right)
-end
-
-function Base.length(leaf::DecisionLeaf)
-    return 1
+    length(tree.tree)
 end
 
 function Base.show(io::IO, tree::ClassificationTree)
@@ -237,17 +233,9 @@ function Base.show(io::IO, tree::ClassificationTree)
 end
 
 function depth(tree::ClassificationTree)
-    depth(tree.root)
+    depth(tree.tree)
 end
 
 function depth(tree::AbstractRegressionTree)
-    depth(tree.root)
-end
-
-function depth(branch::DecisionBranch)
-    return 1+max(depth(branch.left),depth(branch.right))
-end
-
-function depth(leaf::DecisionLeaf)
-    return 1
+    depth(tree.tree)
 end

@@ -25,6 +25,7 @@ module MachineLearning
         ClassificationTreeOptions,
         DecisionBranch,
         DecisionNode,
+        DecisionTree,
         Leaf,
         NeuralNet,
         NeuralNetLayer,
