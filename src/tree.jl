@@ -22,10 +22,10 @@ function valid_node{T}(leaf::Leaf{T})
     true
 end
 
-depth{T}(tree::Tree{T})      = depth(tree.root)
-depth{T}(branch::Branch{T})  = 1 + max(depth(branch.left), depth(branch.right))
-depth{T}(leaf::Leaf{T})      = 1
+depth{T}(tree::Tree{T})     = depth(tree.root)
+depth{T}(branch::Branch{T}) = 1 + max(depth(branch.left), depth(branch.right))
+depth{T}(leaf::Leaf{T})     = 1
 
-length{T}(tree::Tree{T})     = length(tree.root)
-length{T}(branch::Branch{T}) = 1 + length(branch.left) + length(branch.right)
-length{T}(leaf::Leaf{T})     = 1
+Base.length{T}(tree::Tree{T})     = length(tree.root)
+Base.length{T}(branch::Branch{T}) = 1 + length(branch.left) + length(branch.right)
+Base.length{T}(leaf::Leaf{T})     = 1
