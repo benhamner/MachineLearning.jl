@@ -117,41 +117,6 @@ function update_tree!(bart::Bart, tree::BartTree, x::Matrix{Float64}, r::Vector{
     alpha, updated
 end
 
-function grand_branch(branch::DecisionBranch)
-    typeof(branch.left)==DecisionBranch || typeof(branch.right)==DecisionBranch
-end
-
-function all_grand_branches(tree::BartTree)
-    function all_grand_branches!(branch::DecisionBranch, grand_branches::Vector{DecisionBranch})
-        if grand_branch(branch)
-            push!(grand_branches, branch)
-            all_grand_branches!(branch.left,  grand_branches)
-            all_grand_branches!(branch.right, grand_branches)
-        end
-    end
-    all_grand_branches!(leaf::DecisionLeaf, grand_branches::Vector{DecisionBranch}) = Nothing()
-
-    grand_branches = Array(DecisionBranch, 0)
-    all_grand_branches!(tree.tree.root, grand_branches)
-    grand_branches
-end
-
-function all_nog_branches(tree::BartTree) # a nog branch is one that isn't a grandparent
-    function all_nog_branches!(branch::DecisionBranch, nog_branches::Vector{DecisionBranch})
-        if !grand_branch(branch)
-            push!(nog_branches, branch)
-        else
-            all_nog_branches!(branch.left,  nog_branches)
-            all_nog_branches!(branch.right, nog_branches)
-        end
-    end
-    all_nog_branches!(leaf::BartLeaf, nog_branches::Vector{DecisionBranch}) = Nothing()
-    
-    nog_branches = Array(DecisionBranch, 0)
-    all_nog_branches!(tree.tree.root, nog_branches)
-    nog_branches
-end
-
 function growth_prior(node::DecisionNode, depth::Int, opts::BartOptions)
     indices = train_data_indices(node)
     branch_prior = nonterminal_node_prior(opts, depth)
@@ -214,17 +179,17 @@ function node_birth!(bart::Bart, tree::BartTree, x::Matrix{Float64}, r::Vector{F
     ll_after      = log_likelihood(branch, bart.leaf_parameters)
 
     parent_branch = parent(tree, leaf)
-    num_nog_branches = length(all_nog_branches(tree))
+    num_not_grand_branches = length(not_grand_branches(tree))
     if parent_branch == None 
-        num_nog_branches += 1
+        num_not_grand_branches += 1
     elseif typeof(parent_branch.left) != BartLeaf || typeof(parent_branch.right) != BartLeaf
-        num_nog_branches += 1
+        num_not_grand_branches += 1
     end
 
-    p_nog = 1.0/num_nog_branches
+    p_not_grand = 1.0/num_not_grand_branches
     p_dy  = 0.5 #1.0-probability_node_birth(tree)
 
-    alpha1 = (leaf_prior*(1.0-left_prior)*(1.0-right_prior)*p_dy*p_nog)/((1.0-leaf_prior)*probability_birth*leaf_node_probability)
+    alpha1 = (leaf_prior*(1.0-left_prior)*(1.0-right_prior)*p_dy*p_not_grand)/((1.0-leaf_prior)*probability_birth*leaf_node_probability)
     alpha  = alpha1 * exp(ll_after-ll_before)
 
     if rand()<alpha
@@ -246,25 +211,25 @@ function node_birth!(bart::Bart, tree::BartTree, x::Matrix{Float64}, r::Vector{F
 end
 
 function death_node(tree::BartTree)
-    nog_branches = all_nog_branches(tree)
-    nog_branches[rand(1:length(nog_branches))], 1.0/length(nog_branches)
+    not_grand_branch_nodes = not_grand_branches(tree)
+    not_grand_branch_nodes[rand(1:length(not_grand_branch_nodes))], 1.0/length(not_grand_branch_nodes)
 end
 
 function node_death!(bart::Bart, tree::BartTree, r::Vector{Float64}, probability_death::Float64)
-    branch, p_nog = death_node(tree)
-    leaf_depth    = depth(tree, branch.left)
-    left_prior    = growth_prior(branch.left, leaf_depth, bart.options)
-    right_prior   = growth_prior(branch.left, leaf_depth, bart.options)
-    ll_before     = log_likelihood(branch, bart.leaf_parameters)
-    leaf          = BartLeaf(r, sort(vcat(branch.left.train_data_indices, branch.right.train_data_indices)))
-    ll_after      = log_likelihood(leaf, bart.leaf_parameters)
+    branch, p_not_grand = death_node(tree)
+    leaf_depth          = depth(tree, branch.left)
+    left_prior          = growth_prior(branch.left, leaf_depth, bart.options)
+    right_prior         = growth_prior(branch.left, leaf_depth, bart.options)
+    ll_before           = log_likelihood(branch, bart.leaf_parameters)
+    leaf                = BartLeaf(r, sort(vcat(branch.left.train_data_indices, branch.right.train_data_indices)))
+    ll_after            = log_likelihood(leaf, bart.leaf_parameters)
 
     parent_branch = parent(tree, branch)
     probability_birth_after = parent_branch == None ? 1.0 : 0.5
     prior_grow = growth_prior(leaf, leaf_depth-1, bart.options)
     probability_birth_leaf = 1.0 / (length(leaves(tree))-1)
 
-    alpha1 = ((1.0-prior_grow)*probability_birth_after*probability_birth_leaf)/(prior_grow*(1.0-left_prior)*(1.0-right_prior)*probability_death*p_nog)
+    alpha1 = ((1.0-prior_grow)*probability_birth_after*probability_birth_leaf)/(prior_grow*(1.0-left_prior)*(1.0-right_prior)*probability_death*p_not_grand)
     alpha  = alpha1*exp(ll_after-ll_before)
 
     if rand()<alpha
@@ -391,7 +356,7 @@ function swap_decision_rule!(branch::DecisionBranch, child::DecisionBranch, x::M
 end
 
 function swap_decision_rule!(bart::Bart, tree::BartTree, x::Matrix{Float64}, r::Vector{Float64})
-    branch_nodes = all_grand_branches(tree)
+    branch_nodes = grand_branches(tree)
     if length(branch_nodes)==0
         return 0.0, false
     end

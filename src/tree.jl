@@ -84,3 +84,40 @@ function branches{T}(branch::Branch{T})
 end
 branches{T}(tree::Tree{T}) = branches(tree.root)
 branches{T}(leaf::Leaf{T}) = Leaf{T}[]
+
+grand_branch{T}(branch::Branch{T}) = typeof(branch.left)<:Branch{T} || typeof(branch.right)<:Branch{T}
+
+function grand_branches{T}(branch::Branch{T})
+    function grand_branches!{T}(branch::Branch{T}, branch_nodes::Vector{Branch{T}})
+        if grand_branch(branch)
+            push!(branch_nodes, branch)
+            grand_branches!(branch.left,  branch_nodes)
+            grand_branches!(branch.right, branch_nodes)
+        end
+    end
+    grand_branches!{T}(leaf::Leaf{T}, branch_nodes::Vector{Branch{T}}) = Nothing()
+
+    branch_nodes = Branch{T}[]
+    grand_branches!(branch, branch_nodes)
+    branch_nodes
+end
+grand_branches{T}(tree::Tree{T}) = grand_branches(tree.root)
+grand_branches{T}(leaf::Leaf{T}) = Branch{T}[]
+
+function not_grand_branches{T}(branch::Branch{T}) # a not_grand branch is one that isn't a grandparent
+    function not_grand_branches!{T}(branch::Branch{T}, branch_nodes::Vector{Branch{T}})
+        if !grand_branch(branch)
+            push!(branch_nodes, branch)
+        else
+            not_grand_branches!(branch.left,  branch_nodes)
+            not_grand_branches!(branch.right, branch_nodes)
+        end
+    end
+    not_grand_branches!{T}(leaf::Leaf{T}, branch_nodes::Vector{Branch{T}}) = Nothing()
+    
+    branch_nodes = Branch{T}[]
+    not_grand_branches!(branch, branch_nodes)
+    branch_nodes
+end
+not_grand_branches{T}(tree::Tree{T}) = not_grand_branches(tree.root)
+not_grand_branches{T}(leaf::Leaf{T}) = Branch{T}[]

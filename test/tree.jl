@@ -81,3 +81,8 @@ tree = GoodTree(branch4)
 @test Set(branches(tree)...)==Set([branch1,branch2,branch3,branch4]...)
 @test Set(branches(branch2)...)==Set([branch1,branch2]...)
 @test branches(leaf1)==Leaf{Good}[]
+
+@test Set(grand_branches(tree)...)==Set([branch4,branch2]...)
+@test Set(not_grand_branches(tree)...)==Set([branch3,branch1]...)
+@test grand_branches(leaf1)==Branch{Good}[]
+@test not_grand_branches(leaf1)==Branch{Good}[]
