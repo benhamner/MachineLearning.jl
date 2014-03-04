@@ -62,13 +62,17 @@ type BartTree <: AbstractRegressionTree
     tree::DecisionTree
 end
 
-# This is really a single iteration / state.
-type BartState <: RegressionModel
-    trees::Vector{BartTree}
-    leaf_parameters::BartLeafParameters
+type Bart
+    x::Matrix{Float64}
+    y_normalized::Vector{Float64}
     y_min::Float64
     y_max::Float64
     options::BartOptions
+end
+
+type BartState <: RegressionModel
+    trees::Vector{BartTree}
+    leaf_parameters::BartLeafParameters
 end
 
 function nonterminal_node_prior(alpha::Float64, beta::Float64, depth::Int)
@@ -78,21 +82,21 @@ nonterminal_node_prior(opts::BartOptions, depth::Int) = nonterminal_node_prior(o
 
 linear_model_sigma_prior(x::Matrix{Float64}, y::Vector{Float64}) = std(x*(x\y)-y)
 
-function initialize_bart_state(x::Matrix{Float64}, y::Vector{Float64}, y_min, y_max, opts::BartOptions)
+function initialize_bart_state(bart::Bart)
     trees = Array(BartTree, 0)
-    for i=1:opts.num_trees
-        push!(trees, BartTree(DecisionTree(BartLeaf(y, [1:size(x,1)]))))
+    for i=1:bart.options.num_trees
+        push!(trees, BartTree(DecisionTree(BartLeaf(bart.y_normalized, [1:size(bart.x,1)]))))
     end
-    sigma  = linear_model_sigma_prior(x, y)
+    sigma  = linear_model_sigma_prior(bart.x, bart.y_normalized)
     println("Sigma Hat: ", sigma)
-    println("Std Y: ", sqrt(mean(y.^2)))
+    println("Std Y: ", sqrt(mean(bart.y_normalized.^2)))
     nu     = 3.0
-    musig  = 0.5/(opts.k*sqrt(opts.num_trees))
+    musig  = 0.5/(bart.options.k*sqrt(bart.options.num_trees))
     println("MuSig: ", musig)
     q      = 0.90
     lambda = sigma^2.0*quantile(NoncentralChisq(nu, 1.0), q)/nu
     params = BartLeafParameters(sigma, musig, nu, lambda)
-    bart_state = BartState(trees, params, y_min, y_max, opts)
+    bart_state = BartState(trees, params)
     for tree=bart_state.trees
         update_leaf_values!(tree, bart_state.leaf_parameters)
     end
@@ -105,14 +109,14 @@ function update_sigma!(bart_state::BartState, residuals::Vector{Float64})
     bart_state.leaf_parameters.sigma = sqrt(nlpost / rand(Chisq(bart_state.leaf_parameters.nu + length(residuals))))
 end
 
-function update_tree!(bart_state::BartState, tree::BartTree, x::Matrix{Float64}, r::Vector{Float64})
+function update_tree!(bart::Bart, bart_state::BartState, tree::BartTree, r::Vector{Float64})
     select_action = rand()
-    if select_action < bart_state.options.transform_probabilities.node_birth_death
-        alpha, updated = node_birth_death!(bart_state, tree, x, r)
-    elseif select_action < bart_state.options.transform_probabilities.node_birth_death + bart_state.options.transform_probabilities.change_decision_rule
-        alpha, updated = change_decision_rule!(bart_state, tree, x, r)
+    if select_action < bart.options.transform_probabilities.node_birth_death
+        alpha, updated = node_birth_death!(bart, bart_state, tree, r)
+    elseif select_action < bart.options.transform_probabilities.node_birth_death + bart.options.transform_probabilities.change_decision_rule
+        alpha, updated = change_decision_rule!(bart, bart_state, tree, r)
     else
-        alpha, updated = swap_decision_rule!(bart_state, tree, x, r)
+        alpha, updated = swap_decision_rule!(bart, bart_state, tree, r)
     end
     alpha, updated
 end
@@ -159,14 +163,14 @@ function birth_node(tree::BartTree)
 end
 probability_node_birth(tree::BartTree) = typeof(tree.tree.root) == BartLeaf ? 1.0 : 0.5
 
-function node_birth!(bart_state::BartState, tree::BartTree, x::Matrix{Float64}, r::Vector{Float64}, probability_birth::Float64)
+function node_birth!(bart::Bart, bart_state::BartState, tree::BartTree, r::Vector{Float64}, probability_birth::Float64)
     leaf, leaf_node_probability = birth_node(tree)
     leaf_depth    = depth(tree, leaf)
-    leaf_prior    = growth_prior(leaf, leaf_depth, bart_state.options)
+    leaf_prior    = growth_prior(leaf, leaf_depth, bart.options)
     ll_before     = log_likelihood(leaf, bart_state.leaf_parameters)
-    split_feature = rand(1:size(x,2))
+    split_feature = rand(1:size(bart.x,2))
     split_loc     = rand(1:length(leaf.train_data_indices)) # TODO: throwout invalid splits prior to this
-    feature       = x[leaf.train_data_indices, split_feature]
+    feature       = bart.x[leaf.train_data_indices, split_feature]
     split_value   = sort(feature)[split_loc]
     left_indices  = leaf.train_data_indices[map(z->z<=split_value, feature)]
     right_indices = leaf.train_data_indices[map(z->z >split_value, feature)]
@@ -174,8 +178,8 @@ function node_birth!(bart_state::BartState, tree::BartTree, x::Matrix{Float64}, 
     right_leaf    = BartLeaf(r, right_indices)
     branch        = DecisionBranch(split_feature, split_value, left_leaf, right_leaf)
 
-    left_prior    = growth_prior(left_leaf , leaf_depth+1, bart_state.options)
-    right_prior   = growth_prior(right_leaf, leaf_depth+1, bart_state.options)
+    left_prior    = growth_prior(left_leaf , leaf_depth+1, bart.options)
+    right_prior   = growth_prior(right_leaf, leaf_depth+1, bart.options)
     ll_after      = log_likelihood(branch, bart_state.leaf_parameters)
 
     parent_branch = parent(tree, leaf)
@@ -215,18 +219,18 @@ function death_node(tree::BartTree)
     not_grand_branch_nodes[rand(1:length(not_grand_branch_nodes))], 1.0/length(not_grand_branch_nodes)
 end
 
-function node_death!(bart_state::BartState, tree::BartTree, r::Vector{Float64}, probability_death::Float64)
+function node_death!(bart::Bart, bart_state::BartState, tree::BartTree, r::Vector{Float64}, probability_death::Float64)
     branch, p_not_grand = death_node(tree)
     leaf_depth          = depth(tree, branch.left)
-    left_prior          = growth_prior(branch.left, leaf_depth, bart_state.options)
-    right_prior         = growth_prior(branch.left, leaf_depth, bart_state.options)
+    left_prior          = growth_prior(branch.left, leaf_depth, bart.options)
+    right_prior         = growth_prior(branch.left, leaf_depth, bart.options)
     ll_before           = log_likelihood(branch, bart_state.leaf_parameters)
     leaf                = BartLeaf(r, sort(vcat(branch.left.train_data_indices, branch.right.train_data_indices)))
     ll_after            = log_likelihood(leaf, bart_state.leaf_parameters)
 
     parent_branch = parent(tree, branch)
     probability_birth_after = parent_branch == None ? 1.0 : 0.5
-    prior_grow = growth_prior(leaf, leaf_depth-1, bart_state.options)
+    prior_grow = growth_prior(leaf, leaf_depth-1, bart.options)
     probability_birth_leaf = 1.0 / (length(leaves(tree))-1)
 
     alpha1 = ((1.0-prior_grow)*probability_birth_after*probability_birth_leaf)/(prior_grow*(1.0-left_prior)*(1.0-right_prior)*probability_death*p_not_grand)
@@ -250,13 +254,13 @@ function node_death!(bart_state::BartState, tree::BartTree, r::Vector{Float64}, 
     alpha, updated
 end
 
-function node_birth_death!(bart_state::BartState, tree::BartTree, x::Matrix{Float64}, r::Vector{Float64})
+function node_birth_death!(bart::Bart, bart_state::BartState, tree::BartTree, r::Vector{Float64})
     probability_birth = probability_node_birth(tree)
     if rand() < probability_birth
-        alpha, updated = node_birth!(bart_state, tree, x, r, probability_birth)
+        alpha, updated = node_birth!(bart, bart_state, tree, r, probability_birth)
     else
         probability_death = 1.0 - probability_birth
-        alpha, updated = node_death!(bart_state, tree, r, probability_death)
+        alpha, updated = node_death!(bart, bart_state, tree, r, probability_death)
     end
     alpha, updated
 end
@@ -307,7 +311,7 @@ function log_node_prior(branch::DecisionBranch, branch_depth::Int, opts::BartOpt
 end
 log_node_prior(leaf::DecisionLeaf, leaf_depth::Int, opts::BartOptions) = log(1.0 - growth_prior(leaf, leaf_depth, opts))
 
-function change_decision_rule!(bart_state::BartState, tree::BartTree, x::Matrix{Float64}, r::Vector{Float64})
+function change_decision_rule!(bart::Bart, bart_state::BartState, tree::BartTree, r::Vector{Float64})
     branch_nodes = branches(tree)
     if length(branch_nodes)==0
         return 0.0, false
@@ -320,16 +324,16 @@ function change_decision_rule!(bart_state::BartState, tree::BartTree, x::Matrix{
     old_feature  = branch.feature
     old_value    = branch.value
     ll_before    = log_likelihood(branch, bart_state.leaf_parameters)
-    prior_before = log_node_prior(branch, branch_depth, bart_state.options)
+    prior_before = log_node_prior(branch, branch_depth, bart.options)
 
-    features = [1:size(x,2)]
+    features = [1:size(bart.x,2)]
     splice!(features, branch.feature)
     new_feature = features[rand(1:length(features))]
-    new_value   = x[indices[rand(1:length(indices))], new_feature]
+    new_value   = bart.x[indices[rand(1:length(indices))], new_feature]
 
-    fix_data!(branch, x, r, indices)
+    fix_data!(branch, bart.x, r, indices)
     ll_after    = log_likelihood(branch, bart_state.leaf_parameters)
-    prior_after = log_node_prior(branch, branch_depth, bart_state.options)
+    prior_after = log_node_prior(branch, branch_depth, bart.options)
 
     alpha = isnan(ll_after + prior_after) ? 0.0 : exp(prior_after + ll_after - prior_before - ll_before)
 
@@ -338,7 +342,7 @@ function change_decision_rule!(bart_state::BartState, tree::BartTree, x::Matrix{
     else
         branch.feature = old_feature
         branch.value   = old_value
-        fix_data!(branch, x, r, indices)
+        fix_data!(branch, bart.x, r, indices)
         updated = false
     end
 
@@ -355,7 +359,7 @@ function swap_decision_rule!(branch::DecisionBranch, child::DecisionBranch, x::M
     fix_data!(branch, x, r, indices)
 end
 
-function swap_decision_rule!(bart_state::BartState, tree::BartTree, x::Matrix{Float64}, r::Vector{Float64})
+function swap_decision_rule!(bart::Bart, bart_state::BartState, tree::BartTree, r::Vector{Float64})
     branch_nodes = grand_branches(tree)
     if length(branch_nodes)==0
         return 0.0, false
@@ -368,19 +372,19 @@ function swap_decision_rule!(bart_state::BartState, tree::BartTree, x::Matrix{Fl
     child = (typeof(branch.left) == BartLeaf || (rand() < 0.5 && typeof(branch.right) == DecisionBranch)) ? branch.right : branch.left
 
     ll_before    = log_likelihood(branch, bart_state.leaf_parameters)
-    prior_before = log_node_prior(branch, branch_depth, bart_state.options)
+    prior_before = log_node_prior(branch, branch_depth, bart.options)
 
-    swap_decision_rule!(branch, child, x, r, indices)
+    swap_decision_rule!(branch, child, bart.x, r, indices)
 
     ll_after    = log_likelihood(branch, bart_state.leaf_parameters)
-    prior_after = log_node_prior(branch, branch_depth, bart_state.options)
+    prior_after = log_node_prior(branch, branch_depth, bart.options)
 
     alpha = isnan(ll_after + prior_after) ? 0.0 : exp(prior_after + ll_after - prior_before - ll_before)
 
     if rand()<alpha
         updated = true
     else
-        swap_decision_rule!(branch, child, x, r, indices)
+        swap_decision_rule!(branch, child, bart.x, r, indices)
         updated = false
     end
 
@@ -402,42 +406,46 @@ function update_leaf_value!(leaf::BartLeaf, params::BartLeafParameters)
 end
 
 normalize(y::Vector{Float64}, y_min, y_max) = (y - y_min) / (y_max - y_min) - 0.5
-normalize(bart_state::BartState, y::Vector{Float64})   = normalize(y, bart_state.y_min, bart_state.y_max)
+normalize(bart::Bart, y::Vector{Float64})   = normalize(y, bart.y_min, bart.y_max)
 
-function fit_predict(x_train::Matrix{Float64}, y_train::Vector{Float64}, opts::BartOptions, x_test::Matrix{Float64})
-    y_min = minimum(y_train)
-    y_max = maximum(y_train)
-    y_train = normalize(y_train, y_min, y_max)
-    bart_state = initialize_bart_state(x_train, y_train, y_min, y_max, opts)
-
-    y_train_current = normalize(bart_state, predict(bart_state, x_train))
-    y_test_current  = normalize(bart_state, predict(bart_state, x_test))
-    y_test_hat      = zeros(size(x_test, 1))
-    for i=1:opts.num_draws
-        updates = 0
-        for j=1:opts.num_trees
-            y_old_tree_train = predict(bart_state.trees[j], x_train)
-            y_old_tree_test  = predict(bart_state.trees[j], x_test)
-            residuals = y_train - y_train_current + y_old_tree_train
-            alpha, updated = update_tree!(bart_state, bart_state.trees[j], x_train, residuals)
-            updates += updated ? 1 : 0
-            update_leaf_values!(bart_state.trees[j], bart_state.leaf_parameters)
-            y_train_current += predict(bart_state.trees[j], x_train) - y_old_tree_train
-            y_test_current  += predict(bart_state.trees[j], x_test)  - y_old_tree_test
-        end
-        if i>opts.burn_in
-            y_test_hat += y_test_current
-        end
-        update_sigma!(bart_state, y_train_current - y_train)
-        num_leaves = [length(leaves(tree)) for tree=bart_state.trees]
-        if log(2, i) % 1 == 0.0 || i == opts.num_draws
-            println("i: ", i, "\tSigma: ", bart_state.leaf_parameters.sigma, "\tUpdates:", updates, "\tMaxLeafNodes: ", maximum(num_leaves), "\tMeanLeafNodes: ", mean(num_leaves))
-        end
-    end
-    y_test_hat /= opts.num_draws - opts.burn_in
-    y_test_hat
+function fit(x::Matrix{Float64}, y::Vector{Float64}, opts::BartOptions)
+    y_min        = minimum(y)
+    y_max        = maximum(y)
+    y_normalized = normalize(y, y_min, y_max)
+    Bart(x, y_normalized, y_min, y_max, opts)
 end
 
 function StatsBase.predict(bart_state::BartState, sample::Vector{Float64})
-    (sum([predict(tree, sample) for tree=bart_state.trees]) + 0.5) * (bart_state.y_max - bart_state.y_min) + bart_state.y_min
+    sum([predict(tree, sample) for tree=bart_state.trees])
+end
+
+function StatsBase.predict(bart::Bart, x_test::Matrix{Float64})
+    bart_state = initialize_bart_state(bart)
+
+    y_train_current = predict(bart_state, bart.x)
+    y_test_current  = predict(bart_state, x_test)
+    y_test_hat      = zeros(size(x_test, 1))
+    for i=1:bart.options.num_draws
+        updates = 0
+        for j=1:bart.options.num_trees
+            y_old_tree_train = predict(bart_state.trees[j], bart.x)
+            y_old_tree_test  = predict(bart_state.trees[j], x_test)
+            residuals = bart.y_normalized - y_train_current + y_old_tree_train
+            alpha, updated = update_tree!(bart, bart_state, bart_state.trees[j], residuals)
+            updates += updated ? 1 : 0
+            update_leaf_values!(bart_state.trees[j], bart_state.leaf_parameters)
+            y_train_current += predict(bart_state.trees[j], bart.x) - y_old_tree_train
+            y_test_current  += predict(bart_state.trees[j], x_test)  - y_old_tree_test
+        end
+        if i>bart.options.burn_in
+            y_test_hat += y_test_current
+        end
+        update_sigma!(bart_state, y_train_current - bart.y_normalized)
+        num_leaves = [length(leaves(tree)) for tree=bart_state.trees]
+        if log(2, i) % 1 == 0.0 || i == bart.options.num_draws
+            println("i: ", i, "\tSigma: ", bart_state.leaf_parameters.sigma, "\tUpdates:", updates, "\tMaxLeafNodes: ", maximum(num_leaves), "\tMeanLeafNodes: ", mean(num_leaves))
+        end
+    end
+    y_test_hat /= bart.options.num_draws - bart.options.burn_in
+    (y_test_hat + 0.5) * (bart.y_max - bart.y_min) + bart.y_min
 end
