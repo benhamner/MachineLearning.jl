@@ -25,6 +25,19 @@ depth{T}(tree::Tree{T})     = depth(tree.root)
 depth{T}(branch::Branch{T}) = 1 + max(depth(branch.left), depth(branch.right))
 depth{T}(leaf::Leaf{T})     = 1
 
+depth{T}(tree::Tree{T}, node::Node{T}) = depth(tree.root, node) # depth of node in tree
+function depth{T}(branch::Branch{T}, node::Node{T})
+    if node==branch
+        return 1
+    end
+    left_depth  = depth(branch.left,  node)
+    right_depth = depth(branch.right, node)
+    left_depth  = left_depth > 0  ? left_depth  + 1 : 0
+    right_depth = right_depth > 0 ? right_depth + 1 : 0
+    max(left_depth, right_depth)
+end
+depth{T}(leaf::Leaf{T}, node::Node{T}) = node==leaf ? 1 : 0
+
 Base.length{T}(tree::Tree{T})     = length(tree.root)
 Base.length{T}(branch::Branch{T}) = 1 + length(branch.left) + length(branch.right)
 Base.length{T}(leaf::Leaf{T})     = 1

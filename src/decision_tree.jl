@@ -50,6 +50,10 @@ type ClassificationTree <: ClassificationModel
     features_per_split::Int
     options::ClassificationTreeOptions
 end
+depth(tree::ClassificationTree, node::DecisionNode) = depth(tree.tree, node)
+depth(tree::ClassificationTree)    = depth(tree.tree)
+leaves(tree::ClassificationTree)   = leaves(tree.tree)
+branches(tree::ClassificationTree) = branches(tree.tree)
 
 abstract AbstractRegressionTree <: RegressionModel
 type RegressionTree <:  AbstractRegressionTree
@@ -57,6 +61,11 @@ type RegressionTree <:  AbstractRegressionTree
     features_per_split::Int
     options::RegressionTreeOptions
 end
+depth(tree::AbstractRegressionTree, node::DecisionNode) = depth(tree.tree, node)
+depth(tree::AbstractRegressionTree)    = depth(tree.tree)
+leaves(tree::AbstractRegressionTree)   = leaves(tree.tree)
+branches(tree::AbstractRegressionTree) = branches(tree.tree)
+
 
 function classes(tree::ClassificationTree)
     tree.classes
@@ -230,12 +239,4 @@ function Base.show(io::IO, tree::ClassificationTree)
                  @sprintf("    %d Nodes, %d Nodes Deep",length(tree), depth(tree)),
                  @sprintf("    %d Classes",length(tree.classes))], "\n")
     print(io, info)
-end
-
-function depth(tree::ClassificationTree)
-    depth(tree.tree)
-end
-
-function depth(tree::AbstractRegressionTree)
-    depth(tree.tree)
 end

@@ -61,8 +61,6 @@ end
 type BartTree <: AbstractRegressionTree
     tree::DecisionTree
 end
-leaves(tree::BartTree)   = leaves(tree.tree)
-branches(tree::BartTree) = branches(tree.tree)
 
 # This is really a single iteration / state.
 type Bart <: RegressionModel
@@ -152,25 +150,6 @@ function all_nog_branches(tree::BartTree) # a nog branch is one that isn't a gra
     nog_branches = Array(DecisionBranch, 0)
     all_nog_branches!(tree.tree.root, nog_branches)
     nog_branches
-end
-
-function depth(tree::BartTree, node::DecisionNode)
-    depth(tree.tree.root, node)
-end
-
-function depth(branch::DecisionBranch, node::DecisionNode)
-    if node==branch
-        return 1
-    end
-    left_depth  = depth(branch.left)
-    right_depth = depth(branch.right)
-    left_depth  = left_depth > 0  ? left_depth  + 1 : 0
-    right_depth = right_depth > 0 ? right_depth + 1 : 0
-    max(left_depth, right_depth)
-end
-
-function depth(leaf::BartLeaf, node::BartLeaf)
-    node==leaf ? 1 : 0
 end
 
 function data_or_none(a, b)
