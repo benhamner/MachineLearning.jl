@@ -12,6 +12,7 @@ module MachineLearning
         AbstractRegressionTree,
         Bart,
         BartOptions,
+        BartState,
         BartTreeTransformationProbabilies,
         Branch,
         ClassificationForest,
