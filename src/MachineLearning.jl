@@ -50,6 +50,7 @@ module MachineLearning
         # methods
         accuracy,
         bart_options,
+        branches,
         classification_forest_options,
         classification_split_location,
         classification_tree_options,

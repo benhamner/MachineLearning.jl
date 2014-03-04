@@ -43,4 +43,19 @@ function leaves{T}(branch::Branch{T})
     leaf_nodes
 end
 leaves{T}(tree::Tree{T}) = leaves(tree.root)
-leaves{T}(leaf::Leaf{T}) = [leaf]
+leaves{T}(leaf::Leaf{T}) = Leaf{T}[leaf]
+
+function branches{T}(branch::Branch{T})
+    function branches!{T}(branch::Branch{T}, branch_nodes::Vector{Branch{T}})
+        push!(branch_nodes, branch)
+        branches!(branch.left,  branch_nodes)
+        branches!(branch.right, branch_nodes)
+    end
+    branches!{T}(leaf::Leaf{T}, branch_nodes::Vector{Branch{T}}) = Nothing()
+
+    branch_nodes = Branch{T}[branch]
+    branches!(branch, branch_nodes)
+    branch_nodes
+end
+branches{T}(tree::Tree{T}) = branches(tree.root)
+branches{T}(leaf::Leaf{T}) = Leaf{T}[]

@@ -61,7 +61,8 @@ end
 type BartTree <: AbstractRegressionTree
     tree::DecisionTree
 end
-leaves(tree::BartTree) = leaves(tree.tree)
+leaves(tree::BartTree)   = leaves(tree.tree)
+branches(tree::BartTree) = branches(tree.tree)
 
 # This is really a single iteration / state.
 type Bart <: RegressionModel
@@ -151,19 +152,6 @@ function all_nog_branches(tree::BartTree) # a nog branch is one that isn't a gra
     nog_branches = Array(DecisionBranch, 0)
     all_nog_branches!(tree.tree.root, nog_branches)
     nog_branches
-end
-
-function all_branches(tree::BartTree)
-    function all_branches!(branch::DecisionBranch, branches::Vector{DecisionBranch})
-        push!(branches, branch)
-        all_branches!(branch.left,  branches)
-        all_branches!(branch.right, branches)
-    end
-    all_branches!(leaf::BartLeaf, branches::Vector{DecisionBranch}) = Nothing()
-
-    branches = Array(DecisionBranch, 0)
-    all_branches!(tree.tree.root, branches)
-    branches
 end
 
 function depth(tree::BartTree, node::DecisionNode)
@@ -402,12 +390,12 @@ end
 log_node_prior(leaf::DecisionLeaf, leaf_depth::Int, opts::BartOptions) = log(1.0 - growth_prior(leaf, leaf_depth, opts))
 
 function change_decision_rule!(bart::Bart, tree::BartTree, x::Matrix{Float64}, r::Vector{Float64})
-    branches = all_branches(tree)
-    if length(branches)==0
+    branch_nodes = branches(tree)
+    if length(branch_nodes)==0
         return 0.0, false
     end
 
-    branch       = branches[rand(1:length(branches))]
+    branch       = branch_nodes[rand(1:length(branch_nodes))]
     branch_depth = depth(tree, branch)
     indices      = train_data_indices(branch)
 
@@ -450,12 +438,12 @@ function swap_decision_rule!(branch::DecisionBranch, child::DecisionBranch, x::M
 end
 
 function swap_decision_rule!(bart::Bart, tree::BartTree, x::Matrix{Float64}, r::Vector{Float64})
-    branches = all_grand_branches(tree)
-    if length(branches)==0
+    branch_nodes = all_grand_branches(tree)
+    if length(branch_nodes)==0
         return 0.0, false
     end
 
-    branch       = branches[rand(1:length(branches))]
+    branch       = branch_nodes[rand(1:length(branch_nodes))]
     branch_depth = depth(tree, branch)
     indices      = train_data_indices(branch)
 
