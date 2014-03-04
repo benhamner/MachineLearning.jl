@@ -72,6 +72,7 @@ module MachineLearning
         neural_net_options,
         nonterminal_node_prior,
         one_hot,
+        parent,
         predict,
         predict_probs,
         regression_forest_options,

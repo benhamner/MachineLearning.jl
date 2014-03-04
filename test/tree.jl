@@ -67,6 +67,13 @@ tree = GoodTree(branch4)
 @test depth(tree, branch3)==2
 @test depth(tree, branch4)==1
 
+@test parent(tree, leaf1)==branch1
+@test parent(branch1, leaf1)==branch1
+@test parent(branch2, leaf1)==branch1
+@test parent(branch3, leaf1)==None
+@test parent(tree, branch1)==branch2
+@test parent(branch4, branch1)==branch2
+
 @test Set(leaves(tree)...)==Set([leaf1,leaf2,leaf3,leaf4,leaf5]...)
 @test Set(leaves(branch2)...)==Set([leaf1,leaf2,leaf3]...)
 @test leaves(leaf1)==Leaf{Good}[leaf1]

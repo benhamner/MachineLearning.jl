@@ -42,6 +42,18 @@ Base.length{T}(tree::Tree{T})     = length(tree.root)
 Base.length{T}(branch::Branch{T}) = 1 + length(branch.left) + length(branch.right)
 Base.length{T}(leaf::Leaf{T})     = 1
 
+parent{T}(tree::Tree{T}, node::Node{T}) = parent(tree.root, node)
+function parent{T}(branch::Branch{T}, node::Node{T})
+    data_or_none(a, b) = a==None ? b : a
+    if branch.left==node || branch.right==node
+        this_parent = branch
+    else
+        this_parent = data_or_none(parent(branch.left, node), parent(branch.right, node))
+    end
+    this_parent
+end
+parent{T}(leaf::Leaf{T}, node::Node{T}) = None
+
 function leaves{T}(branch::Branch{T})
     function leaves!{T}(branch::Branch{T}, leaf_nodes::Vector{Leaf{T}})
         leaves!(branch.left,  leaf_nodes)

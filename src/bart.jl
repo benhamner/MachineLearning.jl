@@ -152,32 +152,6 @@ function all_nog_branches(tree::BartTree) # a nog branch is one that isn't a gra
     nog_branches
 end
 
-function data_or_none(a, b)
-    if a==None
-        val = b
-    else
-        val = a
-    end
-    val
-end
-
-function parent(tree::BartTree, node::DecisionNode)
-    parent(tree.tree.root, node)
-end
-
-function parent(branch::DecisionBranch, node::DecisionNode)
-    if branch.left==node || branch.right==node
-        this_parent = branch
-    else
-        this_parent = data_or_none(parent(branch.left, node), parent(branch.right, node))
-    end
-    this_parent
-end
-
-function parent(leaf::BartLeaf, node::DecisionNode)
-    None
-end
-
 function growth_prior(node::DecisionNode, depth::Int, opts::BartOptions)
     indices = train_data_indices(node)
     branch_prior = nonterminal_node_prior(opts, depth)
