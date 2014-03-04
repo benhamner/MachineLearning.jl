@@ -25,13 +25,6 @@ type BartLeaf <: DecisionLeaf
     end
 end
 
-function posterior_mu_sigma(prior_mu, a, sigma_hat, y_bar, num_observations)
-    b = num_observations / sigma_hat^2
-    posterior_mu = b*y_bar/(a+b)
-    posterior_sigma = 1 / sqrt(a+b)
-    posterior_mu, posterior_sigma
-end
-
 type BartTreeTransformationProbabilies
     node_birth_death::Float64
     change_decision_rule::Float64
@@ -79,31 +72,22 @@ type Bart <: RegressionModel
 end
 
 function nonterminal_node_prior(alpha::Float64, beta::Float64, depth::Int)
-    # using the convention that the root node has depth=1
-    # BART paper implies that root node has depth=0
-    alpha * depth^(-beta)
+    alpha * depth^(-beta) # root node has depth=1 (note BART paper has depth(root)=0)
 end
+nonterminal_node_prior(opts::BartOptions, depth::Int) = nonterminal_node_prior(opts.alpha, opts.beta, depth)
 
-function nonterminal_node_prior(opts::BartOptions, depth::Int)
-    nonterminal_node_prior(opts.alpha, opts.beta, depth)
-end
-
-function sigma_prior(x::Matrix{Float64}, y::Vector{Float64})
-    linear_model = x\y
-    sigma_hat = std(x*linear_model-y)
-end
+linear_model_sigma_prior(x::Matrix{Float64}, y::Vector{Float64}) = std(x*(x\y)-y)
 
 function initialize_bart(x::Matrix{Float64}, y::Vector{Float64}, y_min, y_max, opts::BartOptions)
     trees = Array(BartTree, 0)
     for i=1:opts.num_trees
         push!(trees, BartTree(DecisionTree(BartLeaf(y, [1:size(x,1)]))))
     end
-    sigma  = sigma_prior(x, y)
+    sigma  = linear_model_sigma_prior(x, y)
     println("Sigma Hat: ", sigma)
     println("Std Y: ", sqrt(mean(y.^2)))
     nu     = 3.0
-    k      = 2.0
-    musig  = 0.5/(k*sqrt(opts.num_trees))
+    musig  = 0.5/(opts.k*sqrt(opts.num_trees))
     println("MuSig: ", musig)
     q      = 0.90
     lambda = sigma^2.0*quantile(NoncentralChisq(nu, 1.0), q)/nu
@@ -127,10 +111,8 @@ function update_tree!(bart::Bart, tree::BartTree, x::Matrix{Float64}, r::Vector{
         alpha, updated = node_birth_death!(bart, tree, x, r)
     elseif select_action < bart.options.transform_probabilities.node_birth_death + bart.options.transform_probabilities.change_decision_rule
         alpha, updated = change_decision_rule!(bart, tree, x, r)
-        # println("Changed Decision Rule", "\talpha: ", alpha, "\tupdated: ", updated)
     else
         alpha, updated = swap_decision_rule!(bart, tree, x, r)
-        # println("Swapped Decision Rule", "\talpha: ", alpha, "\tupdated: ", updated)
     end
     alpha, updated
 end
@@ -170,20 +152,20 @@ function grand_branch(branch::DecisionBranch)
     typeof(branch.left)==DecisionBranch || typeof(branch.right)==DecisionBranch
 end
 
-function all_nog_nodes(tree::BartTree)
-    function all_nog_nodes!(branch::DecisionBranch, nog_nodes::Vector{DecisionBranch})
+function all_nog_branches(tree::BartTree) # a nog branch is one that isn't a grandparent
+    function all_nog_branches!(branch::DecisionBranch, nog_branches::Vector{DecisionBranch})
         if !grand_branch(branch)
-            push!(nog_nodes, branch)
+            push!(nog_branches, branch)
         else
-            all_nog_nodes!(branch.left,  nog_nodes)
-            all_nog_nodes!(branch.right, nog_nodes)
+            all_nog_branches!(branch.left,  nog_branches)
+            all_nog_branches!(branch.right, nog_branches)
         end
     end
-    all_nog_nodes!(leaf::BartLeaf, nog_nodes::Vector{DecisionBranch}) = Nothing()
+    all_nog_branches!(leaf::BartLeaf, nog_branches::Vector{DecisionBranch}) = Nothing()
     
-    nog_nodes = Array(DecisionBranch, 0)
-    all_nog_nodes!(tree.tree.root, nog_nodes)
-    nog_nodes
+    nog_branches = Array(DecisionBranch, 0)
+    all_nog_branches!(tree.tree.root, nog_branches)
+    nog_branches
 end
 
 function all_branches(tree::BartTree)
@@ -269,25 +251,7 @@ function log_likelihood(leaf::BartLeaf, params::BartLeafParameters)
     end
     ll
 end
-
-function log_likelihood(branch::DecisionBranch, params::BartLeafParameters)
-    log_likelihood(branch.left, params)+log_likelihood(branch.right, params)
-end
-
-function count_nodes_with_two_leaf_children(leaf::BartLeaf)
-    0
-end
-
-function count_nodes_with_two_leaf_children(branch::DecisionBranch)
-    if typeof(branch.left)==BartLeaf && typeof(branch.right)==BartLeaf
-        return 1
-    end
-    count_nodes_with_two_leaf_children(branch.left) + count_nodes_with_two_leaf_children(branch.right)
-end
-
-function count_nodes_with_two_leaf_children(tree::BartTree)
-    count_nodes_with_two_leaf_children(tree.tree.root)
-end
+log_likelihood(branch::DecisionBranch, params::BartLeafParameters) = log_likelihood(branch.left, params) + log_likelihood(branch.right, params)
  
 function node_birth!(bart::Bart, tree::BartTree, x::Matrix{Float64}, r::Vector{Float64}, probability_birth::Float64)
     leaf, leaf_node_probability = birth_node(tree)
@@ -309,14 +273,14 @@ function node_birth!(bart::Bart, tree::BartTree, x::Matrix{Float64}, r::Vector{F
     ll_after      = log_likelihood(branch, bart.leaf_parameters)
 
     parent_branch = parent(tree, leaf)
-    num_nog_nodes = count_nodes_with_two_leaf_children(tree)
+    num_nog_branches = length(all_nog_branches(tree))
     if parent_branch == None 
-        num_nog_nodes += 1
+        num_nog_branches += 1
     elseif typeof(parent_branch.left) != BartLeaf || typeof(parent_branch.right) != BartLeaf
-        num_nog_nodes += 1
+        num_nog_branches += 1
     end
 
-    p_nog = 1.0/num_nog_nodes
+    p_nog = 1.0/num_nog_branches
     p_dy  = 0.5 #1.0-probability_node_birth(tree)
 
     alpha1 = (leaf_prior*(1.0-left_prior)*(1.0-right_prior)*p_dy*p_nog)/((1.0-leaf_prior)*probability_birth*leaf_node_probability)
@@ -342,8 +306,8 @@ function node_birth!(bart::Bart, tree::BartTree, x::Matrix{Float64}, r::Vector{F
 end
 
 function death_node(tree::BartTree)
-    nog_nodes = all_nog_nodes(tree)
-    nog_nodes[rand(1:length(nog_nodes))], 1.0/length(nog_nodes)
+    nog_branches = all_nog_branches(tree)
+    nog_branches[rand(1:length(nog_branches))], 1.0/length(nog_branches)
 end
 
 function node_death!(bart::Bart, tree::BartTree, r::Vector{Float64}, probability_death::Float64)
