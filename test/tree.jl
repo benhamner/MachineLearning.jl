@@ -59,3 +59,7 @@ tree = GoodTree(branch4)
 @test depth(branch3)==2
 @test depth(branch4)==4
 @test depth(tree)==4
+
+@test Set(leaves(tree)...)==Set([leaf1,leaf2,leaf3,leaf4,leaf5]...)
+@test Set(leaves(branch2)...)==Set([leaf1,leaf2,leaf3]...)
+@test leaves(leaf1)==[leaf1]

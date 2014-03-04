@@ -28,3 +28,19 @@ depth{T}(leaf::Leaf{T})     = 1
 Base.length{T}(tree::Tree{T})     = length(tree.root)
 Base.length{T}(branch::Branch{T}) = 1 + length(branch.left) + length(branch.right)
 Base.length{T}(leaf::Leaf{T})     = 1
+
+function leaves{T}(branch::Branch{T})
+    function leaves!{T}(branch::Branch{T}, leaf_nodes::Vector{Leaf{T}})
+        leaves!(branch.left,  leaf_nodes)
+        leaves!(branch.right, leaf_nodes)
+    end
+    function leaves!{T}(leaf::Leaf{T}, leaf_nodes::Vector{Leaf{T}})
+        push!(leaf_nodes, leaf)
+    end
+
+    leaf_nodes = Array(Leaf{T}, 0)
+    leaves!(branch, leaf_nodes)
+    leaf_nodes
+end
+leaves{T}(tree::Tree{T}) = leaves(tree.root)
+leaves{T}(leaf::Leaf{T}) = [leaf]

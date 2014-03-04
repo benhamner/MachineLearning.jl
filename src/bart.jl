@@ -61,6 +61,7 @@ end
 type BartTree <: AbstractRegressionTree
     tree::DecisionTree
 end
+leaves(tree::BartTree) = leaves(tree.tree)
 
 # This is really a single iteration / state.
 type Bart <: RegressionModel
@@ -115,21 +116,6 @@ function update_tree!(bart::Bart, tree::BartTree, x::Matrix{Float64}, r::Vector{
         alpha, updated = swap_decision_rule!(bart, tree, x, r)
     end
     alpha, updated
-end
-
-function all_leaf_nodes(tree::BartTree)
-    function all_leaf_nodes!(branch::DecisionBranch, leaf_nodes::Vector{BartLeaf})
-        all_leaf_nodes!(branch.left,  leaf_nodes)
-        all_leaf_nodes!(branch.right, leaf_nodes)
-    end
-
-    function all_leaf_nodes!(leaf::BartLeaf, leaf_nodes::Vector{BartLeaf})
-        push!(leaf_nodes, leaf)
-    end
-
-    leaf_nodes = Array(BartLeaf, 0)
-    all_leaf_nodes!(tree.tree.root, leaf_nodes)
-    leaf_nodes
 end
 
 function grand_branch(branch::DecisionBranch)
@@ -257,7 +243,7 @@ function birth_node(tree::BartTree)
         leaf = tree.tree.root
         leaf_probability = 1.0
     else
-        leaf_nodes = all_leaf_nodes(tree)
+        leaf_nodes = leaves(tree)
         i = rand(1:length(leaf_nodes))
         leaf = leaf_nodes[i]
         leaf_probability = 1.0/length(leaf_nodes)
@@ -335,7 +321,7 @@ function node_death!(bart::Bart, tree::BartTree, r::Vector{Float64}, probability
     parent_branch = parent(tree, branch)
     probability_birth_after = parent_branch == None ? 1.0 : 0.5
     prior_grow = growth_prior(leaf, leaf_depth-1, bart.options)
-    probability_birth_leaf = 1.0 / (length(all_leaf_nodes(tree))-1)
+    probability_birth_leaf = 1.0 / (length(leaves(tree))-1)
 
     alpha1 = ((1.0-prior_grow)*probability_birth_after*probability_birth_leaf)/(prior_grow*(1.0-left_prior)*(1.0-right_prior)*probability_death*p_nog)
     alpha  = alpha1*exp(ll_after-ll_before)
@@ -496,8 +482,7 @@ function swap_decision_rule!(bart::Bart, tree::BartTree, x::Matrix{Float64}, r::
 end
 
 function update_leaf_values!(tree::BartTree, params::BartLeafParameters)
-    leaves = all_leaf_nodes(tree)
-    for leaf=leaves
+    for leaf=leaves(tree)
         update_leaf_value!(leaf, params)
     end
 end
@@ -538,7 +523,7 @@ function fit_predict(x_train::Matrix{Float64}, y_train::Vector{Float64}, opts::B
             y_test_hat += y_test_current
         end
         update_sigma!(bart, y_train_current - y_train)
-        num_leaves = [length(all_leaf_nodes(tree)) for tree=bart.trees]
+        num_leaves = [length(leaves(tree)) for tree=bart.trees]
         if log(2, i) % 1 == 0.0 || i == opts.num_draws
             println("i: ", i, "\tSigma: ", bart.leaf_parameters.sigma, "\tUpdates:", updates, "\tMaxLeafNodes: ", maximum(num_leaves), "\tMeanLeafNodes: ", mean(num_leaves))
         end

@@ -63,6 +63,7 @@ module MachineLearning
         gini,
         initialize_net,
         initialize_neural_net_temporary,
+        leaves,
         log_loss,
         mean_log_loss,
         mean_squared_error,
