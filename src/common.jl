@@ -10,8 +10,8 @@ abstract RegressionModelOptions     <: SupervisedModelOptions
 abstract Transformer
 abstract TransformerOptions
 
-type DataFrameClassificationModel
-    model::ClassificationModel
+type DataFrameModel
+    model::SupervisedModel
     colnames::Vector{Symbol}
 end
 
@@ -25,11 +25,12 @@ function float_matrix(df::DataFrame)
 end
 
 function fit(df::DataFrame, target_column::Symbol, opts::SupervisedModelOptions)
-    y = [x for x=df[target_column]]
+    y = array(df[target_column])
     columns = filter(x->x!=target_column, names(df))
+    columns = filter(x->eltype(df[x]) <: Number, columns)
     x = float_matrix(df[columns])
     model = fit(x, y, opts)
-    DataFrameClassificationModel(model, columns)
+    DataFrameModel(model, columns)
 end
 
 function predict_probs(model::ClassificationModel, samples::Matrix{Float64})
@@ -40,7 +41,7 @@ function predict_probs(model::ClassificationModel, samples::Matrix{Float64})
     probs
 end
 
-function predict_probs(model::DataFrameClassificationModel, df::DataFrame)
+function predict_probs(model::DataFrameModel, df::DataFrame)
     samples = float_matrix(df[model.colnames])
     predict_probs(model.model, samples)
 end
@@ -49,7 +50,7 @@ function StatsBase.predict(model::ClassificationModel, samples::Matrix{Float64})
     [StatsBase.predict(model, vec(samples[i,:])) for i=1:size(samples,1)]
 end
 
-function StatsBase.predict(model::DataFrameClassificationModel, df::DataFrame)
+function StatsBase.predict(model::DataFrameModel, df::DataFrame)
     samples = float_matrix(df[model.colnames])
     predict(model.model, samples)
 end

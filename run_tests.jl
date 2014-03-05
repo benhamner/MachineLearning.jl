@@ -1,11 +1,12 @@
 tests = [
-    "accuracy",
     "bart",
+    "classification",
     "common",
     "decision_tree",
     "metrics",
     "neural_net",
     "pipeline",
+    "regression",
     "split",
     "random_forest",
     "transform/zmuv",
