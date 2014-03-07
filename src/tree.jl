@@ -121,3 +121,15 @@ function not_grand_branches{T}(branch::Branch{T}) # a not_grand branch is one th
 end
 not_grand_branches{T}(tree::Tree{T}) = not_grand_branches(tree.root)
 not_grand_branches{T}(leaf::Leaf{T}) = Branch{T}[]
+
+macro make_tree_type(Tree, Node)
+    eval(quote
+        depth(tree::$Tree)               = depth(tree.tree)
+        leaves(tree::$Tree)              = leaves(tree.tree)
+        branches(tree::$Tree)            = branches(tree.tree)
+        grand_branches(tree::$Tree)      = grand_branches(tree.tree)
+        not_grand_branches(tree::$Tree)  = not_grand_branches(tree.tree)
+        depth(tree::$Tree,  node::$Node) = depth(tree.tree, node)
+        parent(tree::$Tree, node::$Node) = parent(tree.tree, node)
+    end)
+end
