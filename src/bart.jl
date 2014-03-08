@@ -229,6 +229,10 @@ probability_node_birth(tree::BartTree) = typeof(tree.tree.root) == BartLeaf ? 1.
 
 function node_birth!(bart::Bart, bart_state::BartState, tree::BartTree, r::Vector{Float64}, probability_birth::Float64)
     leaf, leaf_node_probability = birth_node(tree)
+    if length(leaf.train_data_indices)==0
+        return 0.0, false
+    end
+    
     leaf_depth    = depth(tree, leaf)
     leaf_prior    = growth_prior(leaf, leaf_depth, bart.options)
     ll_before     = log_likelihood(leaf, bart_state.leaf_parameters)
