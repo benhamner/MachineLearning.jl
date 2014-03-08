@@ -19,13 +19,16 @@ function float_matrix(df::DataFrame)
     columns = names(df)
     res = Array(Float64, (nrow(df), ncol(df)))
     for (i,(name,col)) = enumerate(eachcol(df))
-        res[:,i] = col
+        res[:,i] = array(col, 0.0)
     end
     res
 end
 
 function fit(df::DataFrame, target_column::Symbol, opts::SupervisedModelOptions)
     y = array(df[target_column])
+    if typeof(opts) <: RegressionModelOptions
+        y *= 1.0
+    end
     columns = filter(x->x!=target_column, names(df))
     columns = filter(x->eltype(df[x]) <: Number, columns)
     x = float_matrix(df[columns])
