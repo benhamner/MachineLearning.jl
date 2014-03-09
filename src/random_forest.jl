@@ -48,7 +48,7 @@ function fit(x::Matrix{Float64}, y::Vector, opts::ClassificationForestOptions)
 end
 
 function fit(x::Matrix{Float64}, y::Vector{Float64}, opts::RegressionForestOptions)
-    tree_opts = regression_tree_options(features_per_split_fraction=0.5)
+    tree_opts = regression_tree_options(features_per_split_fraction=0.5, minimum_split_size = max(2, int(size(x,1)/128)))
     trees = Array(RegressionTree, 0)
     for i=1:opts.num_trees
         shuffle_locs = rand(1:size(x,1), size(x,1))
