@@ -6,8 +6,8 @@ options = [bart_options(num_trees=10),
            regression_forest_options(num_trees=10)]
 
 datasets = [("car",      "Prestige",   :Prestige, 0.5),
-            ("datasets", "quakes",     :Mag,      0.5),
-            ("plyr",     "baseball",   :R,        0.5)]
+            ("datasets", "quakes",     :Mag,      0.5)]
+            #("plyr",     "baseball",   :R,        0.5)]
             #("Ecdat",    "BudgetFood", :WFood,    0.5)]
 
 for (pkg, dataset_name, colname, acc_threshold) = datasets
