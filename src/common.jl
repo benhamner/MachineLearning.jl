@@ -15,6 +15,14 @@ type DataFrameModel
     colnames::Vector{Symbol}
 end
 
+function float_dataframe(df::DataFrame)
+    res = copy(df)
+    for (i,(name,col)) = enumerate(eachcol(df))
+        res[name] = array(col, 0.0)*1.0
+    end
+    res
+end
+
 function float_matrix(df::DataFrame)
     columns = names(df)
     res = Array(Float64, (nrow(df), ncol(df)))

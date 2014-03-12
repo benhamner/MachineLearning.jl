@@ -61,6 +61,7 @@ module MachineLearning
         depth,
         fit,
         fit_predict,
+        float_dataframe,
         float_matrix,
         gini,
         grand_branches,
