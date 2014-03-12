@@ -1,4 +1,4 @@
-library(BayesTree)
+library(BayesTree, quietly=TRUE, verbose=FALSE)
 
 # Parameters and data loading
 args       <- commandArgs(trailingOnly = TRUE)

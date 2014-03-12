@@ -46,6 +46,6 @@ for algorithm=algorithms
         run(Cmd(Union(UTF8String, ASCIIString)["Rscript", algorithm.r_script_name, results_file, data_file, string(colname)]))
         r_results, header = readcsv(results_file, Float64, has_header=true)
         acc = cor(ytest, vec(r_results))
-        println(@sprintf("R Correlation: %0.3f", acc), "\t", algorithm.julia_options)
+        println(@sprintf("R Correlation: %0.3f", acc), " ", algorithm.r_script_name)
     end
 end

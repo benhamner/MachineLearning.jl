@@ -18,8 +18,9 @@ type BartOptions <: RegressionModelOptions
     beta::Float64
     k::Float64
     transform_probabilities::BartTreeTransformationProbabilies
+    display::Bool
 end
-BartOptions() = BartOptions(10, 200, 1000, 0.95, 2.0, BartTreeTransformationProbabilies())
+BartOptions() = BartOptions(10, 200, 1000, 0.95, 2.0, BartTreeTransformationProbabilies(), false)
 
 function bart_options(;num_trees::Int=10,
                       burn_in::Int=200,
@@ -27,8 +28,9 @@ function bart_options(;num_trees::Int=10,
                       alpha::Float64=0.95,
                       beta::Float64=2.0,
                       k::Float64=2.0,
-                      transform_probabilities::BartTreeTransformationProbabilies=BartTreeTransformationProbabilies())
-    BartOptions(num_trees, burn_in, num_draws, alpha, beta, k, transform_probabilities)
+                      transform_probabilities::BartTreeTransformationProbabilies=BartTreeTransformationProbabilies(),
+                      display::Bool=false)
+    BartOptions(num_trees, burn_in, num_draws, alpha, beta, k, transform_probabilities, display)
 end
 
 type Bart <: RegressionModel # This is a trivial holder for the data/options. All the magic happens in predict(...), not fit(...)
@@ -197,11 +199,13 @@ function initialize_bart_state(bart::Bart)
         push!(trees, BartTree(DecisionTree(BartLeaf(bart.y_normalized, [1:size(bart.x,1)]))))
     end
     sigma  = linear_model_sigma_prior(bart.x, bart.y_normalized)
-    println("Sigma Hat: ", sigma)
-    println("Std Y: ", sqrt(mean(bart.y_normalized.^2)))
     nu     = 3.0
     musig  = 0.5/(bart.options.k*sqrt(bart.options.num_trees))
-    println("MuSig: ", musig)
+    if bart.options.display
+        println("Sigma Hat: ", sigma)
+        println("Std Y: ", sqrt(mean(bart.y_normalized.^2)))
+        println("MuSig: ", musig)
+    end
     q      = 0.90
     lambda = sigma^2.0*quantile(NoncentralChisq(nu, 1.0), q)/nu
     params = BartLeafParameters(sigma, musig, nu, lambda)
@@ -449,7 +453,7 @@ function StatsBase.predict(bart::Bart, x_test::Matrix{Float64})
         end
         update_sigma!(bart_state, y_train_current - bart.y_normalized)
         num_leaves = [length(leaves(tree)) for tree=bart_state.trees]
-        if log(2, i) % 1 == 0.0 || i == bart.options.num_draws
+        if bart.options.display && (log(2, i) % 1 == 0.0 || i == bart.options.num_draws)
             println("i: ", i, "\tSigma: ", bart_state.leaf_parameters.sigma, "\tUpdates:", updates, "\tMaxLeafNodes: ", maximum(num_leaves), "\tMeanLeafNodes: ", mean(num_leaves))
         end
     end
