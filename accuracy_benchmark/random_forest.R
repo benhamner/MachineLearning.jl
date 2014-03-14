@@ -15,6 +15,6 @@ x_test["is_test"]   <- NULL
 x_train[targetName] <- NULL
 x_test[targetName]  <- NULL
 
-model <- randomForest(as.matrix.data.frame(x_train), as.vector(y_train), as.matrix.data.frame(x_test), ntree=10)
+model <- randomForest(as.matrix.data.frame(x_train), as.vector(y_train), as.matrix.data.frame(x_test), ntree=100)
 
 write.csv(model$test$predicted, outputFile, row.names=FALSE)

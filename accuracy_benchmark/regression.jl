@@ -9,7 +9,7 @@ type RegressionAccuracy
 end
 
 bart          = RegressionAccuracy("BART",          bart_options(num_trees=10, num_draws=1000), "bart.R")
-random_forest = RegressionAccuracy("Random Forest", regression_forest_options(num_trees=10),    "random_forest.R")
+random_forest = RegressionAccuracy("Random Forest", regression_forest_options(num_trees=100),    "random_forest.R")
 
 datasets = [("car",      "Prestige",   :Prestige, 0.5),
             ("datasets", "quakes",     :Mag,      0.5)]
