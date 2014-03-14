@@ -8,10 +8,7 @@ type RegressionAccuracy
     r_script_name::ASCIIString
 end
 
-options = [bart_options(num_trees=10, num_draws=10000),
-           regression_forest_options(num_trees=10)]
-
-bart = RegressionAccuracy("BART", bart_options(num_trees=10), "bart.R")
+bart = RegressionAccuracy("BART", bart_options(num_trees=10, num_draws=1000), "bart.R")
 
 datasets = [("car",      "Prestige",   :Prestige, 0.5),
             ("datasets", "quakes",     :Mag,      0.5)]
@@ -19,9 +16,9 @@ datasets = [("car",      "Prestige",   :Prestige, 0.5),
 algorithms = [bart]
 
 for algorithm=algorithms
-    println("############ ", algorithm.model_name, " ############")
+    println("ALGORITHM: ", algorithm.model_name)
     for (pkg, dataset_name, colname, acc_threshold) = datasets
-        println("- Dataset ", dataset_name)
+        println(" - Dataset ", dataset_name)
         data = dataset(pkg, dataset_name)
         columns = filter(x->eltype(data[x]) <: Number, names(data))
         data = data[columns]
@@ -33,7 +30,7 @@ for algorithm=algorithms
         yhat = predict(model, test)
         t1 = time()
         acc = cor(ytest, yhat)
-        println(@sprintf("Julia Correlation: %0.3f\tElapsed Time: %0.2f", acc, t1-t0), "\t", algorithm.julia_options)
+        println(@sprintf("   - Julia Correlation: %0.3f\tElapsed Time: %0.2f", acc, t1-t0), "\t", algorithm.julia_options)
 
         train = float_dataframe(train)
         test  = float_dataframe(test)
@@ -50,6 +47,6 @@ for algorithm=algorithms
         t1 = time()
         r_results, header = readcsv(results_file, Float64, has_header=true)
         acc = cor(ytest, vec(r_results))
-        println(@sprintf("R Correlation:     %0.3f\tElapsed Time: %0.2f", acc, t1-t0), "\t", algorithm.r_script_name)
+        println(@sprintf("   - R Correlation:     %0.3f\tElapsed Time: %0.2f", acc, t1-t0), "\t", algorithm.r_script_name)
     end
 end
