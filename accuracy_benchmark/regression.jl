@@ -8,12 +8,13 @@ type RegressionAccuracy
     r_script_name::ASCIIString
 end
 
-bart = RegressionAccuracy("BART", bart_options(num_trees=10, num_draws=1000), "bart.R")
+bart          = RegressionAccuracy("BART",          bart_options(num_trees=10, num_draws=1000), "bart.R")
+random_forest = RegressionAccuracy("Random Forest", regression_forest_options(num_trees=10),    "random_forest.R")
 
 datasets = [("car",      "Prestige",   :Prestige, 0.5),
             ("datasets", "quakes",     :Mag,      0.5)]
 
-algorithms = [bart]
+algorithms = [bart, random_forest]
 
 for algorithm=algorithms
     println("ALGORITHM: ", algorithm.model_name)
