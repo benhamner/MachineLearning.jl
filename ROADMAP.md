@@ -1,7 +1,7 @@
 Short-term TODO's
 =================
 
-1. Scikit-learn comparison
+1. Scikit-learn speed / accuracy comparison
 2. Posterior distribution from BART
 3. Support categorical predictors
 4. Track & optionally show metadata and state during training 
