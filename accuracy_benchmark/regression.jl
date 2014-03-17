@@ -6,10 +6,11 @@ type RegressionAccuracy
     model_name::String
     julia_options::RegressionModelOptions
     r_script_name::ASCIIString
+    python_script_name::ASCIIString
 end
 
-bart          = RegressionAccuracy("BART",          bart_options(num_trees=10, num_draws=1000), "bart.R")
-random_forest = RegressionAccuracy("Random Forest", regression_forest_options(num_trees=100),    "random_forest.R")
+bart          = RegressionAccuracy("BART",          bart_options(num_trees=10, num_draws=1000), "bart.R",          "")
+random_forest = RegressionAccuracy("Random Forest", regression_forest_options(num_trees=100),   "random_forest.R", "")
 
 datasets = [("car",      "Prestige",   :Prestige, 0.5),
             ("datasets", "quakes",     :Mag,      0.5)]
@@ -31,7 +32,7 @@ for algorithm=algorithms
         yhat = predict(model, test)
         t1 = time()
         acc = cor(ytest, yhat)
-        println(@sprintf("   - Julia Correlation: %0.3f\tElapsed Time: %0.2f", acc, t1-t0), "\t", algorithm.julia_options)
+        println(@sprintf("   - Julia Correlation:  %0.3f\tElapsed Time: %0.2f", acc, t1-t0), "\t", algorithm.julia_options)
 
         train = float_dataframe(train)
         test  = float_dataframe(test)
@@ -43,11 +44,22 @@ for algorithm=algorithms
 
         writetable(data_file, rbind(train, test))
 
-        t0 = time()
-        run(Cmd(Union(UTF8String, ASCIIString)["Rscript", algorithm.r_script_name, results_file, data_file, string(colname)]))
-        t1 = time()
-        r_results, header = readcsv(results_file, Float64, has_header=true)
-        acc = cor(ytest, vec(r_results))
-        println(@sprintf("   - R Correlation:     %0.3f\tElapsed Time: %0.2f", acc, t1-t0), "\t", algorithm.r_script_name)
+        if algorithm.r_script_name != ""
+            t0 = time()
+            run(Cmd(Union(UTF8String, ASCIIString)["Rscript", algorithm.r_script_name, results_file, data_file, string(colname)]))
+            t1 = time()
+            r_results, header = readcsv(results_file, Float64, has_header=true)
+            acc = cor(ytest, vec(r_results))
+            println(@sprintf("   - R Correlation:      %0.3f\tElapsed Time: %0.2f", acc, t1-t0), "\t", algorithm.r_script_name)
+        end
+
+        if algorithm.python_script_name != ""
+            t0 = time()
+            run(Cmd(Union(UTF8String, ASCIIString)["python", algorithm.r_script_name, results_file, data_file, string(colname)]))
+            t1 = time()
+            r_results, header = readcsv(results_file, Float64, has_header=true)
+            acc = cor(ytest, vec(r_results))
+            println(@sprintf("   - Python Correlation: %0.3f\tElapsed Time: %0.2f", acc, t1-t0), "\t", algorithm.r_script_name)
+        end
     end
 end
