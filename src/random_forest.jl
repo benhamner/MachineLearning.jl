@@ -10,12 +10,14 @@ end
 
 type RegressionForestOptions <: RegressionModelOptions
     num_trees::Int
+    tree_options::RegressionTreeOptions
     display::Bool
 end
 
 function regression_forest_options(;num_trees::Int=100,
+                                   tree_options::RegressionTreeOptions=regression_tree_options(features_per_split_fraction=0.5, minimum_split_size = 5),
                                    display::Bool=false)
-    RegressionForestOptions(num_trees, display)
+    RegressionForestOptions(num_trees, tree_options, display)
 end
 
 type ClassificationForest <: ClassificationModel
@@ -48,11 +50,10 @@ function fit(x::Matrix{Float64}, y::Vector, opts::ClassificationForestOptions)
 end
 
 function fit(x::Matrix{Float64}, y::Vector{Float64}, opts::RegressionForestOptions)
-    tree_opts = regression_tree_options(features_per_split_fraction=0.5, minimum_split_size = max(2, int(size(x,1)/128)))
     trees = Array(RegressionTree, 0)
     for i=1:opts.num_trees
         shuffle_locs = rand(1:size(x,1), size(x,1))
-        tree = fit(x[shuffle_locs,:], y[shuffle_locs], tree_opts)
+        tree = fit(x[shuffle_locs,:], y[shuffle_locs], opts.tree_options)
         if opts.display
             println("Tree ", i, "\tNodes: ", length(tree), "\tDepth: ", depth(tree))
         end
