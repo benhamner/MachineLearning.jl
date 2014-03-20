@@ -9,8 +9,8 @@ type RegressionAccuracy
     python_script_name::ASCIIString
 end
 
-bart          = RegressionAccuracy("BART",          bart_options(num_trees=10, num_draws=1000), "bart.R",          "")
-random_forest = RegressionAccuracy("Random Forest", regression_forest_options(num_trees=100),   "random_forest.R", "random_forest.py")
+bart          = RegressionAccuracy("BART",          bart_options(num_trees=10, num_draws=1000), "regression.R", "")
+random_forest = RegressionAccuracy("Random Forest", regression_forest_options(num_trees=100),   "regression.R", "random_forest.py")
 
 datasets = [("car",      "Prestige",   :Prestige, 0.5),
             ("datasets", "quakes",     :Mag,      0.5)]
@@ -47,7 +47,7 @@ for algorithm=algorithms
 
         if algorithm.r_script_name != ""
             t0 = time()
-            run(Cmd(Union(UTF8String, ASCIIString)["Rscript", algorithm.r_script_name, results_file, data_file, string(colname)]))
+            run(Cmd(Union(UTF8String, ASCIIString)["Rscript", algorithm.r_script_name, results_file, data_file, string(colname), algorithm.model_name]))
             t1 = time()
             r_results, header = readcsv(results_file, Float64, has_header=true)
             acc = cor(ytest, vec(r_results))
