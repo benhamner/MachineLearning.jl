@@ -10,12 +10,14 @@ type RegressionAccuracy
 end
 
 bart          = RegressionAccuracy("BART",          bart_options(num_trees=10, num_draws=1000), "regression.R", "")
-random_forest = RegressionAccuracy("Random Forest", regression_forest_options(num_trees=100),   "regression.R", "random_forest.py")
+random_forest = RegressionAccuracy("Random Forest", regression_forest_options(num_trees=100),   "regression.R", "regression.py")
+decision_tree = RegressionAccuracy("Decision Tree", regression_tree_options(),                  "",             "regression.py")
 
 datasets = [("car",      "Prestige",   :Prestige, 0.5),
             ("datasets", "quakes",     :Mag,      0.5)]
 
-algorithms = [random_forest,
+algorithms = [decision_tree,
+              random_forest,
               bart]
 
 for algorithm=algorithms
@@ -57,7 +59,7 @@ for algorithm=algorithms
         results_file = tempname()
         if algorithm.python_script_name != ""
             t0 = time()
-            run(Cmd(Union(UTF8String, ASCIIString)["python", algorithm.python_script_name, results_file, data_file, string(colname)]))
+            run(Cmd(Union(UTF8String, ASCIIString)["python", algorithm.python_script_name, results_file, data_file, string(colname), algorithm.model_name]))
             t1 = time()
             python_results, header = readcsv(results_file, Float64, has_header=true)
             acc = cor(ytest, vec(python_results))
