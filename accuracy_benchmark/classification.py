@@ -12,19 +12,22 @@ def main():
     train = data[data["is_test"] == False]
     test  = data[data["is_test"] == True]
 
+    classes_list = list(set(train[target_name]))
+    classes_map  = dict(zip(classes_list, range(len(classes_list))))
     x_train = train[[c for c in train.keys() if c != target_name and c != "is_test"]]
-    y_train = train[target_name]
+    y_train = [classes_map[target] for target in train[target_name]]
     x_test  = test [[c for c in test.keys()  if c != target_name and c != "is_test"]]
 
     if model_name=="Random Forest":
         from sklearn.ensemble import RandomForestClassifier
-        model = RandomForestRegressor(n_estimators=100)
+        model = RandomForestClassifier(n_estimators=100)
     elif model_name=="Decision Tree":
         from sklearn.tree import DecisionTreeClassifier
-        model = DecisionTreeRegressor()
+        model = DecisionTreeClassifier()
 
     model.fit(x_train, y_train)
     y_hat = model.predict(x_test)
+    y_hat = [classes_list[y] for y in y_hat]
 
     f = open(output_file, "w")
     f.write("result\n")

@@ -34,8 +34,8 @@ for algorithm=algorithms
         acc = accuracy(ytest, yhat)
         println(@sprintf("   - Julia Accuracy:  %0.3f\tElapsed Time: %0.2f", acc, t1-t0), "\t", algorithm.julia_options)
 
-        train = float_dataframe(train)
-        test  = float_dataframe(test)
+        #train = float_dataframe(train)
+        #test  = float_dataframe(test)
 
         train[:is_test] = "false"
         test[:is_test]  = "true"
@@ -58,7 +58,7 @@ for algorithm=algorithms
             t0 = time()
             run(Cmd(Union(UTF8String, ASCIIString)["python", algorithm.python_script_name, results_file, data_file, string(colname), algorithm.model_name]))
             t1 = time()
-            python_results, header = readcsv(results_file, Float64, has_header=true)
+            python_results, header = readcsv(results_file, ASCIIString, has_header=true)
             acc = accuracy(ytest, vec(python_results))
             println(@sprintf("   - Python Accuracy: %0.3f\tElapsed Time: %0.2f", acc, t1-t0), "\t", algorithm.python_script_name)
         end
