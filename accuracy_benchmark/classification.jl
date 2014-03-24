@@ -9,8 +9,8 @@ type ClassificationAccuracy
     python_script_name::ASCIIString
 end
 
-random_forest = ClassificationAccuracy("Random Forest", classification_forest_options(num_trees=100),   "",             "classification.py")
-decision_tree = ClassificationAccuracy("Decision Tree", classification_tree_options(),                  "",             "classification.py")
+random_forest = ClassificationAccuracy("Random Forest", classification_forest_options(num_trees=100),   "classification.R", "classification.py")
+decision_tree = ClassificationAccuracy("Decision Tree", classification_tree_options(),                  "",                 "classification.py")
 
 datasets = [("datasets", "iris",   :Species, 0.5)]
 
@@ -48,7 +48,8 @@ for algorithm=algorithms
             t0 = time()
             run(Cmd(Union(UTF8String, ASCIIString)["Rscript", algorithm.r_script_name, results_file, data_file, string(colname), algorithm.model_name]))
             t1 = time()
-            r_results, header = readcsv(results_file, Float64, has_header=true)
+            r_results, header = readcsv(results_file, ASCIIString, has_header=true)
+            r_results = [strip(x, '"') for x=vec(r_results)]
             acc = accuracy(ytest, vec(r_results))
             println(@sprintf("   - R Accuracy:      %0.3f\tElapsed Time: %0.2f", acc, t1-t0), "\t", algorithm.r_script_name)
         end
