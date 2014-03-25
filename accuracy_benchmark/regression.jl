@@ -15,6 +15,7 @@ decision_tree = RegressionAccuracy("Decision Tree", regression_tree_options(),  
 
 datasets = [("car",      "Prestige",   :Prestige, 0.5),
             ("datasets", "quakes",     :Mag,      0.5)]
+            # ("ggplot2",  "movies",     :Rating,   0.5),
 
 algorithms = [decision_tree,
               random_forest,
