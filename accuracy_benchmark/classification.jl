@@ -12,7 +12,8 @@ end
 random_forest = ClassificationAccuracy("Random Forest", classification_forest_options(num_trees=100),   "classification.R", "classification.py")
 decision_tree = ClassificationAccuracy("Decision Tree", classification_tree_options(),                  "",                 "classification.py")
 
-datasets = [("datasets", "iris",   :Species, 0.5)]
+datasets = [("ggplot2",  "midwest", :Category, 0.5),
+            ("datasets", "iris",    :Species,  0.5)]
 
 algorithms = [decision_tree,
               random_forest]
@@ -22,8 +23,8 @@ for algorithm=algorithms
     for (pkg, dataset_name, colname, acc_threshold) = datasets
         println(" - Dataset ", dataset_name)
         data = dataset(pkg, dataset_name)
-        #columns = filter(x->eltype(data[x]) <: Number, names(data))
-        #data = data[columns]
+        columns = filter(x->eltype(data[x]) <: Number || x == colname, names(data))
+        data = data[columns]
 
         train, test = split_train_test(data)
         ytest = [x for x=test[colname]]
