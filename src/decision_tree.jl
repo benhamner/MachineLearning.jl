@@ -8,13 +8,16 @@ end
 type ClassificationTreeOptions <: ClassificationModelOptions
     features_per_split_fraction::Float64
     minimum_split_size::Int
+    classes::Union(Vector, Nothing)
 end
-ClassificationTreeOptions() = ClassificationTreeOptions(1.0, 2)
+ClassificationTreeOptions() = ClassificationTreeOptions(1.0, 2, Nothing())
 
 function classification_tree_options(;features_per_split_fraction::Float64=1.0,
-                               minimum_split_size::Int=2)
+                               minimum_split_size::Int=2,
+                               classes::Union(Vector,Nothing)=Nothing())
     ClassificationTreeOptions(features_per_split_fraction,
-                        minimum_split_size)
+                        minimum_split_size,
+                        classes)
 end
 
 type RegressionTreeOptions <: RegressionModelOptions
@@ -65,7 +68,7 @@ function classes(tree::ClassificationTree)
 end
 
 function fit(x::Matrix{Float64}, y::Vector, opts::ClassificationTreeOptions)
-    classes = sort(unique(y))
+    classes = typeof(opts.classes)<:Nothing ? sort(unique(y)) : opts.classes
     classes_map = Dict(classes, 1:length(classes))
     y_mapped = [classes_map[v]::Int for v=y]
     features_per_split = int(opts.features_per_split_fraction*size(x,2))
