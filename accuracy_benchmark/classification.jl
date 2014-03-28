@@ -11,12 +11,14 @@ end
 
 random_forest = ClassificationAccuracy("Random Forest", classification_forest_options(num_trees=100),   "classification.R", "classification.py")
 decision_tree = ClassificationAccuracy("Decision Tree", classification_tree_options(),                  "",                 "classification.py")
+neural_net    = ClassificationAccuracy("Neural Net",    neural_net_options(),                           "",                 "")
 
 datasets = [("ggplot2",  "midwest", :Category, 0.5),
             ("datasets", "iris",    :Species,  0.5)]
 
 algorithms = [decision_tree,
-              random_forest]
+              random_forest,
+              neural_net]
 
 for algorithm=algorithms
     println("ALGORITHM: ", algorithm.model_name)
