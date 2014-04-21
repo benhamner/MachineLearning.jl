@@ -93,7 +93,7 @@ function one_hot(y::Vector, classes_map::Dict)
     values
 end
 
-function fit(x::Matrix{Float64}, y::Vector, opts::NeuralNetOptions)
+function StatsBase.fit(x::Matrix{Float64}, y::Vector, opts::NeuralNetOptions)
     num_features = size(x, 2)
     classes = sort(unique(y))
     classes_map = Dict(classes, [1:length(classes)])

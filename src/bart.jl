@@ -420,7 +420,7 @@ end
 normalize(y::Vector{Float64}, y_min, y_max) = (y - y_min) / (y_max - y_min) - 0.5
 normalize(bart::Bart, y::Vector{Float64})   = normalize(y, bart.y_min, bart.y_max)
 
-function fit(x::Matrix{Float64}, y::Vector{Float64}, opts::BartOptions)
+function StatsBase.fit(x::Matrix{Float64}, y::Vector{Float64}, opts::BartOptions)
     y_min        = minimum(y)
     y_max        = maximum(y)
     y_normalized = normalize(y, y_min, y_max)

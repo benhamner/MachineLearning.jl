@@ -67,7 +67,7 @@ function classes(tree::ClassificationTree)
     tree.classes
 end
 
-function fit(x::Matrix{Float64}, y::Vector, opts::ClassificationTreeOptions)
+function StatsBase.fit(x::Matrix{Float64}, y::Vector, opts::ClassificationTreeOptions)
     classes = typeof(opts.classes)<:Nothing ? sort(unique(y)) : opts.classes
     classes_map = Dict(classes, 1:length(classes))
     y_mapped = [classes_map[v]::Int for v=y]
@@ -77,7 +77,7 @@ function fit(x::Matrix{Float64}, y::Vector, opts::ClassificationTreeOptions)
     ClassificationTree(DecisionTree(root), classes, features_per_split, opts)
 end
 
-function fit(x::Matrix{Float64}, y::Vector{Float64}, opts::RegressionTreeOptions)
+function StatsBase.fit(x::Matrix{Float64}, y::Vector{Float64}, opts::RegressionTreeOptions)
     features_per_split = int(opts.features_per_split_fraction*size(x,2))
     features_per_split = max(1, size(x,2))
     root = train_regression_branch(x, y, opts, features_per_split)

@@ -7,7 +7,7 @@ type Zmuv <: Transformer
     stds::Matrix{Float64}
 end
 
-function fit(x::Matrix{Float64}, opts::ZmuvOptions)
+function StatsBase.fit(x::Matrix{Float64}, opts::ZmuvOptions)
     means = mean(x, 1)
     stds = std(x, 1)
     stds[isnan(stds)] = 0.0

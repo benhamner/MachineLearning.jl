@@ -35,7 +35,7 @@ function classes(forest::ClassificationForest)
     forest.classes
 end
 
-function fit(x::Matrix{Float64}, y::Vector, opts::ClassificationForestOptions)
+function StatsBase.fit(x::Matrix{Float64}, y::Vector, opts::ClassificationForestOptions)
     classes = sort(unique(y))
     tree_opts = classification_tree_options(features_per_split_fraction=0.5, classes=classes)
     trees = Array(ClassificationTree, 0)
@@ -50,7 +50,7 @@ function fit(x::Matrix{Float64}, y::Vector, opts::ClassificationForestOptions)
     ClassificationForest(trees, trees[1].classes, opts)
 end
 
-function fit(x::Matrix{Float64}, y::Vector{Float64}, opts::RegressionForestOptions)
+function StatsBase.fit(x::Matrix{Float64}, y::Vector{Float64}, opts::RegressionForestOptions)
     trees = Array(RegressionTree, 0)
     for i=1:opts.num_trees
         shuffle_locs = rand(1:size(x,1), size(x,1))

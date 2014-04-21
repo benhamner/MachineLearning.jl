@@ -26,7 +26,7 @@ function ClassificationPipelineAny(transformers::Vector, model::ClassificationMo
     ClassificationPipeline(ts, model)
 end
 
-function fit(x::Matrix{Float64}, y::Vector, opts::PipelineOptions)
+function StatsBase.fit(x::Matrix{Float64}, y::Vector, opts::PipelineOptions)
     transformers = Array(Transformer, 0)
     x_transformed = x
     for transformer_opts = opts.transformer_options

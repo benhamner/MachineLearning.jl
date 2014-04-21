@@ -32,7 +32,7 @@ function float_matrix(df::DataFrame)
     res
 end
 
-function fit(df::DataFrame, target_column::Symbol, opts::SupervisedModelOptions)
+function StatsBase.fit(df::DataFrame, target_column::Symbol, opts::SupervisedModelOptions)
     y = array(df[target_column])
     if typeof(opts) <: RegressionModelOptions
         y *= 1.0
