@@ -199,7 +199,7 @@ end
 
 function initialize_layer(number_in::Int, number_out::Int)
     epsilon_init = sqrt(6) / sqrt(number_in + number_out)
-    weights = 2.0 * (rand(number_out, number_in) - 0.5) * epsilon_init
+    weights = 2.0 * (rand(number_out, number_in) .- 0.5) * epsilon_init
     NeuralNetLayer(weights)
 end
 
