@@ -417,7 +417,7 @@ function swap_decision_rule!(bart::Bart, bart_state::BartState, tree::BartTree, 
     alpha, updated
 end
 
-normalize(y::Vector{Float64}, y_min, y_max) = (y .- y_min) / (y_max - y_min) - 0.5
+normalize(y::Vector{Float64}, y_min, y_max) = (y .- y_min) / (y_max - y_min) .- 0.5
 normalize(bart::Bart, y::Vector{Float64})   = normalize(y, bart.y_min, bart.y_max)
 
 function StatsBase.fit(x::Matrix{Float64}, y::Vector{Float64}, opts::BartOptions)
@@ -458,5 +458,5 @@ function StatsBase.predict(bart::Bart, x_test::Matrix{Float64})
         end
     end
     y_test_hat /= bart.options.num_draws - bart.options.burn_in
-    (y_test_hat + 0.5) * (bart.y_max - bart.y_min) + bart.y_min
+    (y_test_hat .+ 0.5) * (bart.y_max - bart.y_min) .+ bart.y_min
 end
