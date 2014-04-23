@@ -1,8 +1,12 @@
-function split_train_test(x::Matrix{Float64}, y::Vector, split_fraction::Float64=0.5)
+function split_train_test(x::Matrix{Float64}, y::Vector; split_fraction::Float64=0.5, seed::Union(Int, Nothing)=Nothing())
     @assert size(x, 1)==length(y)
     @assert size(x, 1)>1
     @assert split_fraction>0.0
     @assert split_fraction<1.0
+
+    if typeof(seed)==Int
+        srand(seed)
+    end
 
     i = shuffle([1:length(y)])
     cutoff = max(int(floor(split_fraction*length(y))), 1)
@@ -13,10 +17,14 @@ function split_train_test(x::Matrix{Float64}, y::Vector, split_fraction::Float64
     x_train, y_train, x_test, y_test
 end
 
-function split_train_test(df::DataFrame, split_fraction::Float64=0.5)
+function split_train_test(df::DataFrame; split_fraction::Float64=0.5, seed::Union(Int, Nothing)=Nothing())
     @assert nrow(df)>1
     @assert split_fraction>0.0
     @assert split_fraction<1.0
+
+    if typeof(seed)==Int
+        srand(seed)
+    end
 
     i = shuffle([1:nrow(df)])
     cutoff = max(int(floor(split_fraction*nrow(df))), 1)
