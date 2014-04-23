@@ -61,7 +61,7 @@ type BartLeaf <: DecisionLeaf
         else
             leaf_r  = r[train_data_indices]
             r_mean  = mean(leaf_r)
-            r_sigma = sum((leaf_r-r_mean).^2)
+            r_sigma = sum((leaf_r.-r_mean).^2)
         end
 
         new(0.0, r_mean, r_sigma, train_data_indices)
