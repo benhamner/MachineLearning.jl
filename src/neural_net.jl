@@ -105,7 +105,7 @@ function StatsBase.fit(x::Matrix{Float64}, y::Vector, opts::NeuralNetOptions)
         if typeof(opts.stop_criteria)==StopAfterIteration
             train_preset_stop!(net, x, one_hot(y, classes_map), temp)
         elseif typeof(opts.stop_criteria)==StopAfterValidationErrorStopsImproving
-            x_train, y_train, x_val, y_val = split_train_test(x, y, opts.stop_criteria.validation_set_size)
+            x_train, y_train, x_val, y_val = split_train_test(x, y, split_fraction=opts.stop_criteria.validation_set_size)
             train_valid_stop!(net, x_train, one_hot(y_train, classes_map), x_val, one_hot(y_val, classes_map), temp)
         end
     else
