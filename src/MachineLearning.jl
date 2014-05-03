@@ -66,6 +66,7 @@ module MachineLearning
         float_matrix,
         gini,
         grand_branches,
+        importances,
         initialize_net,
         initialize_neural_net_temporary,
         leaves,
@@ -100,4 +101,5 @@ module MachineLearning
     include("random_forest.jl")
     include("split.jl")
     include("transform/zmuv.jl")
+    include("importance.jl")
 end
