@@ -27,7 +27,14 @@ function float_matrix(df::DataFrame)
     columns = names(df)
     res = Array(Float64, (nrow(df), ncol(df)))
     for (i,(name,col)) = enumerate(eachcol(df))
-        res[:,i] = array(col, 0.0)
+        if eltype(col)<:String
+            array_col = array(col, "missing")
+            classes = sort(unique(array_col))
+            classes_map = Dict(classes, 1:length(classes))
+            res[:,i] = Float64[float(classes_map[v]) for v=array_col]
+        else
+            res[:,i] = array(col, 0.0)
+        end
     end
     res
 end

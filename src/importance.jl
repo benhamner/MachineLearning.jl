@@ -1,3 +1,8 @@
+type ImportanceResults
+    importances::Vector{Float64}
+    best_score::Float64
+end
+
 function importances(x::Matrix{Float64}, y::Vector, opts::ClassificationModelOptions)
     num_features = size(x, 2)
     x_train, y_train, x_test, y_test = split_train_test(x, y)
@@ -11,5 +16,5 @@ function importances(x::Matrix{Float64}, y::Vector, opts::ClassificationModelOpt
         predictions = vec(predict_probs(model, x_test_permuted)[:,2])
         importance[feature] = best_score-auc(y_test, predictions)
     end
-    importance
+    ImportanceResults(importance, best_score)
 end
