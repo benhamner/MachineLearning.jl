@@ -35,6 +35,7 @@ end
 
 function Gadfly.plot(results::ImportanceResults)
     importance = DataFrame(Feature=results.names, Importance=results.importances)
-    importance = sort(importance, cols=[:Importance], rev=true)
-    plot(importance, x="Importance", y="Feature", Geom.bar(orientation=:horizontal))
+    importance = sort(importance, cols=[:Feature])
+    order = sortperm(importance[:Importance], rev=false)
+    plot(importance, x="Importance", y="Feature", Geom.bar(orientation=:horizontal), Scale.y_discrete(order=order))
 end
