@@ -3,6 +3,7 @@ module MachineLearning
         DataFrames,
         Devectorize,
         Distributions,
+        Gadfly,
         Optim,
         RDatasets,
         StatsBase
@@ -79,6 +80,7 @@ module MachineLearning
         not_grand_branches,
         one_hot,
         parent,
+        plot,
         predict,
         predict_probs,
         regression_forest_options,

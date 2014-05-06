@@ -1,4 +1,5 @@
 type ImportanceResults
+    names::Vector{String}
     importances::Vector{Float64}
     best_score::Float64
 end
@@ -16,5 +17,24 @@ function importances(x::Matrix{Float64}, y::Vector, opts::ClassificationModelOpt
         predictions = vec(predict_probs(model, x_test_permuted)[:,2])
         importance[feature] = best_score-auc(y_test, predictions)
     end
-    ImportanceResults(importance, best_score)
+    names = [@sprintf("X%d", i) for i=1:num_features]
+    ImportanceResults(names, importance, best_score)
+end
+
+function importances(df::DataFrame, target_column::Symbol, opts::ClassificationModelOptions)
+    y = array(df[target_column])
+    if typeof(opts) <: RegressionModelOptions
+        y *= 1.0
+    end
+    columns = filter(x->x!=target_column, names(df))
+    x = float_matrix(df[columns])
+    results = importances(x, y, opts)
+    results.names = [string(c) for c=columns]
+    results
+end
+
+function Gadfly.plot(results::ImportanceResults)
+    importance = DataFrame(Feature=results.names, Importance=results.importances)
+    importance = sort(importance, cols=[:Importance], rev=true)
+    plot(importance, x="Importance", y="Feature", Geom.bar(orientation=:horizontal))
 end
