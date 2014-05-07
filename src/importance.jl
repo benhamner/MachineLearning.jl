@@ -42,5 +42,6 @@ function Gadfly.plot(results::ImportanceResults)
          y="Feature",
          color="Useful",
          Geom.bar(orientation=:horizontal),
-         Scale.y_discrete(order=order))
+         Scale.y_discrete(order=order),
+         Guide.title(@sprintf("Best Score: %0.4d", results.best_score)))
 end
