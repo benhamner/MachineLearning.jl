@@ -6,7 +6,21 @@ end
 
 function importances(x::Matrix{Float64}, y::Vector, opts::ClassificationModelOptions)
     num_features = size(x, 2)
-    x_train, y_train, x_test, y_test = split_train_test(x, y)
+    num_splits   = 5
+    imps = zeros(num_splits, num_features)
+    bests = zeros(num_splits)
+    for i=1:num_splits
+        x_train, y_train, x_test, y_test = split_train_test(x, y, seed=i)
+        imp, best = single_importances(x_train, y_train, x_test, y_train, opts)
+        imps[i,:] = imp
+        bests[i]  = best
+    end
+    names = [@sprintf("X%d", i) for i=1:num_features]
+    ImportanceResults(names, vec(mean(imps, 1)), mean(bests))
+end
+
+function single_importances(x_train::Matrix{Float64}, y_train::Vector, x_test::Matrix{Float64}, y_test::Vector, opts::ClassificationModelOptions)
+    num_features = size(x_train, 2)
     model      = fit(x_train, y_train, opts)
     predictions = vec(predict_probs(model, x_test)[:,2])
     best_score = auc(y_test, predictions)
@@ -17,8 +31,7 @@ function importances(x::Matrix{Float64}, y::Vector, opts::ClassificationModelOpt
         predictions = vec(predict_probs(model, x_test_permuted)[:,2])
         importance[feature] = best_score-auc(y_test, predictions)
     end
-    names = [@sprintf("X%d", i) for i=1:num_features]
-    ImportanceResults(names, importance, best_score)
+    importance, best_score
 end
 
 function importances(df::DataFrame, target_column::Symbol, opts::ClassificationModelOptions)
