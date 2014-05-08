@@ -11,7 +11,7 @@ function importances(x::Matrix{Float64}, y::Vector, opts::ClassificationModelOpt
     bests = zeros(num_splits)
     for i=1:num_splits
         x_train, y_train, x_test, y_test = split_train_test(x, y, seed=i)
-        imp, best = single_importances(x_train, y_train, x_test, y_train, opts)
+        imp, best = single_importances(x_train, y_train, x_test, y_test, opts)
         imps[i,:] = imp
         bests[i]  = best
     end
