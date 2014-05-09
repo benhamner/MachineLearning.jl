@@ -2,6 +2,8 @@ type ImportanceResults
     names::Vector{String}
     importances::Vector{Float64}
     best_score::Float64
+    all_importances::Matrix{Float64}
+    best_scores::Vector{Float64}
 end
 
 function importances(x::Matrix{Float64}, y::Vector, opts::ClassificationModelOptions)
@@ -16,7 +18,7 @@ function importances(x::Matrix{Float64}, y::Vector, opts::ClassificationModelOpt
         bests[i]  = best
     end
     names = [@sprintf("X%d", i) for i=1:num_features]
-    ImportanceResults(names, vec(mean(imps, 1)), mean(bests))
+    ImportanceResults(names, vec(mean(imps, 1)), mean(bests), imps, bests)
 end
 
 function single_importances(x_train::Matrix{Float64}, y_train::Vector, x_test::Matrix{Float64}, y_test::Vector, opts::ClassificationModelOptions)
