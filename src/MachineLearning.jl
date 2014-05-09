@@ -80,6 +80,7 @@ module MachineLearning
         not_grand_branches,
         one_hot,
         parent,
+        partial_plot,
         plot,
         predict,
         predict_probs,
@@ -99,6 +100,7 @@ module MachineLearning
     include("bart.jl")
     include("metrics.jl")
     include("neural_net.jl")
+    include("partial_plot.jl")
     include("pipeline.jl")
     include("random_forest.jl")
     include("split.jl")
