@@ -80,7 +80,7 @@ module MachineLearning
         not_grand_branches,
         one_hot,
         parent,
-        partial_plot,
+        partials,
         plot,
         predict,
         predict_probs,
