@@ -14,3 +14,10 @@ function partial_plot(x::Matrix{Float64}, y::Vector, feature::Int, opts::Classif
          y="Probability",
          Geom.line)
 end
+
+function partial_plot(df::DataFrame, target::Symbol, feature::Symbol, opts::ClassificationModelOptions)
+    y = array(df[target])
+    columns = filter(x->x!=target, names(df))
+    x = float_matrix(df[columns])
+    partial_plot(x, y, find(columns.==feature)[1], opts)
+end
