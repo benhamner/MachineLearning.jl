@@ -100,7 +100,7 @@ module MachineLearning
     include("bart.jl")
     include("metrics.jl")
     include("neural_net.jl")
-    include("partial_plot.jl")
+    include("partial.jl")
     include("pipeline.jl")
     include("random_forest.jl")
     include("split.jl")
