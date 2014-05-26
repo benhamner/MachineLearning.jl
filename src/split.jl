@@ -1,3 +1,19 @@
+type TrainTestSplit
+    x::Matrix{Float64}
+    y::Vector
+    train_indices::Vector{Int}
+    test_indices::Vector{Int}
+end
+
+train_set(s::TrainTestSplit) = (s.x[s.train_indices,:], s.y[s.train_indices])
+test_set( s::TrainTestSplit) = (s.x[s.test_indices, :], s.y[s.test_indices])
+
+type CrossValidationSplit
+    x::Matrix{Float64}
+    y::Vector
+    groups::Vector{Int}
+end
+
 function split_train_test(x::Matrix{Float64}, y::Vector; split_fraction::Float64=0.5, seed::Union(Int, Nothing)=Nothing())
     @assert size(x, 1)==length(y)
     @assert size(x, 1)>1
@@ -10,11 +26,7 @@ function split_train_test(x::Matrix{Float64}, y::Vector; split_fraction::Float64
 
     i = shuffle([1:length(y)])
     cutoff = max(int(floor(split_fraction*length(y))), 1)
-    x_train = x[i[1:cutoff], :]
-    y_train = y[i[1:cutoff]]
-    x_test  = x[i[cutoff+1:length(i)], :]
-    y_test  = y[i[cutoff+1:length(i)]]
-    x_train, y_train, x_test, y_test
+    TrainTestSplit(x, y, i[1:cutoff], i[cutoff+1:end])
 end
 
 function split_train_test(df::DataFrame; split_fraction::Float64=0.5, seed::Union(Int, Nothing)=Nothing())
