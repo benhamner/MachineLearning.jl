@@ -14,3 +14,5 @@ script:
   - julia -e 'Pkg.init(); run(`ln -s $(pwd()) $(Pkg.dir("MachineLearning"))`); Pkg.pin("MachineLearning"); Pkg.resolve()'
   - julia -e 'using MachineLearning; @assert isdefined(:MachineLearning); @assert typeof(MachineLearning) === Module'
   - julia ./run_tests.jl
+after_success:
+    - julia -e 'cd(Pkg.dir("MachineLearning")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
