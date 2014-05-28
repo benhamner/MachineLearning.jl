@@ -12,8 +12,8 @@ function importances(x::Matrix{Float64}, y::Vector, opts::ClassificationModelOpt
     imps = zeros(num_splits, num_features)
     bests = zeros(num_splits)
     for i=1:num_splits
-        x_train, y_train, x_test, y_test = split_train_test(x, y, seed=i)
-        imp, best = single_importances(x_train, y_train, x_test, y_test, opts)
+        split = split_train_test(x, y, seed=i)
+        imp, best = single_importances(split, opts)
         imps[i,:] = imp
         bests[i]  = best
     end
@@ -21,7 +21,9 @@ function importances(x::Matrix{Float64}, y::Vector, opts::ClassificationModelOpt
     ImportanceResults(names, vec(mean(imps, 1)), mean(bests), imps, bests)
 end
 
-function single_importances(x_train::Matrix{Float64}, y_train::Vector, x_test::Matrix{Float64}, y_test::Vector, opts::ClassificationModelOptions)
+function single_importances(split::TrainTestSplit, opts::ClassificationModelOptions)
+    x_train, y_train = train_set(split)
+    x_test,  y_test  = test_set(split)
     num_features = size(x_train, 2)
     model      = fit(x_train, y_train, opts)
     predictions = vec(predict_probs(model, x_test)[:,2])
