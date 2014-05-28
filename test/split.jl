@@ -77,9 +77,7 @@ train, test = split_train_test(iris, split_fraction=2.0/3)
 
 u_iris = unique(iris)
 train, test = split_train_test(u_iris, split_fraction=2.0/3)
-println(u_iris)
-println(u_iris[1,:])
-data_map = [[u_iris[i,:]=>i for i=1:nrow(u_iris)]]
-rows = vcat([data_map[train[i,:]]::Int for i=1:nrow(train)], [data_map[test[i,:]]::Int for i=1:nrow(test)])
+data_map = [hash(u_iris[i,:])=>i for i=1:nrow(u_iris)]
+rows = vcat([data_map[hash(train[i,:])]::Int for i=1:nrow(train)], [data_map[hash(test[i,:])]::Int for i=1:nrow(test)])
 @test rows != [1:nrow(u_iris)]
 @test sort(rows)==[1:nrow(u_iris)]
