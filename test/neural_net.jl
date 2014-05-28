@@ -5,7 +5,9 @@ require("linear_data.jl")
 
 num_features=5
 x, y = linear_data(2500, num_features)
-x_train, y_train, x_test, y_test = split_train_test(x, y)
+split = split_train_test(x, y)
+x_train, y_train = train_set(split)
+x_test,  y_test  = test_set(split)
 
 # Checking gradients
 println("Checking Gradients")
@@ -58,7 +60,9 @@ println("Linear Accuracy, Valid Stop: ", acc)
 
 x = randn(2500, 5)
 y = int(map(x->x>0.0, x[:,1]-x[:,2]+3*x[:,3]+x[:,4].*x[:,5]+0.2*randn(2500)))
-x_train, y_train, x_test, y_test = split_train_test(x, y)
+split = split_train_test(x, y)
+x_train, y_train = train_set(split)
+x_test,  y_test  = test_set(split)
 
 opts = neural_net_options(learning_rate=10.0)
 net = fit(x_train, y_train, opts)
