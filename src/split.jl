@@ -5,8 +5,12 @@ type TrainTestSplit
     test_indices::Vector{Int}
 end
 
-train_set(s::TrainTestSplit) = (s.x[s.train_indices,:], s.y[s.train_indices])
-test_set( s::TrainTestSplit) = (s.x[s.test_indices, :], s.y[s.test_indices])
+train_set(  s::TrainTestSplit) = (s.x[s.train_indices,:], s.y[s.train_indices])
+test_set(   s::TrainTestSplit) = (s.x[s.test_indices, :], s.y[s.test_indices])
+train_set_x(s::TrainTestSplit) = s.x[s.train_indices,:]
+train_set_y(s::TrainTestSplit) = s.y[s.train_indices]
+test_set_x( s::TrainTestSplit) = s.x[s.test_indices,:]
+test_set_y( s::TrainTestSplit) = s.y[s.test_indices]
 
 type CrossValidationSplit
     x::Matrix{Float64}
@@ -45,4 +49,10 @@ function split_train_test(df::DataFrame; split_fraction::Float64=0.5, seed::Unio
     test  = df[i[cutoff+1:length(i)],:]
 
     train, test
+end
+
+function evaluate(split::TrainTestSplit, opts::SupervisedModelOptions, metric::Function)
+    model = fit(train_set_x(split), train_set_y(split), opts)
+    yhat = predict(model, test_set_x(split))
+    metric(test_set_y(split), yhat)
 end
