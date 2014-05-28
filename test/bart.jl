@@ -19,14 +19,10 @@ model = randn(10)
 model[3] = 100.0
 x     = randn(2500, 10)
 y     = x*model + randn(2500)
-x_train, y_train, x_test, y_test = split_train_test(x, y)
-bart = fit(x_train, y_train, bart_options())
-yhat = predict(bart, x_test)
-correlation = cor(y_test, yhat)
+split = split_train_test(x, y)
+correlation = evaluate(split, bart_options(), cor)
 println("Bart Linear Pearson Correlation: ", correlation)
 @test correlation>0.80
 
-forest = fit(x_train, y_train, regression_forest_options())
-yhat = predict(forest, x_test)
-correlation = cor(y_test, yhat)
+correlation = evaluate(split, regression_forest_options(), cor)
 println("RF   Linear Pearson Correlation: ", correlation)
