@@ -1,9 +1,10 @@
 MachineLearning.jl
 ==================
 
-The MachineLearning package represents the very beginnings of an attempt to consolidate common machine learning algorithms written in pure Julia and presenting a consistent API. Initially, the package will be targeted towards the machine learning practitioner, working with a dataset that fits in memory on a single machine. Longer term, I hope this will both target much larger datasets and be valuable for state of the art machine learning research as well.
-
 [![Build Status](https://travis-ci.org/benhamner/MachineLearning.jl.png)](https://travis-ci.org/benhamner/MachineLearning.jl)
+[![Coverage Status](https://img.shields.io/coveralls/benhamner/MachineLearning.jl.svg)](https://coveralls.io/r/benhamner/MachineLearning.jl?branch=master)
+
+The MachineLearning package represents the very beginnings of an attempt to consolidate common machine learning algorithms written in pure Julia and presenting a consistent API. Initially, the package will be targeted towards the machine learning practitioner, working with a dataset that fits in memory on a single machine. Longer term, I hope this will both target much larger datasets and be valuable for state of the art machine learning research as well.
 
 API Introdution
 ===============
