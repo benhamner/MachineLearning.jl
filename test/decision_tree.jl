@@ -40,11 +40,14 @@ for i=1:100
     @test_approx_eq mean((x.-mean(x)).^2) streaming_mse(sum(x), sum(x.^2), length(x))
 end
 
-model = randn(10)
-model[3] = 100.0
-x     = randn(2500, 10)
-y     = x*model
-split = split_train_test(x, y)
-correlation = evaluate(split, regression_tree_options(), cor)
-println("Linear Pearson Correlation: ", correlation)
-@test correlation>0.50
+correlations = zeros(10)
+for i=1:10
+    model = randn(10)
+    model[3] = 100.0
+    x     = randn(2500, 10)
+    y     = x*model
+    split = split_train_test(x, y)
+    correlations[i] = evaluate(split, regression_tree_options(), cor)
+end
+println("Linear Pearson Correlation: ", mean(correlations))
+@test mean(correlations)>0.50
