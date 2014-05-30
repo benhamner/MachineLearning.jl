@@ -21,6 +21,11 @@ end
 
 @test evaluate(split, regression_tree_options(), mean_squared_error)>0.0
 
+split = split_train_test(x, vec(int(x[:,1]+x[:,2].>0.0)))
+acc = evaluate(split, classification_tree_options(), accuracy)
+println("Evaluate Split Test Accuracy: ", acc)
+@test acc>0.6
+
 split = split_train_test(x, y, split_fraction=0.75, seed=1)
 x_train, y_train = train_set(split)
 x_test,  y_test  = test_set(split)
