@@ -5,8 +5,8 @@ type TrainTestSplit
     test_indices::Vector{Int}
 end
 
-train_set(  s::TrainTestSplit) = (s.x[s.train_indices,:], s.y[s.train_indices])
-test_set(   s::TrainTestSplit) = (s.x[s.test_indices, :], s.y[s.test_indices])
+train_set(s::TrainTestSplit) = (s.x[s.train_indices,:], s.y[s.train_indices])
+test_set( s::TrainTestSplit) = (s.x[s.test_indices, :], s.y[s.test_indices])
 train_set_x(s::TrainTestSplit) = s.x[s.train_indices,:]
 train_set_y(s::TrainTestSplit) = s.y[s.train_indices]
 test_set_x( s::TrainTestSplit) = s.x[s.test_indices,:]
@@ -17,6 +17,9 @@ type CrossValidationSplit
     y::Vector
     groups::Vector{Int}
 end
+
+train_set(s::CrossValidationSplit, k::Int) = (s.x[s.groups.!=k,:], s.y[s.groups.!=k])
+test_set( s::CrossValidationSplit, k::Int) = (s.x[s.groups.!=k,:], s.y[s.groups.!=k])
 
 function split_train_test(x::Matrix{Float64}, y::Vector; split_fraction::Float64=0.5, seed::Union(Int, Nothing)=Nothing())
     @assert size(x, 1)==length(y)
@@ -49,6 +52,30 @@ function split_train_test(df::DataFrame; split_fraction::Float64=0.5, seed::Unio
     test  = df[i[cutoff+1:length(i)],:]
 
     train, test
+end
+
+function split_cross_valid(x::Matrix{Float64}, y::Vector; num_folds::Int=10, seed::Union(Int, Nothing)=Nothing())
+    @assert size(x, 1)==length(y)
+    @assert size(x, 1)>=num_folds
+    @assert num_folds>1
+
+    if typeof(seed)==Int
+        srand(seed)
+    end
+
+    i = shuffle([1:length(y)])
+    fold_size = int(floor(length(y)/num_folds))
+    remainder = length(y)-num_folds*fold_size
+    groups = zeros(Int, length(y))
+    position = 1
+    group = 1
+    while position<length(y)
+        this_fold_size = group <= remainder ? fold_size+1:fold_size
+        groups[i[pos:pos+this_fold_size-1]] = group
+        group += 1
+        position += this_fold_size
+    end
+    CrossValidationSplit(x, y, groups)
 end
 
 function evaluate(split::TrainTestSplit, opts::SupervisedModelOptions, metric::Function)
