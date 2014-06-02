@@ -19,6 +19,10 @@ for i=1:size(x_test, 1)
     @test x_map[x_test[i,:]]==y_test[i]
 end
 
+split = split_cross_valid(x, y)
+@test length(split.groups)==length(y)
+@test sort(unique(split.groups))==Int[1:10]
+
 split = split_train_test(x, y, split_fraction=0.75, seed=1)
 x_train, y_train = train_set(split)
 x_test,  y_test  = test_set(split)

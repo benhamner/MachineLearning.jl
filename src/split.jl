@@ -67,13 +67,13 @@ function split_cross_valid(x::Matrix{Float64}, y::Vector; num_folds::Int=10, see
     fold_size = int(floor(length(y)/num_folds))
     remainder = length(y)-num_folds*fold_size
     groups = zeros(Int, length(y))
-    position = 1
+    cursor = 1
     group = 1
-    while position<length(y)
+    while cursor<=length(y)
         this_fold_size = group <= remainder ? fold_size+1:fold_size
-        groups[i[pos:pos+this_fold_size-1]] = group
+        groups[i[cursor:cursor+this_fold_size-1]] = group
         group += 1
-        position += this_fold_size
+        cursor += this_fold_size
     end
     CrossValidationSplit(x, y, groups)
 end
