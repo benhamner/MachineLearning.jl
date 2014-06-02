@@ -19,6 +19,13 @@ for i=1:size(x_test, 1)
     @test x_map[x_test[i,:]]==y_test[i]
 end
 
+@test evaluate(split, regression_tree_options(), mean_squared_error)>0.0
+
+split = split_train_test(x, vec(int(x[:,1]+x[:,2].>0.0)))
+acc = evaluate(split, classification_tree_options(), accuracy)
+println("Evaluate Split Test Accuracy: ", acc)
+@test acc>0.6
+
 split = split_cross_valid(x, y)
 @test length(split.groups)==length(y)
 @test sort(unique(split.groups))==Int[1:10]
