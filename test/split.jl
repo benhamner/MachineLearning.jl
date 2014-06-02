@@ -26,10 +26,6 @@ acc = evaluate(split, classification_tree_options(), accuracy)
 println("Evaluate Split Test Accuracy: ", acc)
 @test acc>0.6
 
-split = split_cross_valid(x, y)
-@test length(split.groups)==length(y)
-@test sort(unique(split.groups))==Int[1:10]
-
 split = split_train_test(x, y, split_fraction=0.75, seed=1)
 x_train, y_train = train_set(split)
 x_test,  y_test  = test_set(split)
@@ -53,6 +49,10 @@ a_test,  b_test  = test_set(split)
 @test b_train!=y_train
 @test a_test!=x_test
 @test b_test!=y_test
+
+split = split_cross_valid(x, y)
+@test length(split.groups)==length(y)
+@test sort(unique(split.groups))==Int[1:10]
 
 x = [[1.0 2.0],[3.0 4.0]]
 y = [1, 2]
@@ -92,3 +92,21 @@ data_map = [hash(u_iris[i,:])=>i for i=1:nrow(u_iris)]
 rows = vcat([data_map[hash(train[i,:])]::Int for i=1:nrow(train)], [data_map[hash(test[i,:])]::Int for i=1:nrow(test)])
 @test rows != [1:nrow(u_iris)]
 @test sort(rows)==[1:nrow(u_iris)]
+
+x = randn(100,3)
+y = randn(100)
+s1 = split_cross_valid(x, y, seed=1)
+s2 = split_cross_valid(x, y, seed=1)
+s3 = split_cross_valid(x, y, seed=2)
+@test s1.groups==s2.groups
+@test s1.groups!=s3.groups
+@test sum(s1.groups.==1)==10
+
+split = split_cross_valid(x, y, num_folds=2)
+@test sort(unique(split.groups))==Int[1, 2]
+@test sum(split.groups.==1)==50
+
+split = split_cross_valid(x, y, num_folds=100)
+@test sort(unique(split.groups))==[1:100]
+
+@test_throws ErrorException split_cross_valid(x, y, num_folds=101)
