@@ -19,7 +19,7 @@ type CrossValidationSplit
 end
 
 train_set(s::CrossValidationSplit, k::Int) = (s.x[s.groups.!=k,:], s.y[s.groups.!=k])
-test_set( s::CrossValidationSplit, k::Int) = (s.x[s.groups.!=k,:], s.y[s.groups.!=k])
+test_set( s::CrossValidationSplit, k::Int) = (s.x[s.groups.==k,:], s.y[s.groups.==k])
 
 function split_train_test(x::Matrix{Float64}, y::Vector; split_fraction::Float64=0.5, seed::Union(Int, Nothing)=Nothing())
     @assert size(x, 1)==length(y)
@@ -82,4 +82,15 @@ function evaluate(split::TrainTestSplit, opts::SupervisedModelOptions, metric::F
     model = fit(train_set_x(split), train_set_y(split), opts)
     yhat = predict(model, test_set_x(split))
     metric(test_set_y(split), yhat)
+end
+
+function evaluate(split::CrossValidationSplit, opts::SupervisedModelOptions, metric::Function)
+    yhat = [split.y[1] for i=1:length(split.y)]
+    for i=unique(split.groups)
+        x_train, y_train = train_set(split, i)
+        x_test,  y_test  = test_set( split, i)
+        model = fit(x_train, y_train, opts)
+        yhat[split.groups.==i] = predict(model, x_test)
+    end
+    metric(split.y, yhat)
 end

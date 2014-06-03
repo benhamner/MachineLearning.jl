@@ -23,7 +23,12 @@ end
 
 split = split_train_test(x, vec(int(x[:,1]+x[:,2].>0.0)))
 acc = evaluate(split, classification_tree_options(), accuracy)
-println("Evaluate Split Test Accuracy: ", acc)
+println("Evaluate Train/Test Split Accuracy: ", acc)
+@test acc>0.6
+
+split = split_cross_valid(x, vec(int(x[:,1]+x[:,2].>0.0)))
+acc = evaluate(split, classification_tree_options(), accuracy)
+println("Evaluate Cross Validation Split Accuracy: ", acc)
 @test acc>0.6
 
 split = split_train_test(x, y, split_fraction=0.75, seed=1)
@@ -101,6 +106,13 @@ s3 = split_cross_valid(x, y, seed=2)
 @test s1.groups==s2.groups
 @test s1.groups!=s3.groups
 @test sum(s1.groups.==1)==10
+
+x_train, y_train = train_set(s1, 1)
+@test size(x_train, 1)==90
+@test length(y_train)==90
+x_test, y_test = test_set(s1, 1)
+@test size(x_test, 1)==10
+@test length(y_test)==10
 
 split = split_cross_valid(x, y, num_folds=2)
 @test sort(unique(split.groups))==Int[1, 2]
