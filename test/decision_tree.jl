@@ -23,7 +23,7 @@ println("Quadrant Accuracy: ", acc)
 
 num_features=5
 x, y = linear_data(2500, num_features)
-split = split_train_test(x, y)
+split = split_cross_valid(x, y)
 acc = evaluate(split, classification_tree_options(), accuracy)
 println("Linear Accuracy: ", acc)
 @test acc>0.80
