@@ -13,6 +13,7 @@ require("linear_data.jl")
 @test classification_split_location([1,1,1,1,2,2,2,2,2],2)==(0.0, 4)
 @test classification_split_location([1,2],2)==(0.0, 1)
 @test classification_split_location([2,1,1,1,2,2,2,2,2],2)==(3/18, 4)
+@test regression_split_location([1.0:10]) == (4.0,5)
 
 x=randn(2500, 2)
 y=int(map(i->x[i,1]>0 || x[i,2]>0, 1:size(x,1)))
