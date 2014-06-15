@@ -51,3 +51,13 @@ for i=1:10
 end
 println("Linear Pearson Correlation: ", mean(correlations))
 @test mean(correlations)>0.50
+
+branch = DecisionBranch(1, 0.5, 
+	DecisionBranch(2, 1.5, 
+		DecisionBranch(3, 2.5, 
+			MachineLearning.RegressionLeaf(10.0), 
+			MachineLearning.RegressionLeaf(12.0)),
+		MachineLearning.RegressionLeaf(20.0)), 
+	MachineLearning.RegressionLeaf(30.0))
+
+@test MachineLearning.pretty_string(branch) == "DecisionBranch(1, 0.500000, \n|DecisionBranch(2, 1.500000, \n||DecisionBranch(3, 2.500000, \n|||RegressionLeaf(10.0) \n|||RegressionLeaf(12.0)) \n||RegressionLeaf(20.0)) \n|RegressionLeaf(30.0))"
