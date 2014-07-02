@@ -442,7 +442,7 @@ function StatsBase.predict(bart::Bart, x_test::Matrix{Float64})
         for j=1:bart.options.num_trees
             y_old_tree_train = predict(bart_state.trees[j], bart.x)
             y_old_tree_test  = predict(bart_state.trees[j], x_test)
-            residuals = bart.y_normalized - y_train_current + y_old_tree_train
+            residuals = bart.y_normalized - (y_train_current - y_old_tree_train)
             alpha, updated = update_tree!(bart, bart_state, bart_state.trees[j], residuals)
             updates += updated ? 1 : 0
             y_train_current += predict(bart_state.trees[j], bart.x) - y_old_tree_train
