@@ -71,6 +71,7 @@ module MachineLearning
         gini,
         grand_branches,
         importances,
+        initialize_bart_state,
         initialize_net,
         initialize_neural_net_temporary,
         leaves,
