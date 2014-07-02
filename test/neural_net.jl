@@ -34,7 +34,7 @@ for i=1:length(weights)
 end
 
 println("Classification Tests")
-opts = neural_net_options(learning_rate=10.0, track_cost=true)
+opts = neural_net_options(learning_rate=10.0, track_cost=false)
 net = fit(x_train, y_train, opts)
 yhat = predict(net, x_test)
 acc = accuracy(y_test, yhat)
