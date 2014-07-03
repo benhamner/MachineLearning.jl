@@ -61,7 +61,7 @@ type BartLeaf <: DecisionLeaf
         else
             leaf_r  = r[train_data_indices]
             r_mean  = mean(leaf_r)
-            r_sigma = sum((leaf_r.-r_mean).^2)
+            r_sigma = sqrt(mean((leaf_r.-r_mean).^2))
         end
 
         new(0.0, r_mean, r_sigma, train_data_indices)
@@ -112,7 +112,7 @@ function log_likelihood(leaf::BartLeaf, params::BartLeafParameters)
         a   = 1.0/params.sigma_prior^2.0
         b   = length(leaf.train_data_indices) / params.sigma^2
         ll  = 0.5*log(a/(a+b))
-        ll -= leaf.r_sigma^2/(2.0*params.sigma^2)
+        ll -= leaf.r_sigma^2*length(leaf.train_data_indices)/(2.0*params.sigma^2)
         ll -= 0.5*a*b*leaf.r_mean^2/(a+b)
     end
     ll
