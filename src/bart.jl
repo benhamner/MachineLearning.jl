@@ -131,10 +131,10 @@ function update_leaf_values!(tree::BartTree, params::BartLeafParameters)
 end
 
 function update_leaf_value!(leaf::BartLeaf, params::BartLeafParameters)
-    a          = 1.0/params.sigma_prior^2.0
-    b          = length(leaf.train_data_indices) / params.sigma^2
-    post_mu    = b*leaf.r_mean / (a+b)
-    post_sigma = 1.0 / sqrt(a+b)
+    n          = length(leaf.train_data_indices)
+    mu_factor  = n*params.sigma_prior^2.0/(n*params.sigma_prior^2 + params.sigma^2)
+    post_mu    = leaf.r_mean * mu_factor
+    post_sigma = 1.0 / sqrt(1.0/params.sigma_prior^2 + n/params.sigma^2)
     leaf.value = post_mu + post_sigma*randn()
 end
 
