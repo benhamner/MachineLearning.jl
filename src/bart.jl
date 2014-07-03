@@ -106,14 +106,13 @@ log_node_prior(leaf::DecisionLeaf, leaf_depth::Int, opts::BartOptions) = log(1.0
 
 function log_likelihood(leaf::BartLeaf, params::BartLeafParameters)
     ll = 0.0
-    if length(leaf.train_data_indices)==0
+    n  = length(leaf.train_data_indices)
+    if n==0
         ll = -10000000.0
     else
-        a   = 1.0/params.sigma_prior^2.0
-        b   = length(leaf.train_data_indices) / params.sigma^2
-        ll  = 0.5*log(a/(a+b))
-        ll -= leaf.r_sigma^2*length(leaf.train_data_indices)/(2.0*params.sigma^2)
-        ll -= 0.5*a*b*leaf.r_mean^2/(a+b)
+        ll  = 0.5*log(params.sigma^2/(params.sigma^2+n*params.sigma_prior^2))
+        ll -= leaf.r_sigma^2*n/(2.0*params.sigma^2)
+        ll -= 0.5*leaf.r_mean^2*n/(params.sigma^2+n*params.sigma_prior^2)
     end
     ll
 end
