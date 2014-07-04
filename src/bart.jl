@@ -113,6 +113,7 @@ function log_likelihood(leaf::BartLeaf, params::BartLeafParameters)
         ll  = 0.5*log(params.sigma^2/(params.sigma^2+n*params.sigma_prior^2))
         ll -= leaf.r_sigma^2*n/(2.0*params.sigma^2)
         ll -= 0.5*leaf.r_mean^2*n/(params.sigma^2+n*params.sigma_prior^2)
+        #println("LL: ", ll, "\tr_mean: ", leaf.r_mean, "\tr_sigma: ", leaf.r_sigma, "\tn: ", n)
     end
     ll
 end
@@ -194,8 +195,9 @@ end
 
 function initialize_bart_state(bart::Bart)
     trees = Array(BartTree, 0)
+    initial_residuals = (bart.y_normalized.-mean(bart.y_normalized))/bart.options.num_trees
     for i=1:bart.options.num_trees
-        push!(trees, BartTree(DecisionTree(BartLeaf(bart.y_normalized/bart.options.num_trees, [1:size(bart.x,1)]))))
+        push!(trees, BartTree(DecisionTree(BartLeaf(initial_residuals, [1:size(bart.x,1)]))))
     end
     sigma  = linear_model_sigma_prior(bart.x, bart.y_normalized)
     nu     = 3.0
@@ -211,6 +213,15 @@ function initialize_bart_state(bart::Bart)
     bart_state = BartState(trees, params)
     for tree=bart_state.trees
         update_leaf_values!(tree, bart_state.leaf_parameters)
+    end
+    yhat = predict(bart_state, bart.x)
+    for tree=bart_state.trees
+        y_old_tree = predict(tree, bart.x)
+        residuals = bart.y_normalized - (yhat - y_old_tree)
+        tree.tree.root.r_mean = mean(residuals)
+        tree.tree.root.r_sigma = sqrt(mean((residuals.-tree.tree.root.r_mean).^2))
+        update_leaf_values!(tree, bart_state.leaf_parameters)
+        yhat += predict(tree, bart.x) - y_old_tree
     end
     bart_state
 end
@@ -266,6 +277,7 @@ function node_birth!(bart::Bart, bart_state::BartState, tree::BartTree, r::Vecto
 
     alpha1 = (leaf_prior*(1.0-left_prior)*(1.0-right_prior)*p_dy*p_not_grand)/((1.0-leaf_prior)*probability_birth*leaf_node_probability)
     alpha  = alpha1 * exp(ll_after-ll_before)
+    #println("Alpha1: ", alpha1, "\tll_after: ", ll_after, "\tll-before: ", ll_before)
 
     if rand()<alpha
         if parent_branch == None
@@ -437,7 +449,7 @@ function StatsBase.predict(bart::Bart, x_test::Matrix{Float64})
     y_test_current  = predict(bart_state, x_test)
     y_test_hat      = zeros(size(x_test, 1))
     alphas          = zeros(bart.options.num_trees)
-    println(y_train_current[1:10])
+    #println(y_train_current[1:10])
     for i=1:bart.options.num_draws
         updates = 0
         for j=1:bart.options.num_trees
@@ -457,7 +469,7 @@ function StatsBase.predict(bart::Bart, x_test::Matrix{Float64})
         num_leaves = [length(leaves(tree)) for tree=bart_state.trees]
         if bart.options.display && (log(2, i) % 1 == 0.0 || i == bart.options.num_draws)
             println("i: ", i, "\tSigma: ", bart_state.leaf_parameters.sigma, "\tUpdates:", updates, "\tMaxLeafNodes: ", maximum(num_leaves), "\tMeanLeafNodes: ", mean(num_leaves), "\tMaxAlpha: ", median(alphas), "\tMeanAlpha: ", median(alphas))
-            println(y_train_current[1:10])
+            #println(y_train_current[1:10])
         end
     end
     y_test_hat /= bart.options.num_draws - bart.options.burn_in
