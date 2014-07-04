@@ -2,7 +2,7 @@ using Base.Test
 using MachineLearning
 using RDatasets
 
-options = [bart_options(num_trees=10, display=true),
+options = [bart_options(num_trees=10),
            regression_forest_options(num_trees=10)]
 
 datasets = [("car",      "Prestige",   :Prestige, 0.5),

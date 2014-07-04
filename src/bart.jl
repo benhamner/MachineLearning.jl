@@ -449,7 +449,6 @@ function StatsBase.predict(bart::Bart, x_test::Matrix{Float64})
     y_test_current  = predict(bart_state, x_test)
     y_test_hat      = zeros(size(x_test, 1))
     alphas          = zeros(bart.options.num_trees)
-    #println(y_train_current[1:10])
     for i=1:bart.options.num_draws
         updates = 0
         for j=1:bart.options.num_trees
@@ -468,8 +467,10 @@ function StatsBase.predict(bart::Bart, x_test::Matrix{Float64})
         update_sigma!(bart_state, y_train_current - bart.y_normalized)
         num_leaves = [length(leaves(tree)) for tree=bart_state.trees]
         if bart.options.display && (log(2, i) % 1 == 0.0 || i == bart.options.num_draws)
-            println("i: ", i, "\tSigma: ", bart_state.leaf_parameters.sigma, "\tUpdates:", updates, "\tMaxLeafNodes: ", maximum(num_leaves), "\tMeanLeafNodes: ", mean(num_leaves), "\tMaxAlpha: ", max(alphas), "\tMeanAlpha: ", median(alphas))
-            #println(y_train_current[1:10])
+            println("i: ", i, "\tSigma: ", bart_state.leaf_parameters.sigma,
+                    "\tUpdates:", updates, "\tMaxLeafNodes: ", maximum(num_leaves),
+                    "\tMeanLeafNodes: ", mean(num_leaves),
+                    "\tMaxAlpha: ", maximum(alphas), "\tMeanAlpha: ", median(alphas))
         end
     end
     y_test_hat /= bart.options.num_draws - bart.options.burn_in

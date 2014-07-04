@@ -20,7 +20,7 @@ model[3] = 100.0
 x     = randn(2500, 10)
 y     = x*model + randn(2500)
 split = split_train_test(x, y)
-correlation = evaluate(split, bart_options(display=true), cor)
+correlation = evaluate(split, bart_options(), cor)
 println("Bart Linear Pearson Correlation: ", correlation)
 @test correlation>0.80
 
