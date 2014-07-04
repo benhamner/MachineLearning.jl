@@ -195,7 +195,7 @@ end
 function initialize_bart_state(bart::Bart)
     trees = Array(BartTree, 0)
     for i=1:bart.options.num_trees
-        push!(trees, BartTree(DecisionTree(BartLeaf(bart.y_normalized, [1:size(bart.x,1)]))))
+        push!(trees, BartTree(DecisionTree(BartLeaf(bart.y_normalized/bart.options.num_trees, [1:size(bart.x,1)]))))
     end
     sigma  = linear_model_sigma_prior(bart.x, bart.y_normalized)
     nu     = 3.0
@@ -436,6 +436,8 @@ function StatsBase.predict(bart::Bart, x_test::Matrix{Float64})
     y_train_current = predict(bart_state, bart.x)
     y_test_current  = predict(bart_state, x_test)
     y_test_hat      = zeros(size(x_test, 1))
+    alphas          = zeros(bart.options.num_trees)
+    println(y_train_current[1:10])
     for i=1:bart.options.num_draws
         updates = 0
         for j=1:bart.options.num_trees
@@ -443,6 +445,7 @@ function StatsBase.predict(bart::Bart, x_test::Matrix{Float64})
             y_old_tree_test  = predict(bart_state.trees[j], x_test)
             residuals = bart.y_normalized - (y_train_current - y_old_tree_train)
             alpha, updated = update_tree!(bart, bart_state, bart_state.trees[j], residuals)
+            alphas[j] = alpha
             updates += updated ? 1 : 0
             y_train_current += predict(bart_state.trees[j], bart.x) - y_old_tree_train
             y_test_current  += predict(bart_state.trees[j], x_test)  - y_old_tree_test
@@ -453,7 +456,8 @@ function StatsBase.predict(bart::Bart, x_test::Matrix{Float64})
         update_sigma!(bart_state, y_train_current - bart.y_normalized)
         num_leaves = [length(leaves(tree)) for tree=bart_state.trees]
         if bart.options.display && (log(2, i) % 1 == 0.0 || i == bart.options.num_draws)
-            println("i: ", i, "\tSigma: ", bart_state.leaf_parameters.sigma, "\tUpdates:", updates, "\tMaxLeafNodes: ", maximum(num_leaves), "\tMeanLeafNodes: ", mean(num_leaves))
+            println("i: ", i, "\tSigma: ", bart_state.leaf_parameters.sigma, "\tUpdates:", updates, "\tMaxLeafNodes: ", maximum(num_leaves), "\tMeanLeafNodes: ", mean(num_leaves), "\tMaxAlpha: ", median(alphas), "\tMeanAlpha: ", median(alphas))
+            println(y_train_current[1:10])
         end
     end
     y_test_hat /= bart.options.num_draws - bart.options.burn_in
