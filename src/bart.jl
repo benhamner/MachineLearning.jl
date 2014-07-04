@@ -468,7 +468,7 @@ function StatsBase.predict(bart::Bart, x_test::Matrix{Float64})
         update_sigma!(bart_state, y_train_current - bart.y_normalized)
         num_leaves = [length(leaves(tree)) for tree=bart_state.trees]
         if bart.options.display && (log(2, i) % 1 == 0.0 || i == bart.options.num_draws)
-            println("i: ", i, "\tSigma: ", bart_state.leaf_parameters.sigma, "\tUpdates:", updates, "\tMaxLeafNodes: ", maximum(num_leaves), "\tMeanLeafNodes: ", mean(num_leaves), "\tMaxAlpha: ", median(alphas), "\tMeanAlpha: ", median(alphas))
+            println("i: ", i, "\tSigma: ", bart_state.leaf_parameters.sigma, "\tUpdates:", updates, "\tMaxLeafNodes: ", maximum(num_leaves), "\tMeanLeafNodes: ", mean(num_leaves), "\tMaxAlpha: ", max(alphas), "\tMeanAlpha: ", median(alphas))
             #println(y_train_current[1:10])
         end
     end
