@@ -14,6 +14,7 @@ type BartOptions <: RegressionModelOptions
     num_trees::Int
     burn_in::Int
     num_draws::Int
+    thinning::Int
     alpha::Float64
     beta::Float64
     k::Float64
@@ -25,12 +26,13 @@ BartOptions() = BartOptions(10, 200, 1000, 0.95, 2.0, BartTreeTransformationProb
 function bart_options(;num_trees::Int=10,
                       burn_in::Int=200,
                       num_draws::Int=1000,
+                      thinning::Int=10,
                       alpha::Float64=0.95,
                       beta::Float64=2.0,
                       k::Float64=2.0,
                       transform_probabilities::BartTreeTransformationProbabilies=BartTreeTransformationProbabilies(),
                       display::Bool=false)
-    BartOptions(num_trees, burn_in, num_draws, alpha, beta, k, transform_probabilities, display)
+    BartOptions(num_trees, burn_in, num_draws, thinning, alpha, beta, k, transform_probabilities, display)
 end
 
 type BartLeafParameters
@@ -455,8 +457,7 @@ function StatsBase.predict(bart_state::BartState, sample::Vector{Float64})
 end
 
 function StatsBase.fit(x::Matrix{Float64}, y::Vector{Float64}, opts::BartOptions)
-    y_min        = minimum(y)
-    y_max        = maximum(y)
+    y_min, y_max = minimum(y), maximum(y)
     y_normalized = normalize(y, y_min, y_max)
 
     bart_state = initialize_bart_state(x, y_normalized, opts)
@@ -464,7 +465,7 @@ function StatsBase.fit(x::Matrix{Float64}, y::Vector{Float64}, opts::BartOptions
 
     y_hat  = predict(bart_state, x)
     alphas = zeros(opts.num_trees)
-    for i=1:opts.num_draws
+    for i=1:opts.num_draws+opts.burn_in
         updates = 0
         for j=1:opts.num_trees
             y_tree_hat = predict(bart_state.trees[j], x)
@@ -474,13 +475,13 @@ function StatsBase.fit(x::Matrix{Float64}, y::Vector{Float64}, opts::BartOptions
             updates += updated ? 1 : 0
             y_hat += predict(bart_state.trees[j], x) - y_tree_hat
         end
-        if i>opts.burn_in
+        if i>opts.burn_in && (i-opts.burn_in) % opts.thinning==0
             forest = bart_state_to_forest(bart_state)
             push!(forests, forest)
         end
         update_sigma!(bart_state, y_hat - y_normalized)
         num_leaves = [length(leaves(tree)) for tree=bart_state.trees]
-        if opts.display && (log(2, i) % 1 == 0.0 || i == opts.num_draws)
+        if opts.display && (log(2, i) % 1 == 0.0 || i == opts.num_draws+opts.burn_in)
             println("i: ", i, "\tSigma: ", bart_state.leaf_parameters.sigma,
                     "\tUpdates:", updates, "\tMaxLeafNodes: ", maximum(num_leaves),
                     "\tMeanLeafNodes: ", mean(num_leaves),
