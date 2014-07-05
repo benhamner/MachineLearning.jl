@@ -77,6 +77,17 @@ type BartState <: RegressionModel
     leaf_parameters::BartLeafParameters
 end
 
+type BartForest
+    trees::Vector{DecisionTree}
+end
+
+type Bart2 <: RegressionModel # This will replace Bart and move the work from the predict step to the predict step
+    forests::Vector{BartForest}
+    y_min::Float64
+    y_max::Float64
+    options::BartOptions
+end
+
 linear_model_sigma_prior(x::Matrix{Float64}, y::Vector{Float64}) = std(x*(x\y)-y)
 
 function nonterminal_node_prior(alpha::Float64, beta::Float64, depth::Int)
