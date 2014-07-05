@@ -33,14 +33,6 @@ function bart_options(;num_trees::Int=10,
     BartOptions(num_trees, burn_in, num_draws, alpha, beta, k, transform_probabilities, display)
 end
 
-type Bart <: RegressionModel # This is a trivial holder for the data/options. All the magic happens in predict(...), not fit(...)
-    x::Matrix{Float64}
-    y_normalized::Vector{Float64}
-    y_min::Float64
-    y_max::Float64
-    options::BartOptions
-end
-
 type BartLeafParameters
     sigma::Float64
     sigma_prior::Float64
@@ -78,10 +70,10 @@ type BartState <: RegressionModel
 end
 
 type BartForest
-    trees::Vector{DecisionTree}
+    trees::Vector{BartTree}
 end
 
-type Bart2 <: RegressionModel # This will replace Bart and move the work from the predict step to the predict step
+type Bart <: RegressionModel
     forests::Vector{BartForest}
     y_min::Float64
     y_max::Float64
@@ -442,11 +434,58 @@ end
 normalize(y::Vector{Float64}, y_min, y_max) = (y .- y_min) / (y_max - y_min) .- 0.5
 normalize(bart::Bart, y::Vector{Float64})   = normalize(y, bart.y_min, bart.y_max)
 
+function bart_node_to_regression_node(leaf::BartLeaf)
+    RegressionLeaf(leaf.value)
+end
+
+function bart_node_to_regression_node(branch::DecisionBranch)
+    DecisionBranch(branch.feature,
+                   branch.value,
+                   bart_node_to_regression_node(branch.left),
+                   bart_node_to_regression_node(branch.right))
+end
+
+function bart_state_to_forest(bart_state::BartState)
+    trees = BartTree[BartTree(DecisionTree(bart_node_to_regression_node(tree.tree.root))) for tree=bart_state.trees]
+    BartForest(trees)
+end
+
 function StatsBase.fit(x::Matrix{Float64}, y::Vector{Float64}, opts::BartOptions)
     y_min        = minimum(y)
     y_max        = maximum(y)
     y_normalized = normalize(y, y_min, y_max)
-    Bart(x, y_normalized, y_min, y_max, opts)
+    bart_state = initialize_bart_state(bart)
+
+    y_train_current = predict(bart_state, bart.x)
+    y_test_current  = predict(bart_state, x_test)
+    y_test_hat      = zeros(size(x_test, 1))
+    alphas          = zeros(bart.options.num_trees)
+    for i=1:bart.options.num_draws
+        updates = 0
+        for j=1:bart.options.num_trees
+            y_old_tree_train = predict(bart_state.trees[j], bart.x)
+            y_old_tree_test  = predict(bart_state.trees[j], x_test)
+            residuals = bart.y_normalized - (y_train_current - y_old_tree_train)
+            alpha, updated = update_tree!(bart, bart_state, bart_state.trees[j], residuals)
+            alphas[j] = alpha
+            updates += updated ? 1 : 0
+            y_train_current += predict(bart_state.trees[j], bart.x) - y_old_tree_train
+            y_test_current  += predict(bart_state.trees[j], x_test)  - y_old_tree_test
+        end
+        if i>bart.options.burn_in
+            y_test_hat += y_test_current
+        end
+        update_sigma!(bart_state, y_train_current - bart.y_normalized)
+        num_leaves = [length(leaves(tree)) for tree=bart_state.trees]
+        if bart.options.display && (log(2, i) % 1 == 0.0 || i == bart.options.num_draws)
+            println("i: ", i, "\tSigma: ", bart_state.leaf_parameters.sigma,
+                    "\tUpdates:", updates, "\tMaxLeafNodes: ", maximum(num_leaves),
+                    "\tMeanLeafNodes: ", mean(num_leaves),
+                    "\tMaxAlpha: ", maximum(alphas), "\tMeanAlpha: ", median(alphas))
+        end
+    end
+    y_test_hat /= bart.options.num_draws - bart.options.burn_in
+    (y_test_hat .+ 0.5) * (bart.y_max - bart.y_min) .+ bart.y_min
 end
 
 function StatsBase.predict(bart_state::BartState, sample::Vector{Float64})
