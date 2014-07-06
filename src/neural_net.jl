@@ -127,10 +127,10 @@ end
 function train_preset_stop!(net::NeuralNet, x::Matrix{Float64}, actuals::Matrix{Float64}, temp::NeuralNetTemporary)
     num_samples = size(x,1)
     for iter=1:net.options.stop_criteria.max_iteration
-        if net.options.display
+        if net.options.display && (log(2, iter) % 1 == 0.0 || iter == net.options.stop_criteria.max_iteration)
             println("Iteration ", iter)
         end
-        if net.options.track_cost
+        if net.options.track_cost && (log(2, iter) % 1 == 0.0 || iter == net.options.stop_criteria.max_iteration)
             println("  Cost: ", cost(net, x, actuals))
         end
         for j=1:num_samples
