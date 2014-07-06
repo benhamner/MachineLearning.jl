@@ -23,3 +23,4 @@ Algorithms Implemented
  - Basic Decision Tree for Classification
  - Basic Random Forest for Classification
  - Basic Neural Network
+ - Bayesian Additive Regression Trees
