@@ -12,6 +12,8 @@ module MachineLearning
         # types
         AbstractRegressionTree,
         Bart,
+        BartLeaf,
+        BartLeafParameters,
         BartOptions,
         BartState,
         BartTreeTransformationProbabilies,
@@ -75,6 +77,7 @@ module MachineLearning
         initialize_net,
         initialize_neural_net_temporary,
         leaves,
+        log_likelihood,
         log_loss,
         mean_log_loss,
         mean_squared_error,

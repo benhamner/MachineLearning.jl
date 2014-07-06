@@ -15,6 +15,18 @@ probability_three_terminal_nodes = 2.0*(1 - probability_one_terminal_node) * (1 
 # Shouldn't throw an error
 transform_probabilities = BartTreeTransformationProbabilies(0.4, 0.3, 0.3)
 
+residuals  = [-0.05,0.0,0.05,0.1,0.2,0.3]
+leaf_root  = BartLeaf(residuals, [1:6])
+leaf_left  = BartLeaf(residuals, [1:3])
+leaf_right = BartLeaf(residuals, [4:6])
+branch     = DecisionBranch(1, 0.0, leaf_left, leaf_right)
+leaf_params = BartLeafParameters(0.01, 0.01, 3.0, 0.001)
+
+alpha = exp(log_likelihood(branch, leaf_params)-log_likelihood(leaf_root, leaf_params))
+# TODO: analyze the effect of sigma and sigma_prior on alpha in cases like this
+@test alpha>1.0
+@test log_likelihood(branch, leaf_params) == log_likelihood(leaf_left, leaf_params)+log_likelihood(leaf_right, leaf_params)
+
 m = randn(10)
 m[3] = 100.0
 x     = randn(2500, 10)
