@@ -61,7 +61,7 @@ end
 data_set_x(data::DataFrameSupervisedLearningDataSet) = float_matrix(data.df[data_frame_feature_columns(data)])
 function data_set_y(data::DataFrameSupervisedLearningDataSet)
     if eltype(data.df[data.target_column])<:Float64 
-        return data.df[data.target_column]
+        return array(data.df[data.target_column], 0.0)
     end
     return [y for y=data.df[data.target_column]]
 end

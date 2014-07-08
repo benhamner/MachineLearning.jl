@@ -6,7 +6,7 @@ type MatrixTrainTestSplit <: TrainTestSplit
     test_indices::Vector{Int}
 end
 type DataFrameTrainTestSplit <: TrainTestSplit
-    data::DataFrame
+    df::DataFrame
     target_column::Symbol
     train_indices::Vector{Int}
     test_indices::Vector{Int}
@@ -14,14 +14,14 @@ end
 
 train_set(s::MatrixTrainTestSplit) = MatrixSupervisedLearningDataSet(s.x[s.train_indices,:], s.y[s.train_indices])
 test_set( s::MatrixTrainTestSplit) = MatrixSupervisedLearningDataSet(s.x[s.test_indices, :], s.y[s.test_indices])
-train_set_x(s::MatrixTrainTestSplit) = s.x[s.train_indices,:]
-train_set_y(s::MatrixTrainTestSplit) = s.y[s.train_indices]
-test_set_x( s::MatrixTrainTestSplit) = s.x[s.test_indices,:]
-test_set_y( s::MatrixTrainTestSplit) = s.y[s.test_indices]
-train_set_x_y(s::MatrixTrainTestSplit) = train_set_x(s), train_set_y(s)
-test_set_x_y(s::MatrixTrainTestSplit) = test_set_x(s), test_set_y(s)
-train_set(s::DataFrameTrainTestSplit) = DataFrameSupervisedLearningDataSet(s.data[s.train_indices,:], s.target_column)
-test_set( s::DataFrameTrainTestSplit) = DataFrameSupervisedLearningDataSet(s.data[s.test_indices, :], s.target_column)
+train_set(s::DataFrameTrainTestSplit) = DataFrameSupervisedLearningDataSet(s.df[s.train_indices,:], s.target_column)
+test_set( s::DataFrameTrainTestSplit) = DataFrameSupervisedLearningDataSet(s.df[s.test_indices, :], s.target_column)
+train_set_x(s::TrainTestSplit) = data_set_x(train_set(s))
+train_set_y(s::TrainTestSplit) = data_set_y(test_set( s))
+test_set_x( s::TrainTestSplit) = data_set_x(train_set(s))
+test_set_y( s::TrainTestSplit) = data_set_y(test_set( s))
+train_set_x_y(s::TrainTestSplit) = train_set_x(s), train_set_y(s)
+test_set_x_y( s::TrainTestSplit) = test_set_x(s), test_set_y(s)
 
 StatsBase.fit(split::TrainTestSplit, opts::SupervisedModelOptions) = fit(train_set(split), opts)
 StatsBase.predict(model::SupervisedModel, split::TrainTestSplit)   = predict(model, test_set(split))
@@ -92,7 +92,7 @@ end
 function evaluate(split::TrainTestSplit, opts::SupervisedModelOptions, metric::Function)
     model = fit(train_set(split), opts)
     yhat = predict(model, test_set(split))
-    metric(data_set_y(test_set(split)), yhat)
+    metric(test_set_y(split), yhat)
 end
 
 function evaluate(split::CrossValidationSplit, opts::SupervisedModelOptions, metric::Function)
