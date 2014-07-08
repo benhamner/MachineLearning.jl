@@ -21,22 +21,17 @@ type MatrixSupervisedLearningDataSet <: SupervisedLearningDataSet
     y::Vector
 end
 type DataFrameSupervisedLearningDataSet <: SupervisedLearningDataSet
-    data::DataFrame
+    df::DataFrame
     target_column::Symbol
 end
 
 data_sex_x(data::MatrixSupervisedLearningDataSet) = data.x
 data_set_y(data::MatrixSupervisedLearningDataSet) = data.y
-function data_set_x(data::DataFrameSupervisedLearningDataSet)
-    columns = filter(x->x!=data.target_column, names(data.data))
-    columns = filter(x->eltype(df[x]) <: Number, columns)
-    float_matrix(df[columns])
-end
-function data_set_y(data::DataFrameSupervisedLearningDataSet)
-    if eltype(data.data[data.target_column])<:Float64 
-        return data.data[data.target_column]
-    end
-    return [y for y=data.data[data.target_column]]
+
+function data_frame_feature_columns(data::DataFrameSupervisedLearningDataSet)
+    columns = filter(x->x!=data.target_column, names(data.df))
+    columns = filter(x->eltype(data.df[x]) <: Number, columns)
+    columns
 end
 
 function float_dataframe(df::DataFrame)
@@ -63,19 +58,25 @@ function float_matrix(df::DataFrame)
     res
 end
 
-function StatsBase.fit(df::DataFrame, target_column::Symbol, opts::SupervisedModelOptions)
-    y = array(df[target_column])
+data_set_x(data::DataFrameSupervisedLearningDataSet) = float_matrix(data.df[data_frame_feature_columns(data)])
+function data_set_y(data::DataFrameSupervisedLearningDataSet)
+    if eltype(data.df[data.target_column])<:Float64 
+        return data.df[data.target_column]
+    end
+    return [y for y=data.df[data.target_column]]
+end
+data_set_x_y(data::SupervisedLearningDataSet) = data_set_x(data), data_set_y(data)
+
+function StatsBase.fit(data::DataFrameSupervisedLearningDataSet, opts::SupervisedModelOptions)
+    x, y = data_set_x_y(data)
     if typeof(opts) <: RegressionModelOptions
         y *= 1.0
     end
-    columns = filter(x->x!=target_column, names(df))
-    columns = filter(x->eltype(df[x]) <: Number, columns)
-    x = float_matrix(df[columns])
-    model = fit(x, y, opts)
-    DataFrameModel(model, columns)
+    columns = data_frame_feature_columns(data)
+    DataFrameModel(fit(x, y, opts), columns)
 end
-StatsBase.fit(data::DataFrameSupervisedLearningDataSet, opts::SupervisedModelOptions) = fit(data.data, data.target_column, opts)
-StatsBase.fit(data::MatrixSupervisedLearningDataSet, opts::SupervisedModelOptions)    = fit(data.x, data.y, opts)
+StatsBase.fit(df::DataFrame, target_column::Symbol, opts::SupervisedModelOptions)  = fit(DataFrameSupervisedLearningDataSet(df, target_column), opts)
+StatsBase.fit(data::MatrixSupervisedLearningDataSet, opts::SupervisedModelOptions) = fit(data.x, data.y, opts)
 
 function predict_probs(model::ClassificationModel, samples::Matrix{Float64})
     probs = Array(Float64, size(samples, 1), length(classes(model)))
@@ -102,4 +103,4 @@ function StatsBase.predict(model::DataFrameModel, df::DataFrame)
     samples = float_matrix(df[model.colnames])
     predict(model.model, samples)
 end
-StatsBase.predict(model::DataFrameModel, data::DataFrameSupervisedLearningDataSet) = predict(model, data.data)
+StatsBase.predict(model::DataFrameModel, data::DataFrameSupervisedLearningDataSet) = predict(model, data.df)

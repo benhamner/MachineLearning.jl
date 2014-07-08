@@ -11,6 +11,6 @@ m_iris = float_matrix(iris[filter(x->x!=:Species, colnames)])
 split = split_train_test(iris, :Species)
 forest = fit(train_set(split), classification_forest_options(num_trees=10))
 yhat = predict(forest, test_set(split))
-ytest = [x for x=(test_set(split).data[:Species])]
+ytest = [x for x=(test_set(split).df[:Species])]
 acc = accuracy(ytest, yhat)
 @test acc>0.8

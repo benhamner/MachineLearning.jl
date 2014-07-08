@@ -73,8 +73,8 @@ train_data = train_set(split)
 
 iris = dataset("datasets", "iris")
 split = split_train_test(iris, :Species, split_fraction=0.50, seed=1)
-@test nrow(train_set(split).data) == 75
-@test nrow(test_set(split).data)  == 75
+@test nrow(train_set(split).df) == 75
+@test nrow(test_set(split).df)  == 75
 
 split2 = split_train_test(iris, :Species, split_fraction=0.50, seed=1)
 @test split2.train_indices == split.train_indices
@@ -85,13 +85,13 @@ split3 = split_train_test(iris, :Species, split_fraction=0.50, seed=2)
 @test split3.test_indices  != split.test_indices
 
 split = split_train_test(iris, :Species, split_fraction=2.0/3)
-@test nrow(train_set(split).data)==100
-@test nrow(test_set(split).data) ==50
+@test nrow(train_set(split).df)==100
+@test nrow(test_set(split).df) ==50
 
 u_iris = unique(iris)
 split = split_train_test(u_iris, :Species, split_fraction=2.0/3)
-train = train_set(split).data
-test  = test_set(split).data
+train = train_set(split).df
+test  = test_set(split).df
 data_map = [hash(u_iris[i,:])=>i for i=1:nrow(u_iris)]
 rows = vcat([data_map[hash(train[i,:])]::Int for i=1:nrow(train)], [data_map[hash(test[i,:])]::Int for i=1:nrow(test)])
 @test rows != [1:nrow(u_iris)]
