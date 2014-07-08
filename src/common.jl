@@ -25,7 +25,7 @@ type DataFrameSupervisedLearningDataSet <: SupervisedLearningDataSet
     target_column::Symbol
 end
 
-data_sex_x(data::MatrixSupervisedLearningDataSet) = data.x
+data_set_x(data::MatrixSupervisedLearningDataSet) = data.x
 data_set_y(data::MatrixSupervisedLearningDataSet) = data.y
 
 function data_frame_feature_columns(data::DataFrameSupervisedLearningDataSet)

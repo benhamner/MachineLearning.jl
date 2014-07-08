@@ -17,9 +17,9 @@ test_set( s::MatrixTrainTestSplit) = MatrixSupervisedLearningDataSet(s.x[s.test_
 train_set(s::DataFrameTrainTestSplit) = DataFrameSupervisedLearningDataSet(s.df[s.train_indices,:], s.target_column)
 test_set( s::DataFrameTrainTestSplit) = DataFrameSupervisedLearningDataSet(s.df[s.test_indices, :], s.target_column)
 train_set_x(s::TrainTestSplit) = data_set_x(train_set(s))
-train_set_y(s::TrainTestSplit) = data_set_y(test_set( s))
-test_set_x( s::TrainTestSplit) = data_set_x(train_set(s))
-test_set_y( s::TrainTestSplit) = data_set_y(test_set( s))
+train_set_y(s::TrainTestSplit) = data_set_y(train_set(s))
+test_set_x( s::TrainTestSplit) = data_set_x(test_set(s))
+test_set_y( s::TrainTestSplit) = data_set_y(test_set(s))
 train_set_x_y(s::TrainTestSplit) = train_set_x(s), train_set_y(s)
 test_set_x_y( s::TrainTestSplit) = test_set_x(s), test_set_y(s)
 
