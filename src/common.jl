@@ -24,8 +24,20 @@ type DataFrameSupervisedLearningDataSet <: SupervisedLearningDataSet
     data::DataFrame
     target_column::Symbol
 end
+
+data_sex_x(data::MatrixSupervisedLearningDataSet) = data.x
 data_set_y(data::MatrixSupervisedLearningDataSet) = data.y
-data_set_y(data::DataFrameSupervisedLearningDataSet) = eltype(data.data[data.target_column])<:Float64 ? data.data[data.target_column] : [y for y=data.data[data.target_column]]
+function data_set_x(data::DataFrameSupervisedLearningDataSet)
+    columns = filter(x->x!=data.target_column, names(data.data))
+    columns = filter(x->eltype(df[x]) <: Number, columns)
+    float_matrix(df[columns])
+end
+function data_set_y(data::DataFrameSupervisedLearningDataSet)
+    if eltype(data.data[data.target_column])<:Float64 
+        return data.data[data.target_column]
+    end
+    return [y for y=data.data[data.target_column]]
+end
 
 function float_dataframe(df::DataFrame)
     res = copy(df)
