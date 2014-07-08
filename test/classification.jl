@@ -8,16 +8,13 @@ options = [classification_forest_options(),
 
 datasets = [("datasets", "iris", :Species, 0.6)]
 
-for (pkg, dataset_name, colname, acc_threshold) = datasets
+for (pkg, dataset_name, colname, score_threshold) = datasets
     println("- Dataset ", dataset_name)
     data = dataset(pkg, dataset_name)
-    train, test = split_train_test(data)
-    ytest = [x for x=test[colname]]
+    split = split_train_test(data, colname)
     for opts = options
-        model = fit(train, colname, opts)
-        yhat = predict(model, test)
-        acc = accuracy(ytest, yhat)
-        println(@sprintf("Accuracy: %0.3f", acc), "\t", opts)
-        @test acc>acc_threshold
+        score = evaluate(split, opts, accuracy)
+        println(@sprintf("Accuracy: %0.3f", score), "\t", opts)
+        @test score>score_threshold
     end
 end

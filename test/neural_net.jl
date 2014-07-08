@@ -6,8 +6,8 @@ require("linear_data.jl")
 num_features=5
 x, y = linear_data(2500, num_features)
 split = split_train_test(x, y)
-x_train, y_train = train_set(split)
-x_test,  y_test  = test_set(split)
+x_train, y_train = train_set_x_y(split)
+x_test,  y_test  = test_set_x_y(split)
 
 # Checking gradients
 println("Checking Gradients")
@@ -61,27 +61,20 @@ println("Linear Accuracy, Valid Stop: ", acc)
 x = randn(2500, 5)
 y = int(map(x->x>0.0, x[:,1]-x[:,2]+3*x[:,3]+x[:,4].*x[:,5]+0.2*randn(2500)))
 split = split_train_test(x, y)
-x_train, y_train = train_set(split)
-x_test,  y_test  = test_set(split)
-
 opts = neural_net_options(learning_rate=10.0)
-net = fit(x_train, y_train, opts)
-yhat = predict(net, x_test)
-acc = accuracy(y_test, yhat)
+acc = evaluate(split, opts, accuracy)
 println("Nonlinear Accuracy, 1 Hidden Layer : ", acc)
 @test acc>0.70
 
 opts = neural_net_options(hidden_layers=[10;10], learning_rate=10.0)
-net = fit(x_train, y_train, opts)
+net = fit(split, opts)
 println(net)
-yhat = predict(net, x_test)
-acc = accuracy(y_test, yhat)
+yhat = predict(net, split)
+acc = accuracy(test_set_y(split), yhat)
 println("Nonlinear Accuracy, 2 Hidden Layers: ", acc)
 @test acc>0.70
 
 opts = neural_net_options(hidden_layers=Array(Int, 0), learning_rate=10.0)
-net = fit(x_train, y_train, opts)
-yhat = predict(net, x_test)
-acc = accuracy(y_test, yhat)
+acc = evaluate(split, opts, accuracy)
 println("Nonlinear Accuracy, 0 Hidden Layers: ", acc)
 @test acc>0.70

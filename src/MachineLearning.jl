@@ -61,6 +61,7 @@ module MachineLearning
         classification_forest_options,
         classification_split_location,
         classification_tree_options,
+        compare,
         cost,
         cost_gradient!,
         cost_gradient_update_net!,
@@ -99,9 +100,11 @@ module MachineLearning
         streaming_mse,
         test_set,
         test_set_x,
+        test_set_x_y,
         test_set_y,
         train_set,
         train_set_x,
+        train_set_x_y,
         train_set_y,
         transform,
         valid_tree,
@@ -120,4 +123,5 @@ module MachineLearning
     include("split.jl")
     include("transform/zmuv.jl")
     include("importance.jl")
+    include("experiment.jl")
 end
