@@ -493,10 +493,12 @@ function StatsBase.predict(forest::BartForest, x::Matrix{Float64})
     sum([predict(tree, x) for tree=forest.trees])
 end
 
-function StatsBase.predict(bart::Bart, x::Matrix{Float64})
+function StatsBase.sample(bart::Bart, x::Matrix{Float64})
     y_hats = zeros(size(x, 1), length(bart.forests))
     for i=1:length(bart.forests)
         y_hats[:,i] = (predict(bart.forests[i], x) .+ 0.5) .* (bart.y_max - bart.y_min) .+ bart.y_min
     end
-    vec(mean(y_hats,2))
+    y_hats    
 end
+
+StatsBase.predict(bart::Bart, x::Matrix{Float64}) = vec(mean(sample(bart, x), 2))

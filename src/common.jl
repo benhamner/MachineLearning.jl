@@ -78,29 +78,27 @@ end
 StatsBase.fit(df::DataFrame, target_column::Symbol, opts::SupervisedModelOptions)  = fit(SupervisedDataFrame(df, target_column), opts)
 StatsBase.fit(data::SupervisedMatrix, opts::SupervisedModelOptions) = fit(data.x, data.y, opts)
 
-function predict_probs(model::ClassificationModel, samples::Matrix{Float64})
-    probs = Array(Float64, size(samples, 1), length(classes(model)))
-    for i=1:size(samples, 1)
-        probs[i,:] = predict_probs(model, vec(samples[i,:]))
+function predict_probs(model::ClassificationModel, x::Matrix{Float64})
+    probs = Array(Float64, size(x, 1), length(classes(model)))
+    for i=1:size(x, 1)
+        probs[i,:] = predict_probs(model, vec(x[i,:]))
     end
     probs
 end
 
 function predict_probs(model::DataFrameModel, df::DataFrame)
-    samples = float_matrix(df[model.colnames])
-    predict_probs(model.model, samples)
+    x = float_matrix(df[model.colnames])
+    predict_probs(model.model, x)
 end
 
-function StatsBase.predict(model::ClassificationModel, samples::Matrix{Float64})
-    [StatsBase.predict(model, vec(samples[i,:])) for i=1:size(samples,1)]
+function StatsBase.predict(model::ClassificationModel, x::Matrix{Float64})
+    [StatsBase.predict(model, vec(x[i,:])) for i=1:size(x,1)]
 end
-function StatsBase.predict(model::RegressionModel, samples::Matrix{Float64})
-    [StatsBase.predict(model, vec(samples[i,:]))::Float64 for i=1:size(samples,1)]
+function StatsBase.predict(model::RegressionModel, x::Matrix{Float64})
+    [StatsBase.predict(model, vec(x[i,:]))::Float64 for i=1:size(x,1)]
 end
 StatsBase.predict(model::SupervisedModel, data::SupervisedMatrix) = predict(model, data.x)
-
-function StatsBase.predict(model::DataFrameModel, df::DataFrame)
-    samples = float_matrix(df[model.colnames])
-    predict(model.model, samples)
-end
+StatsBase.predict(model::DataFrameModel, df::DataFrame) = predict(model.model, float_matrix(df[model.colnames]))
 StatsBase.predict(model::DataFrameModel, data::SupervisedDataFrame) = predict(model, data.df)
+
+StatsBase.sample(model::DataFrameModel, df::DataFrame) = sample(model.model, float_matrix(df[model.colnames]))

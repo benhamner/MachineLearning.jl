@@ -100,6 +100,7 @@ module MachineLearning
         regression_forest_options,
         regression_split_location,
         regression_tree_options,
+        sample,
         split_cross_valid,
         split_train_test,
         streaming_mse,
