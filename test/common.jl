@@ -15,7 +15,7 @@ ytest = [x for x=(test_set(split).df[:Species])]
 acc = accuracy(ytest, yhat)
 @test acc>0.8
 
-data = DataFrameSupervisedLearningDataSet(iris, :Species)
+data = SupervisedDataFrame(iris, :Species)
 x = data_set_x(data)
 y = data_set_y(data)
 
@@ -25,7 +25,7 @@ y = data_set_y(data)
 @test y[1]=="setosa"
 @test x[1,1]==5.1
 
-data = DataFrameSupervisedLearningDataSet(iris, :SepalLength)
+data = SupervisedDataFrame(iris, :SepalLength)
 x = data_set_x(data)
 y = data_set_y(data)
 

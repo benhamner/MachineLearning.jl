@@ -12,10 +12,10 @@ type DataFrameTrainTestSplit <: TrainTestSplit
     test_indices::Vector{Int}
 end
 
-train_set(s::MatrixTrainTestSplit) = MatrixSupervisedLearningDataSet(s.x[s.train_indices,:], s.y[s.train_indices])
-test_set( s::MatrixTrainTestSplit) = MatrixSupervisedLearningDataSet(s.x[s.test_indices, :], s.y[s.test_indices])
-train_set(s::DataFrameTrainTestSplit) = DataFrameSupervisedLearningDataSet(s.df[s.train_indices,:], s.target_column)
-test_set( s::DataFrameTrainTestSplit) = DataFrameSupervisedLearningDataSet(s.df[s.test_indices, :], s.target_column)
+train_set(s::MatrixTrainTestSplit) = SupervisedMatrix(s.x[s.train_indices,:], s.y[s.train_indices])
+test_set( s::MatrixTrainTestSplit) = SupervisedMatrix(s.x[s.test_indices, :], s.y[s.test_indices])
+train_set(s::DataFrameTrainTestSplit) = SupervisedDataFrame(s.df[s.train_indices,:], s.target_column)
+test_set( s::DataFrameTrainTestSplit) = SupervisedDataFrame(s.df[s.test_indices, :], s.target_column)
 train_set_x(s::TrainTestSplit) = data_set_x(train_set(s))
 train_set_y(s::TrainTestSplit) = data_set_y(train_set(s))
 test_set_x( s::TrainTestSplit) = data_set_x(test_set(s))
