@@ -10,7 +10,7 @@ abstract RegressionModelOptions     <: SupervisedModelOptions
 abstract Transformer
 abstract TransformerOptions
 
-type DataFrameModel
+type DataFrameModel <: SupervisedModel
     model::SupervisedModel
     colnames::Vector{Symbol}
 end
@@ -102,3 +102,4 @@ StatsBase.predict(model::DataFrameModel, df::DataFrame) = predict(model.model, f
 StatsBase.predict(model::DataFrameModel, data::SupervisedDataFrame) = predict(model, data.df)
 
 StatsBase.sample(model::DataFrameModel, df::DataFrame) = sample(model.model, float_matrix(df[model.colnames]))
+StatsBase.sample(model::DataFrameModel, data::SupervisedDataFrame) = sample(model, data.df)

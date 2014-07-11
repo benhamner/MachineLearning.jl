@@ -29,6 +29,7 @@ module MachineLearning
         ClassificationTreeOptions,
         CrossValidationSplit,
         SupervisedDataFrame,
+        DataFrameModel,
         DecisionBranch,
         DecisionNode,
         DecisionTree,

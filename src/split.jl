@@ -25,6 +25,7 @@ test_set_x_y( s::TrainTestSplit) = test_set_x(s), test_set_y(s)
 
 StatsBase.fit(split::TrainTestSplit, opts::SupervisedModelOptions) = fit(train_set(split), opts)
 StatsBase.predict(model::SupervisedModel, split::TrainTestSplit)   = predict(model, test_set(split))
+StatsBase.sample(model::SupervisedModel, split::TrainTestSplit)    = sample(model, test_set(split))
 
 type CrossValidationSplit
     x::Matrix{Float64}
@@ -64,6 +65,7 @@ function split_train_test(df::DataFrame, target_column::Symbol; split_fraction::
     
     DataFrameTrainTestSplit(df, target_column, i[1:cutoff], i[cutoff+1:length(i)])
 end
+split_train_test(data::SupervisedDataFrame; split_fraction::Float64=0.5, seed::Union(Int, Nothing)=Nothing()) = split_train_test(data.df, data.target_column, split_fraction=split_fraction, seed=seed)
 
 function split_cross_valid(x::Matrix{Float64}, y::Vector; num_folds::Int=10, seed::Union(Int, Nothing)=Nothing())
     @assert size(x, 1)==length(y)
