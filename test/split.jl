@@ -8,8 +8,8 @@ x_map = Dict([x[i,:] for i=1:size(x,1)], y)
 split = split_train_test(x, y)
 train_data = train_set(split)
 test_data  = test_set(split)
-@test size(train_data.x, 1)==500
-@test size(test_data.x,  1)==500
+@test size(data_set_x(train_data), 1)==500
+@test size(data_set_y(test_data),  1)==500
 @test length(train_data.y) ==500
 @test length(test_data.y)  ==500
 for i=1:size(train_data.x, 1)
