@@ -68,6 +68,7 @@ module MachineLearning
         cost,
         cost_gradient!,
         cost_gradient_update_net!,
+        data_frame_feature_columns,
         data_set_x,
         data_set_y,
         data_set_x_y,

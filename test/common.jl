@@ -33,9 +33,16 @@ y = data_set_y(data)
 @test y[1]==5.1
 @test x[1,1]==3.5
 
+columns = data_frame_feature_columns(data)
+@test in(:SepalWidth, columns)
+@test in(:PetalLength, columns)
+@test in(:PetalWidth, columns)
+@test !in(:SepalLength, columns)
+
 x = randn(100, 3)
 y = randn(100)
 
 data = SupervisedMatrix(x, y)
 @test data_set_x(data)==x
 @test data_set_y(data)==y
+@test (x, y)==data_set_x_y(data)
