@@ -180,7 +180,7 @@ function regression_split_location(y::Vector{Float64})
         squared_sum_right -= y[i]^2
 
         mse = streaming_mse(sum_left,  squared_sum_left,  i) +
-              streaming_mse(sum_right, squared_sum_right, i)
+              streaming_mse(sum_right, squared_sum_right, length(y)-i)
         if mse<score
             score = mse
             loc   = i
