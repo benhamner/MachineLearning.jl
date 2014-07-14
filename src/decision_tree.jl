@@ -236,3 +236,16 @@ function Base.show(io::IO, tree::ClassificationTree)
                  @sprintf("    %d Classes",length(tree.classes))], "\n")
     print(io, info)
 end
+
+Base.show(io::IO, branch::DecisionBranch) = print(io, pretty_string(branch, 1))
+pretty_string(leaf::DecisionLeaf, indent::Integer) = string(leaf)
+function pretty_string(branch::DecisionBranch, indent::Integer) 
+    @sprintf("DecisionBranch(%d, %f, \n%s%s \n%s%s)", 
+    branch.feature,
+    branch.value,
+    repeat("|", indent), 
+    pretty_string(branch.left, indent+1), 
+    repeat("|", indent), 
+    pretty_string(branch.right, indent+1))
+end
+pretty_string(branch::DecisionBranch) = pretty_string(branch::DecisionBranch, 1)
