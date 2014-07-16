@@ -19,9 +19,10 @@ type BartOptions <: RegressionModelOptions
     beta::Float64
     k::Float64
     transform_probabilities::BartTreeTransformationProbabilies
+    small_leaf_likelihood_factor::Float64
     display::Bool
 end
-BartOptions() = BartOptions(10, 200, 1000, 0.95, 2.0, BartTreeTransformationProbabilies(), false)
+BartOptions() = BartOptions(10, 200, 1000, 0.95, 2.0, BartTreeTransformationProbabilies(), 0.001, false)
 
 function bart_options(;num_trees::Int=10,
                       burn_in::Int=200,
@@ -31,8 +32,9 @@ function bart_options(;num_trees::Int=10,
                       beta::Float64=2.0,
                       k::Float64=2.0,
                       transform_probabilities::BartTreeTransformationProbabilies=BartTreeTransformationProbabilies(),
+                      small_leaf_likelihood_factor::Float64=0.001,
                       display::Bool=false)
-    BartOptions(num_trees, burn_in, num_draws, thinning, alpha, beta, k, transform_probabilities, display)
+    BartOptions(num_trees, burn_in, num_draws, thinning, alpha, beta, k, transform_probabilities, small_leaf_likelihood_factor, display)
 end
 
 type BartLeafParameters
@@ -95,7 +97,7 @@ function growth_prior(node::DecisionNode, depth::Int, opts::BartOptions)
     if length(indices) >= 5
         return branch_prior
     elseif length(indices) > 0
-        return 0.001*branch_prior
+        return opts.small_leaf_likelihood_factor*branch_prior
     else
         return 0.0
     end
