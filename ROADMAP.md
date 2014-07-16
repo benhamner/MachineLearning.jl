@@ -1,12 +1,3 @@
-Short-term TODO's
-=================
-
-1. Posterior distribution from BART
-2. Support categorical predictors
-3. Track & optionally show metadata and state during training 
-4. Support minibatch sgd during neural net training
-5. Supervised regression support for neural nets
-
 Longer term Roadmap
 ===================
 
@@ -15,3 +6,22 @@ Longer term Roadmap
 3. Robust sampling methods
 4. Build out metrics, potentially break out as separate repo
 5. Testing against more real world datasets
+
+Short-term TODO's
+=================
+
+1. More unit tests
+   - likelihood under different observations for bart.jl
+   - split.jl
+2. Graphical output for experiments
+3. Experiments with multiple datasets
+4. Support categorical predictors
+5. Track & optionally show metadata and state during training 
+6. Support minibatch sgd during neural net training
+7. Supervised regression support for neural nets
+
+Experiments To Run
+==================
+
+1. Impact of the jump distribution on time to convergence
+2. Convergence of MCMC results
