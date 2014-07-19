@@ -1,3 +1,4 @@
+using Gadfly
 using MachineLearning
 using RDatasets
 
