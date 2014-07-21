@@ -4,13 +4,15 @@ using RDatasets
 
 options = SupervisedModelOptions[
                regression_tree_options(),
-               regression_forest_options(),
-               bart_options()]
+               regression_forest_options(num_trees=10),
+               regression_forest_options(num_trees=100),
+               bart_options(num_trees=10),
+               bart_options(num_trees=100)]
 
 data = dataset("car", "Prestige")
 data_generator(seed) = split_train_test(data, :Prestige, seed=seed)
 
-res = compare(data_generator, options, ["Tree", "Forest", "BART"], cor)
+res = compare(data_generator, options, ["Tree", "Forest10", "Forest100", "BART10", "BART100"], cor)
 
 draw(PNG("regression_comparison.png", 8inch, 6inch), plot(res, x=:Name, y=:Score, Geom.boxplot))
 
