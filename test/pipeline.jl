@@ -7,7 +7,7 @@ num_features=5
 x, y = linear_data(2500, num_features)
 split = split_train_test(0.0001*x, y)
 
-net_opts = neural_net_options(learning_rate=10.0)
+net_opts = classification_net_options(learning_rate=10.0)
 opts = PipelineOptionsAny([], net_opts)
 acc = evaluate(split, opts, accuracy)
 println("Linear Accuracy, Unnormalized: ", acc)

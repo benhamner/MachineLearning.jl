@@ -4,7 +4,7 @@ using RDatasets
 
 options = [classification_forest_options(),
            classification_tree_options(),
-           neural_net_options()]
+           classification_net_options()]
 
 datasets = [("datasets", "iris", :Species, 0.6)]
 

@@ -13,7 +13,7 @@ type StopAfterValidationErrorStopsImproving <: NeuralNetStopCriteria
 end
 StopAfterValidationErrorStopsImproving() = StopAfterValidationErrorStopsImproving(0.2, 2, 10, 1000)
 
-type NeuralNetOptions <: ClassificationModelOptions
+type ClassificationNetOptions <: ClassificationModelOptions
     bias_unit::Bool # include a bias unit that always outputs a +1
     hidden_layers::Vector{Int} # sizes of hidden layers
     train_method::Symbol
@@ -23,22 +23,22 @@ type NeuralNetOptions <: ClassificationModelOptions
     track_cost::Bool
 end
 
-function neural_net_options(;bias_unit::Bool=true,
-                            hidden_layers::Vector{Int}=[50],
-                            train_method::Symbol=:sgd,
-                            learning_rate::Float64=10.0,
-                            stop_criteria::NeuralNetStopCriteria=StopAfterIteration(),
-                            display::Bool=false,
-                            track_cost=false)
-    NeuralNetOptions(bias_unit, hidden_layers, train_method, learning_rate, stop_criteria, display, track_cost)
+function classification_net_options(;bias_unit::Bool=true,
+                                    hidden_layers::Vector{Int}=[50],
+                                    train_method::Symbol=:sgd,
+                                    learning_rate::Float64=10.0,
+                                    stop_criteria::NeuralNetStopCriteria=StopAfterIteration(),
+                                    display::Bool=false,
+                                    track_cost=false)
+    ClassificationNetOptions(bias_unit, hidden_layers, train_method, learning_rate, stop_criteria, display, track_cost)
 end
 
 type NeuralNetLayer
     weights::Matrix{Float64}
 end
 
-type NeuralNet <: ClassificationModel
-    options::NeuralNetOptions
+type ClassificationNet <: ClassificationModel
+    options::ClassificationNetOptions
     layers::Vector{NeuralNetLayer}
     classes::Vector
 end
@@ -50,7 +50,7 @@ type NeuralNetTemporary # prevents us from making unnecessary allocations
     layer_gradients::Vector{Matrix{Float64}}
 end
 
-function initialize_neural_net_temporary(net::NeuralNet)
+function initialize_neural_net_temporary(net::ClassificationNet)
     outputs = Array(Matrix{Float64}, 0)
     activations = Array(Matrix{Float64}, 0)
     deltas = Array(Matrix{Float64}, 0)
@@ -72,7 +72,7 @@ function initialize_neural_net_temporary(net::NeuralNet)
     NeuralNetTemporary(outputs, activations, deltas, layer_gradients)
 end
 
-function classes(net::NeuralNet)
+function classes(net::ClassificationNet)
     net.classes
 end
 
@@ -93,7 +93,7 @@ function one_hot(y::Vector, classes_map::Dict)
     values
 end
 
-function StatsBase.fit(x::Matrix{Float64}, y::Vector, opts::NeuralNetOptions)
+function StatsBase.fit(x::Matrix{Float64}, y::Vector, opts::ClassificationNetOptions)
     num_features = size(x, 2)
     classes = sort(unique(y))
     classes_map = Dict(classes, [1:length(classes)])
@@ -124,7 +124,7 @@ function StatsBase.fit(x::Matrix{Float64}, y::Vector, opts::NeuralNetOptions)
     net
 end
 
-function train_preset_stop!(net::NeuralNet, x::Matrix{Float64}, actuals::Matrix{Float64}, temp::NeuralNetTemporary)
+function train_preset_stop!(net::ClassificationNet, x::Matrix{Float64}, actuals::Matrix{Float64}, temp::NeuralNetTemporary)
     num_samples = size(x,1)
     for iter=1:net.options.stop_criteria.max_iteration
         if net.options.display && (log(2, iter) % 1 == 0.0 || iter == net.options.stop_criteria.max_iteration)
@@ -139,7 +139,7 @@ function train_preset_stop!(net::NeuralNet, x::Matrix{Float64}, actuals::Matrix{
     end
 end
 
-function train_valid_stop!(net::NeuralNet,
+function train_valid_stop!(net::ClassificationNet,
                            x_train::Matrix{Float64},
                            a_train::Matrix{Float64},
                            x_val::Matrix{Float64},
@@ -173,7 +173,7 @@ function train_valid_stop!(net::NeuralNet,
     println("Number of Iterations: ", iteration)
 end
 
-function predict_probs(net::NeuralNet, sample::Vector{Float64})
+function predict_probs(net::ClassificationNet, sample::Vector{Float64})
     state = sample
     for layer = net.layers
         if net.options.bias_unit==true
@@ -185,12 +185,12 @@ function predict_probs(net::NeuralNet, sample::Vector{Float64})
     state
 end
 
-function StatsBase.predict(net::NeuralNet, sample::Vector{Float64})
+function StatsBase.predict(net::ClassificationNet, sample::Vector{Float64})
     probs = predict_probs(net, sample)
     net.classes[minimum(find(x->x==maximum(probs), probs))]
 end
 
-function update_weights!(net::NeuralNet, sample::Vector{Float64}, actual::Vector{Float64}, learning_rate::Float64, num_samples::Int, temp::NeuralNetTemporary)
+function update_weights!(net::ClassificationNet, sample::Vector{Float64}, actual::Vector{Float64}, learning_rate::Float64, num_samples::Int, temp::NeuralNetTemporary)
     cost_gradient!(net, sample, actual, temp)
     regularization_gradient!(net, temp, 1.0/num_samples)
 
@@ -205,7 +205,7 @@ function initialize_layer(number_in::Int, number_out::Int)
     NeuralNetLayer(weights)
 end
 
-function initialize_net(opts::NeuralNetOptions, classes::Vector, num_features::Int)
+function initialize_net(opts::ClassificationNetOptions, classes::Vector, num_features::Int)
     layers = Array(NeuralNetLayer, 0)
     if isempty(opts.hidden_layers)
         push!(layers, initialize_layer(num_features + (opts.bias_unit?1:0), length(classes)))
@@ -216,10 +216,10 @@ function initialize_net(opts::NeuralNetOptions, classes::Vector, num_features::I
         end
         push!(layers, initialize_layer(opts.hidden_layers[length(opts.hidden_layers)] + (opts.bias_unit?1:0), length(classes)))
     end
-    NeuralNet(opts, layers, classes)
+    ClassificationNet(opts, layers, classes)
 end
 
-function weights_to_net!(weights::Vector{Float64}, net::NeuralNet)
+function weights_to_net!(weights::Vector{Float64}, net::ClassificationNet)
     loc = 0
     for layer = net.layers
         layer.weights[:] = weights[loc+1:loc+length(layer.weights)]
@@ -228,7 +228,7 @@ function weights_to_net!(weights::Vector{Float64}, net::NeuralNet)
     @assert loc==length(weights)
 end
 
-function net_to_weights(net::NeuralNet)
+function net_to_weights(net::ClassificationNet)
     weights = Array(Float64, 0)
     for layer=net.layers
         for w=layer.weights
@@ -238,7 +238,7 @@ function net_to_weights(net::NeuralNet)
     weights
 end
 
-function cost(net::NeuralNet, x::Matrix{Float64}, actuals::Matrix{Float64})
+function cost(net::ClassificationNet, x::Matrix{Float64}, actuals::Matrix{Float64})
     @assert size(x,1)==size(actuals,1)
     probs = predict_probs(net, x)
     err = mean_log_loss(actuals, probs)
@@ -253,7 +253,7 @@ function cost(net::NeuralNet, x::Matrix{Float64}, actuals::Matrix{Float64})
     err + regularization
 end
 
-function cost(net::NeuralNet, x::Matrix{Float64}, actuals::Matrix{Float64}, weights::Vector{Float64})
+function cost(net::ClassificationNet, x::Matrix{Float64}, actuals::Matrix{Float64}, weights::Vector{Float64})
     weights_to_net!(weights, net)
     cost(net, x, actuals)
 end
@@ -264,7 +264,7 @@ function copy_range!(destination::Array, destination_start::Int, source::Array, 
     end
 end
 
-function cost_gradient!(net::NeuralNet, sample::Vector{Float64}, actual::Vector{Float64}, temp::NeuralNetTemporary)
+function cost_gradient!(net::ClassificationNet, sample::Vector{Float64}, actual::Vector{Float64}, temp::NeuralNetTemporary)
     num_layers = length(net.layers)
     copy!(temp.outputs[1], sample)
     if net.options.bias_unit
@@ -298,7 +298,7 @@ function cost_gradient!(net::NeuralNet, sample::Vector{Float64}, actual::Vector{
     end
 end
 
-function regularization_gradient(net::NeuralNet)
+function regularization_gradient(net::ClassificationNet)
     layer_gradients = [copy(layer.weights) for layer=net.layers]
     for i=1:length(layer_gradients)
         if net.options.bias_unit
@@ -308,14 +308,14 @@ function regularization_gradient(net::NeuralNet)
     layer_gradients
 end
 
-function regularization_gradient!(net::NeuralNet, temp::NeuralNetTemporary, lambda::Float64)
+function regularization_gradient!(net::ClassificationNet, temp::NeuralNetTemporary, lambda::Float64)
     for i=1:length(net.layers)
         start_col = net.options.bias_unit ? 2 : 1
         temp.layer_gradients[i][:,start_col:end] += lambda*net.layers[i].weights[:,start_col:end]
     end
 end
 
-function cost_gradient_update_net!(net::NeuralNet, x::Matrix{Float64}, actuals::Matrix{Float64}, weights::Vector{Float64}, gradients::Vector{Float64}, temp::NeuralNetTemporary)
+function cost_gradient_update_net!(net::ClassificationNet, x::Matrix{Float64}, actuals::Matrix{Float64}, weights::Vector{Float64}, gradients::Vector{Float64}, temp::NeuralNetTemporary)
     @assert size(x,1)==size(actuals,1)
     weights_to_net!(weights, net)
     gradients[:]=0.0
@@ -336,7 +336,7 @@ function cost_gradient_update_net!(net::NeuralNet, x::Matrix{Float64}, actuals::
     end
 end
 
-function Base.show(io::IO, net::NeuralNet)
+function Base.show(io::IO, net::ClassificationNet)
     info = join(["Neural Network",
                  @sprintf("    %d Hidden Layers",length(net.options.hidden_layers)),
                  @sprintf("    %d Classes",length(net.classes))], "\n")

@@ -11,7 +11,7 @@ x_test,  y_test  = test_set_x_y(split)
 
 # Checking gradients
 println("Checking Gradients")
-opts = neural_net_options(hidden_layers=[3])
+opts = classification_net_options(hidden_layers=[3])
 classes = sort(unique(y))
 classes_map = Dict(classes, [1:length(classes)])
 net = initialize_net(opts, classes, num_features)
@@ -34,14 +34,14 @@ for i=1:length(weights)
 end
 
 println("Classification Tests")
-opts = neural_net_options(learning_rate=10.0, track_cost=false)
+opts = classification_net_options(learning_rate=10.0, track_cost=false)
 net = fit(x_train, y_train, opts)
 yhat = predict(net, x_test)
 acc = accuracy(y_test, yhat)
 println("Linear Accuracy, Preset Stop: ", acc)
 @test acc>0.7
 
-opts = neural_net_options(learning_rate=10.0, train_method=:cg)
+opts = classification_net_options(learning_rate=10.0, train_method=:cg)
 net = fit(x_train, y_train, opts)
 for layer=net.layers
     println("Max Weight: ", maximum(layer.weights))
@@ -51,7 +51,7 @@ acc = accuracy(y_test, yhat)
 println("Linear Accuracy, Soph: ", acc)
 @test acc>0.7
 
-opts = neural_net_options(learning_rate=10.0, stop_criteria=StopAfterValidationErrorStopsImproving())
+opts = classification_net_options(learning_rate=10.0, stop_criteria=StopAfterValidationErrorStopsImproving())
 net = fit(x_train, y_train, opts)
 yhat = predict(net, x_test)
 acc = accuracy(y_test, yhat)
@@ -61,12 +61,12 @@ println("Linear Accuracy, Valid Stop: ", acc)
 x = randn(2500, 5)
 y = int(map(x->x>0.0, x[:,1]-x[:,2]+3*x[:,3]+x[:,4].*x[:,5]+0.2*randn(2500)))
 split = split_train_test(x, y)
-opts = neural_net_options(learning_rate=10.0)
+opts = classification_net_options(learning_rate=10.0)
 acc = evaluate(split, opts, accuracy)
 println("Nonlinear Accuracy, 1 Hidden Layer : ", acc)
 @test acc>0.70
 
-opts = neural_net_options(hidden_layers=[10;10], learning_rate=10.0)
+opts = classification_net_options(hidden_layers=[10;10], learning_rate=10.0)
 net = fit(split, opts)
 println(net)
 yhat = predict(net, split)
@@ -74,7 +74,7 @@ acc = accuracy(test_set_y(split), yhat)
 println("Nonlinear Accuracy, 2 Hidden Layers: ", acc)
 @test acc>0.70
 
-opts = neural_net_options(hidden_layers=Array(Int, 0), learning_rate=10.0)
+opts = classification_net_options(hidden_layers=Array(Int, 0), learning_rate=10.0)
 acc = evaluate(split, opts, accuracy)
 println("Nonlinear Accuracy, 0 Hidden Layers: ", acc)
 @test acc>0.70

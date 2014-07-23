@@ -3,8 +3,8 @@ using MachineLearning
 using RDatasets
 
 options = SupervisedModelOptions[
-               neural_net_options(),
-               neural_net_options(stop_criteria=StopAfterIteration(1000)),
+               classification_net_options(learning_rate=10.0),
+               classification_net_options(stop_criteria=StopAfterIteration(1000), learning_rate=1.0),
                classification_tree_options(),
                classification_forest_options(num_trees=10),
                classification_forest_options(num_trees=100)]

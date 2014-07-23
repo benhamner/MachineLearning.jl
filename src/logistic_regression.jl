@@ -24,7 +24,7 @@ function logistic_regression_options(;bias_unit::Bool=true,
 end
 
 type LogisticRegression <: LogisticRegressionOptions
-    options::NeuralNetOptions
+    options::ClassificationNetOptions
     weights::Matrix{Float64}
     classes::Vector
 end
