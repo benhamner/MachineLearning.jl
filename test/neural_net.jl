@@ -14,7 +14,7 @@ println("Checking Gradients")
 opts = classification_net_options(hidden_layers=[3])
 classes = sort(unique(y))
 classes_map = Dict(classes, [1:length(classes)])
-net = initialize_net(opts, classes, num_features)
+net = initialize_classification_net(opts, classes, num_features)
 temp = initialize_neural_net_temporary(net)
 weights = net_to_weights(net)
 
@@ -32,6 +32,10 @@ for i=1:length(weights)
     err = abs(((c2-c1)/(2*epsilon)-gradients[i])/gradients[i])
     @test err<epsilon
 end
+
+@test inverse_sigmoid(sigmoid(1.343))-1.343   < 1e-9
+@test inverse_sigmoid(sigmoid(-3.45))-(-3.45) < 1e-9
+@test sigmoid(0.0)==0.5
 
 println("Classification Tests")
 opts = classification_net_options(learning_rate=10.0, track_cost=false)
@@ -78,3 +82,16 @@ opts = classification_net_options(hidden_layers=Array(Int, 0), learning_rate=10.
 acc = evaluate(split, opts, accuracy)
 println("Nonlinear Accuracy, 0 Hidden Layers: ", acc)
 @test acc>0.70
+
+println("Regression Tests")
+m = randn(10)
+m[3] = 100.0
+x     = randn(2500, 10)
+y     = x*m + randn(2500)
+split = split_train_test(x, y)
+opts = regression_net_options()
+model = fit(train_set_x(split), train_set_y(split), opts)
+yhat = predict(model, test_set_x(split))
+correlation = cor(test_set_y(split), yhat)
+println("Regression Net Linear Pearson Correlation: ", correlation)
+@test correlation>0.80
