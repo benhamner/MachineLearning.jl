@@ -3,6 +3,7 @@ function compare(data_generator::Function, opts::Vector{SupervisedModelOptions},
     for i=1:iterations
         split = data_generator(i)
         for j=1:length(opts)
+            println("Running ", opts_names[j], " on split ", i)
             res = vcat(res, DataFrame(Name=opts_names[j], Option=opts[j], Iteration=i, Score=evaluate(split, opts[j], metric)))
         end
     end
