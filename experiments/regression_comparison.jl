@@ -3,6 +3,8 @@ using MachineLearning
 using RDatasets
 
 options = SupervisedModelOptions[
+               regression_net_options(),
+               regression_net_options(stop_criteria=StopAfterIteration(10000), learning_rate=1.0),
                regression_tree_options(),
                regression_forest_options(num_trees=2),
                regression_forest_options(num_trees=10),
@@ -14,9 +16,9 @@ options = SupervisedModelOptions[
                bart_options(num_trees=200)]
 
 data = dataset("car", "Prestige")
-data_generator(seed) = split_train_test(data, :Prestige, seed=seed)
+data_generator(seed) = split_train_test(data, :Prestige, seed=seed+1)
 
-res = compare(data_generator, options, ["Tree", "Forest2", "Forest10", "Forest100", "Forest200",
+res = compare(data_generator, options, ["Net100", "Net10000", "Tree", "Forest2", "Forest10", "Forest100", "Forest200",
                                         "BART2", "BART10", "BART100", "BART200"], cor)
 
 draw(PNG("regression_comparison.png", 8inch, 6inch), plot(res, x=:Name, y=:Score, Geom.boxplot))
