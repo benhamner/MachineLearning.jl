@@ -25,7 +25,6 @@ module MachineLearning
         ClassificationLeaf,
         ClassificationNet,
         ClassificationPipeline,
-        ClassificationPipelineAny,
         ClassificationTree,
         ClassificationTreeOptions,
         CrossValidationSplit,

@@ -17,15 +17,6 @@ type ClassificationPipeline <: ClassificationModel
     model::ClassificationModel
 end
 
-# I have to write this since Julia types aren't covariant
-function ClassificationPipelineAny(transformers::Vector, model::ClassificationModel)
-    ts = Array(Transformer, 0)
-    for transformer = transformers
-        push!(ts, transformer)
-    end
-    ClassificationPipeline(ts, model)
-end
-
 function StatsBase.fit(x::Matrix{Float64}, y::Vector, opts::PipelineOptions)
     transformers = Array(Transformer, 0)
     x_transformed = x
