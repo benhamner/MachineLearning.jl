@@ -2,8 +2,8 @@ using Gadfly
 using MachineLearning
 using RDatasets
 
-opts_generator(stop_iterations::Int) = regression_net_options(hidden_layers=[500], stop_criteria=StopAfterIteration(stop_iterations), learning_rate=0.01)
-opts_sweep = [20000:20000:100000]
+opts_generator(stop_iterations::Int) = RegressionPipelineOptions(TransformerOptions[ZmuvOptions()], regression_net_options(stop_criteria=StopAfterIteration(stop_iterations)))
+opts_sweep = [100:100:2000]
 
 data = dataset("car", "Prestige")
 data_generator(seed) = split_train_test(data, :Prestige, seed=seed)
