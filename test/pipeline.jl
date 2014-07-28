@@ -8,12 +8,12 @@ x, y = linear_data(2500, num_features)
 split = split_train_test(0.0001*x, y)
 
 net_opts = classification_net_options(learning_rate=10.0)
-opts = PipelineOptionsAny([], net_opts)
+opts = ClassificationPipelineOptions(TransformerOptions[], net_opts)
 acc = evaluate(split, opts, accuracy)
 println("Linear Accuracy, Unnormalized: ", acc)
 @test acc<0.55
 
-opts = PipelineOptionsAny([ZmuvOptions()], net_opts)
+opts = ClassificationPipelineOptions(TransformerOptions[ZmuvOptions()], net_opts)
 acc = evaluate(split, opts, accuracy)
 println("Linear Accuracy, Normalized: ", acc)
 @test acc>0.80
