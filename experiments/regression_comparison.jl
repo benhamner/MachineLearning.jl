@@ -3,7 +3,7 @@ using MachineLearning
 using RDatasets
 
 options = SupervisedModelOptions[
-               RegressionPipelineOptions(TransformerOptions[ZmuvOptions()], regression_tree_options()),
+               RegressionPipelineOptions(TransformerOptions[ZmuvOptions()], regression_net_options()),
                regression_forest_options(num_trees=2),
                regression_forest_options(num_trees=10),
                regression_forest_options(num_trees=100),
