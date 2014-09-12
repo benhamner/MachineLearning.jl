@@ -1,11 +1,13 @@
 type ClassificationForestOptions <: ClassificationModelOptions
     num_trees::Int
+    tree_options::ClassificationTreeOptions
     display::Bool
 end
 
 function classification_forest_options(;num_trees::Int=100,
+                                       tree_options::ClassificationTreeOptions=classification_tree_options(features_per_split_fraction=0.5, minimum_split_size=2),
                                        display::Bool=false)
-    ClassificationForestOptions(num_trees, display)
+    ClassificationForestOptions(num_trees, tree_options, display)
 end
 
 type RegressionForestOptions <: RegressionModelOptions
@@ -15,7 +17,7 @@ type RegressionForestOptions <: RegressionModelOptions
 end
 
 function regression_forest_options(;num_trees::Int=100,
-                                   tree_options::RegressionTreeOptions=regression_tree_options(features_per_split_fraction=0.5, minimum_split_size = 5),
+                                   tree_options::RegressionTreeOptions=regression_tree_options(features_per_split_fraction=0.5, minimum_split_size=5),
                                    display::Bool=false)
     RegressionForestOptions(num_trees, tree_options, display)
 end
@@ -37,7 +39,8 @@ end
 
 function StatsBase.fit(x::Matrix{Float64}, y::Vector, opts::ClassificationForestOptions)
     classes = sort(unique(y))
-    tree_opts = classification_tree_options(features_per_split_fraction=0.5, classes=classes)
+    tree_opts = opts.tree_options
+    tree_opts.classes = classes
     trees = Array(ClassificationTree, 0)
     for i=1:opts.num_trees
         shuffle_locs = rand(1:size(x,1), size(x,1))
