@@ -11,7 +11,7 @@ net_opts = classification_net_options(learning_rate=10.0)
 opts = ClassificationPipelineOptions(TransformerOptions[], net_opts)
 acc = evaluate(split, opts, accuracy)
 println("Linear Accuracy, Unnormalized: ", acc)
-@test acc<0.55
+@test acc<0.70
 
 opts = ClassificationPipelineOptions(TransformerOptions[ZmuvOptions()], net_opts)
 acc = evaluate(split, opts, accuracy)
