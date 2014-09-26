@@ -28,7 +28,7 @@ net_opts = regression_net_options()
 opts = RegressionPipelineOptions(TransformerOptions[], net_opts)
 score = evaluate(split, opts, cor)
 println("Linear Accuracy, Unnormalized: ", score)
-@test score<0.55
+@test score<0.70
 
 opts = RegressionPipelineOptions(TransformerOptions[ZmuvOptions()], net_opts)
 score = evaluate(split, opts, cor)
