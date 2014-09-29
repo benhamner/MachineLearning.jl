@@ -25,3 +25,10 @@ Algorithms Implemented
  - Basic Random Forest for Classification
  - Basic Neural Network
  - Bayesian Additive Regression Trees
+
+Other Helpers
+=============
+
+ - Train/Test split
+ - Cross validation
+ - Experiments
