@@ -36,7 +36,7 @@ end
 train_set(s::CrossValidationSplit, k::Int) = (s.x[s.groups.!=k,:], s.y[s.groups.!=k])
 test_set( s::CrossValidationSplit, k::Int) = (s.x[s.groups.==k,:], s.y[s.groups.==k])
 
-function split_train_test(x::Matrix{Float64}, y::Vector; split_fraction::Float64=0.5, seed::Union(Int, Nothing)=Nothing())
+function split_train_test(x::Matrix{Float64}, y::Vector; split_fraction::Float64=0.5, seed::Union(Int, Nothing)=nothing)
     @assert size(x, 1)==length(y)
     @assert size(x, 1)>1
     @assert split_fraction>0.0
@@ -51,7 +51,7 @@ function split_train_test(x::Matrix{Float64}, y::Vector; split_fraction::Float64
     MatrixTrainTestSplit(x, y, i[1:cutoff], i[cutoff+1:end])
 end
 
-function split_train_test(df::DataFrame, target_column::Symbol; split_fraction::Float64=0.5, seed::Union(Int, Nothing)=Nothing())
+function split_train_test(df::DataFrame, target_column::Symbol; split_fraction::Float64=0.5, seed::Union(Int, Nothing)=nothing)
     @assert nrow(df)>1
     @assert split_fraction>0.0
     @assert split_fraction<1.0
@@ -65,9 +65,9 @@ function split_train_test(df::DataFrame, target_column::Symbol; split_fraction::
     
     DataFrameTrainTestSplit(df, target_column, i[1:cutoff], i[cutoff+1:length(i)])
 end
-split_train_test(data::SupervisedDataFrame; split_fraction::Float64=0.5, seed::Union(Int, Nothing)=Nothing()) = split_train_test(data.df, data.target_column, split_fraction=split_fraction, seed=seed)
+split_train_test(data::SupervisedDataFrame; split_fraction::Float64=0.5, seed::Union(Int, Nothing)=nothing) = split_train_test(data.df, data.target_column, split_fraction=split_fraction, seed=seed)
 
-function split_cross_valid(x::Matrix{Float64}, y::Vector; num_folds::Int=10, seed::Union(Int, Nothing)=Nothing())
+function split_cross_valid(x::Matrix{Float64}, y::Vector; num_folds::Int=10, seed::Union(Int, Nothing)=nothing)
     @assert size(x, 1)==length(y)
     @assert size(x, 1)>=num_folds
     @assert num_folds>1

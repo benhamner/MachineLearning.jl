@@ -76,7 +76,7 @@ function branches{T}(branch::Branch{T})
         branches!(branch.left,  branch_nodes)
         branches!(branch.right, branch_nodes)
     end
-    branches!{T}(leaf::Leaf{T}, branch_nodes::Vector{Branch{T}}) = Nothing()
+    branches!{T}(leaf::Leaf{T}, branch_nodes::Vector{Branch{T}}) = nothing
 
     branch_nodes = Branch{T}[branch]
     branches!(branch, branch_nodes)
@@ -95,7 +95,7 @@ function grand_branches{T}(branch::Branch{T})
             grand_branches!(branch.right, branch_nodes)
         end
     end
-    grand_branches!{T}(leaf::Leaf{T}, branch_nodes::Vector{Branch{T}}) = Nothing()
+    grand_branches!{T}(leaf::Leaf{T}, branch_nodes::Vector{Branch{T}}) = nothing
 
     branch_nodes = Branch{T}[]
     grand_branches!(branch, branch_nodes)
@@ -113,7 +113,7 @@ function not_grand_branches{T}(branch::Branch{T}) # a not_grand branch is one th
             not_grand_branches!(branch.right, branch_nodes)
         end
     end
-    not_grand_branches!{T}(leaf::Leaf{T}, branch_nodes::Vector{Branch{T}}) = Nothing()
+    not_grand_branches!{T}(leaf::Leaf{T}, branch_nodes::Vector{Branch{T}}) = nothing
     
     branch_nodes = Branch{T}[]
     not_grand_branches!(branch, branch_nodes)

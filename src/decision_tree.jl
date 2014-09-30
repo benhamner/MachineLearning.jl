@@ -10,11 +10,11 @@ type ClassificationTreeOptions <: ClassificationModelOptions
     minimum_split_size::Int
     classes::Union(Vector, Nothing)
 end
-ClassificationTreeOptions() = ClassificationTreeOptions(1.0, 2, Nothing())
+ClassificationTreeOptions() = ClassificationTreeOptions(1.0, 2, nothing)
 
 function classification_tree_options(;features_per_split_fraction::Float64=1.0,
                                minimum_split_size::Int=2,
-                               classes::Union(Vector,Nothing)=Nothing())
+                               classes::Union(Vector,Nothing)=nothing)
     ClassificationTreeOptions(features_per_split_fraction,
                         minimum_split_size,
                         classes)
