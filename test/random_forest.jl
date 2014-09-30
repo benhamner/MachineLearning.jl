@@ -1,10 +1,8 @@
 using Base.Test
 using MachineLearning
 
-require("linear_data.jl")
-
 num_features=5
-x, y = linear_data(2500, num_features)
+x, y = MachineLearning.linear_data(2500, num_features)
 split = split_train_test(x, y)
 score = evaluate(split, classification_forest_options(num_trees=10, display=true), accuracy)
 println("Linear Accuracy: ", score)

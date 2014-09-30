@@ -1,10 +1,8 @@
 using Base.Test
 using MachineLearning
 
-require("linear_data.jl")
-
 num_features=5
-x, y = linear_data(2500, num_features)
+x, y = MachineLearning.linear_data(2500, num_features)
 split = split_train_test(x, y)
 x_train, y_train = train_set_x_y(split)
 x_test,  y_test  = test_set_x_y(split)

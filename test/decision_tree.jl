@@ -1,8 +1,6 @@
 using Base.Test
 using MachineLearning
 
-require("linear_data.jl")
-
 @test_approx_eq gini([1.0,0]) 0.0
 @test_approx_eq gini([10.0,0]) 0.0
 @test_approx_eq gini([0.0,0,10]) 0.0
@@ -23,7 +21,7 @@ println("Quadrant Accuracy: ", acc)
 @test acc>0.9
 
 num_features=5
-x, y = linear_data(2500, num_features)
+x, y = MachineLearning.linear_data(2500, num_features)
 split = split_cross_valid(x, y)
 acc = evaluate(split, classification_tree_options(), accuracy)
 println("Linear Accuracy: ", acc)

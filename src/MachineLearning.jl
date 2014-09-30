@@ -139,4 +139,5 @@ module MachineLearning
     include("transform/zmuv.jl")
     include("importance.jl")
     include("experiment.jl")
+    include("test_helpers.jl")
 end
