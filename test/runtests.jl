@@ -12,6 +12,7 @@ tests = [
     "split",
     "random_forest",
     "transform/zmuv",
+    "transform/hash",
     "tree"]
 
 println("Running tests:")

@@ -34,6 +34,8 @@ module MachineLearning
         DecisionBranch,
         DecisionNode,
         DecisionTree,
+        HashVectorizer,
+        HashVectorizerOptions,
         Leaf,
         SupervisedMatrix,
         NeuralNet,
@@ -83,6 +85,7 @@ module MachineLearning
         float_matrix,
         gini,
         grand_branches,
+        hash_vectorizer_options,
         importances,
         initialize_bart_state,
         initialize_classification_net,
@@ -137,6 +140,7 @@ module MachineLearning
     include("random_forest.jl")
     include("split.jl")
     include("transform/zmuv.jl")
+    include("transform/hash.jl")
     include("importance.jl")
     include("experiment.jl")
     include("test_helpers.jl")
