@@ -74,15 +74,15 @@ tree = GoodTree(branch4)
 @test parent(tree, branch1)==branch2
 @test parent(branch4, branch1)==branch2
 
-@test Set({leaves(tree)...})   ==Set({[leaf1,leaf2,leaf3,leaf4,leaf5]...})
-@test Set({leaves(branch2)...})==Set({[leaf1,leaf2,leaf3]...})
+@test Set(Any[leaves(tree)...])   ==Set(Any[[leaf1,leaf2,leaf3,leaf4,leaf5]...])
+@test Set(Any[leaves(branch2)...])==Set(Any[[leaf1,leaf2,leaf3]...])
 @test leaves(leaf1)==Leaf{Good}[leaf1]
 
-@test Set({branches(tree)...})   ==Set({[branch1,branch2,branch3,branch4]...})
-@test Set({branches(branch2)...})==Set({[branch1,branch2]...})
+@test Set(Any[branches(tree)...])   ==Set(Any[[branch1,branch2,branch3,branch4]...])
+@test Set(Any[branches(branch2)...])==Set(Any[[branch1,branch2]...])
 @test branches(leaf1)==Leaf{Good}[]
 
-@test Set({grand_branches(tree)...})    ==Set({[branch4,branch2]...})
-@test Set({not_grand_branches(tree)...})==Set({[branch3,branch1]...})
+@test Set(Any[grand_branches(tree)...])    ==Set(Any[[branch4,branch2]...])
+@test Set(Any[not_grand_branches(tree)...])==Set(Any[[branch3,branch1]...])
 @test grand_branches(leaf1)==Branch{Good}[]
 @test not_grand_branches(leaf1)==Branch{Good}[]
