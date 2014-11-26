@@ -45,6 +45,7 @@ module MachineLearning
         StopAfterIteration,
         RegressionForest,
         RegressionForestOptions,
+        RegressionLeaf,
         RegressionModel,
         RegressionModelOptions,
         RegressionNet,
