@@ -49,7 +49,7 @@ function float_matrix(df::DataFrame)
         if eltype(col)<:String
             array_col = array(col, "missing")
             classes = sort(unique(array_col))
-            classes_map = Dict(classes, 1:length(classes))
+            classes_map = Dict(zip(classes, 1:length(classes)))
             res[:,i] = Float64[float(classes_map[v]) for v=array_col]
         else
             res[:,i] = array(col, 0.0)

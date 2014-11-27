@@ -4,7 +4,7 @@ using RDatasets
 
 x = randn(1000,10)
 y = randn(1000)
-x_map = Dict([x[i,:] for i=1:size(x,1)], y)
+x_map = Dict(zip([x[i,:] for i=1:size(x,1)], y))
 split = split_train_test(x, y)
 train_data = train_set(split)
 test_data  = test_set(split)
