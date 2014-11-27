@@ -238,7 +238,7 @@ function Base.show(io::IO, tree::ClassificationTree)
 end
 
 Base.show(io::IO, branch::DecisionBranch) = print(io, pretty_string(branch, 1))
-pretty_string(leaf::DecisionLeaf, indent::Integer) = string(leaf)
+pretty_string(leaf::DecisionLeaf, indent::Integer) = string(leaf)[1:min(end, 16)]=="MachineLearning." ? string(leaf)[17:end] : string(leaf)
 function pretty_string(branch::DecisionBranch, indent::Integer) 
     @sprintf("DecisionBranch(%d, %f, \n%s%s \n%s%s)", 
     branch.feature,
