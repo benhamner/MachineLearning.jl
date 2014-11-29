@@ -150,7 +150,7 @@ end
 function StatsBase.fit(x::Matrix{Float64}, y::Vector, opts::ClassificationNetOptions)
     num_features = size(x, 2)
     classes = sort(unique(y))
-    classes_map = Dict(zip(classes, [1:length(classes)]))
+    classes_map = Dict([zip(classes, [1:length(classes)])...]) # TODO: cleanup post julia-0.3 compat
     num_classes = length(classes)
     net = initialize_classification_net(opts, classes, num_features)
     temp = initialize_neural_net_temporary(net)

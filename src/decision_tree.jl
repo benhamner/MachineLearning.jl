@@ -69,7 +69,7 @@ end
 
 function StatsBase.fit(x::Matrix{Float64}, y::Vector, opts::ClassificationTreeOptions)
     classes = typeof(opts.classes)<:Nothing ? sort(unique(y)) : opts.classes
-    classes_map = Dict(zip(classes, 1:length(classes)))
+    classes_map = Dict([zip(classes, 1:length(classes))...]) # TODO: cleanup post julia-0.3 compat
     y_mapped = [classes_map[v]::Int for v=y]
     features_per_split = int(opts.features_per_split_fraction*size(x,2))
     features_per_split = max(1, size(x,2))
