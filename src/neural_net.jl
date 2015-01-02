@@ -18,6 +18,7 @@ type ClassificationNetOptions <: ClassificationModelOptions
     hidden_layers::Vector{Int} # sizes of hidden layers
     train_method::Symbol
     learning_rate::Float64
+    regularization_factor::Float64
     stop_criteria::NeuralNetStopCriteria
     display::Bool
     track_cost::Bool
@@ -27,10 +28,11 @@ function classification_net_options(;bias_unit::Bool=true,
                                     hidden_layers::Vector{Int}=[50],
                                     train_method::Symbol=:sgd,
                                     learning_rate::Float64=10.0,
+                                    regularization_factor::Float64=1.0,
                                     stop_criteria::NeuralNetStopCriteria=StopAfterIteration(),
                                     display::Bool=false,
                                     track_cost=false)
-    ClassificationNetOptions(bias_unit, hidden_layers, train_method, learning_rate, stop_criteria, display, track_cost)
+    ClassificationNetOptions(bias_unit, hidden_layers, train_method, learning_rate, regularization_factor, stop_criteria, display, track_cost)
 end
 
 type RegressionNetOptions <: RegressionModelOptions
@@ -38,6 +40,7 @@ type RegressionNetOptions <: RegressionModelOptions
     hidden_layers::Vector{Int} # sizes of hidden layers
     train_method::Symbol
     learning_rate::Float64
+    regularization_factor::Float64
     stop_criteria::NeuralNetStopCriteria
     display::Bool
     track_cost::Bool
@@ -47,10 +50,11 @@ function regression_net_options(;bias_unit::Bool=true,
                                 hidden_layers::Vector{Int}=[50],
                                 train_method::Symbol=:sgd,
                                 learning_rate::Float64=10.0,
+                                regularization_factor::Float64=1.0,
                                 stop_criteria::NeuralNetStopCriteria=StopAfterIteration(),
                                 display::Bool=false,
                                 track_cost=false)
-    RegressionNetOptions(bias_unit, hidden_layers, train_method, learning_rate, stop_criteria, display, track_cost)
+    RegressionNetOptions(bias_unit, hidden_layers, train_method, learning_rate, regularization_factor, stop_criteria, display, track_cost)
 end
 
 type NeuralNetLayer
@@ -178,7 +182,7 @@ function train_preset_stop!(net::NeuralNet, x::Matrix{Float64}, actuals::Matrix{
             println("  Cost: ", cost(net, x, actuals))
         end
         for j=1:num_samples
-            update_weights!(net, vec(x[j,:]), vec(actuals[j,:]), net.options.learning_rate, num_samples, temp)
+            update_weights!(net, vec(x[j,:]), vec(actuals[j,:]), net.options.learning_rate, net.options.regularization_factor, num_samples, temp)
         end
     end
 end
@@ -202,7 +206,7 @@ function train_valid_stop!(net::NeuralNet,
             println("  Training Cost: ", cost(net, x_train, a_train))
         end
         for j=1:num_samples
-            update_weights!(net, vec(x_train[j,:]), vec(a_train[j,:]), net.options.learning_rate, num_samples, temp)
+            update_weights!(net, vec(x_train[j,:]), vec(a_train[j,:]), net.options.learning_rate, net.options.regularization_factor, num_samples, temp)
         end
         preds = predict_probs(net, x_val)
         err = mean_log_loss(a_val, preds)
@@ -236,9 +240,9 @@ function StatsBase.predict(net::ClassificationNet, sample::Vector{Float64})
 end
 StatsBase.predict(net::RegressionNet, sample::Vector{Float64}) = inverse_sigmoid(forward_propagate(net, sample)[1])
 
-function update_weights!(net::NeuralNet, sample::Vector{Float64}, actual::Vector{Float64}, learning_rate::Float64, num_samples::Int, temp::NeuralNetTemporary)
+function update_weights!(net::NeuralNet, sample::Vector{Float64}, actual::Vector{Float64}, learning_rate::Float64, regularization_factor::Float64, num_samples::Int, temp::NeuralNetTemporary)
     cost_gradient!(net, sample, actual, temp)
-    regularization_gradient!(net, temp, 1.0/num_samples)
+    regularization_gradient!(net, temp, regularization_factor/num_samples)
 
     for i=1:length(net.layers)
         net.layers[i].weights -= learning_rate*temp.layer_gradients[i]/num_samples
