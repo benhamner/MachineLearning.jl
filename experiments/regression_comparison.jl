@@ -6,12 +6,8 @@ options = SupervisedModelOptions[
                RegressionPipelineOptions(TransformerOptions[ZmuvOptions()], regression_net_options()),
                regression_forest_options(num_trees=2),
                regression_forest_options(num_trees=10),
-               regression_forest_options(num_trees=100),
-               regression_forest_options(num_trees=200),
                bart_options(num_trees=2),
-               bart_options(num_trees=10),
-               bart_options(num_trees=100),
-               bart_options(num_trees=200)]
+               bart_options(num_trees=10)]
 
 data = dataset("car", "Prestige")
 data_generator(seed) = split_train_test(data, :Prestige, seed=seed+1)

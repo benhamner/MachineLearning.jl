@@ -250,8 +250,15 @@ function update_weights!(net::NeuralNet, sample::Vector{Float64}, actual::Vector
 end
 
 function initialize_layer(number_in::Int, number_out::Int)
-    epsilon_init = sqrt(6) / sqrt(number_in + number_out)
-    weights = 2.0 * (rand(number_out, number_in) .- 0.5) * epsilon_init
+    # Old weights initialization, from ????
+    # epsilon_init = sqrt(6) / sqrt(number_in + number_out)
+    # weights = 2.0 * (rand(number_out, number_in) .- 0.5) * epsilon_init
+    
+    # Initializing weights according to equation 16 from 
+    # Efficient Backprop by Yann Lecun et al
+    # http://yann.lecun.com/exdb/publis/pdf/lecun-98b.pdf
+    weights = randn(number_out, number_in).*(number_in^(-0.5))
+
     NeuralNetLayer(weights)
 end
 
