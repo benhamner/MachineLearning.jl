@@ -11,9 +11,8 @@ function mean_log_loss(a::Matrix{Float64}, p::Matrix{Float64})
     -sum(a.*log(probs)+(1.0.-a).*log(1.0.-probs))/size(a,1)
 end
 
-function mean_squared_error(a::Array{Float64}, p::Array{Float64})
-    mean((a-p).^2)
-end
+mse(a::Array{Float64}, p::Array{Float64}) = mean((a-p).^2)
+rmse(a::Array{Float64}, p::Array{Float64}) = sqrt(mse(a, p))
 
 function accuracy(a::Array, p::Array)
     @assert size(a)==size(p)

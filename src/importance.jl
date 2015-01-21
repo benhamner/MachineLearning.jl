@@ -44,13 +44,13 @@ function single_importances(split::TrainTestSplit, opts::RegressionModelOptions)
     num_features = size(x_train, 2)
     model      = fit(x_train, y_train, opts)
     predictions = predict(model, x_test)
-    best_score = sqrt(mean((y_test-predictions).^2))
+    best_score = rmse(y_test, predictions)
     importance = zeros(num_features)
     for feature=1:num_features
         x_test_permuted = copy(x_test)
         x_test_permuted[:,feature] = shuffle(x_test[:,feature])
         predictions = predict(model, x_test_permuted)
-        importance[feature] = sqrt(mean((y_test-predictions).^2))-best_score
+        importance[feature] = rmse(y_test, predictions)-best_score
     end
     importance, best_score
 end
