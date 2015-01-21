@@ -6,7 +6,7 @@ type ImportanceResults
     best_scores::Vector{Float64}
 end
 
-function importances(x::Matrix{Float64}, y::Vector, opts::ClassificationModelOptions)
+function importances(x::Matrix{Float64}, y::Vector, opts::SupervisedModelOptions)
     num_features = size(x, 2)
     num_splits   = 5
     imps = zeros(num_splits, num_features)
@@ -22,8 +22,8 @@ function importances(x::Matrix{Float64}, y::Vector, opts::ClassificationModelOpt
 end
 
 function single_importances(split::TrainTestSplit, opts::ClassificationModelOptions)
-    x_train, y_train = train_set(split)
-    x_test,  y_test  = test_set(split)
+    x_train, y_train = train_set_x_y(split)
+    x_test,  y_test  = test_set_x_y(split)
     num_features = size(x_train, 2)
     model      = fit(x_train, y_train, opts)
     predictions = vec(predict_probs(model, x_test)[:,2])
@@ -38,7 +38,24 @@ function single_importances(split::TrainTestSplit, opts::ClassificationModelOpti
     importance, best_score
 end
 
-function importances(df::DataFrame, target_column::Symbol, opts::ClassificationModelOptions)
+function single_importances(split::TrainTestSplit, opts::RegressionModelOptions)
+    x_train, y_train = train_set_x_y(split)
+    x_test,  y_test  = test_set_x_y(split)
+    num_features = size(x_train, 2)
+    model      = fit(x_train, y_train, opts)
+    predictions = predict(model, x_test)
+    best_score = sqrt(mean((y_test-predictions).^2))
+    importance = zeros(num_features)
+    for feature=1:num_features
+        x_test_permuted = copy(x_test)
+        x_test_permuted[:,feature] = shuffle(x_test[:,feature])
+        predictions = predict(model, x_test_permuted)
+        importance[feature] = sqrt(mean((y_test-predictions).^2))-best_score
+    end
+    importance, best_score
+end
+
+function importances(df::DataFrame, target_column::Symbol, opts::SupervisedModelOptions)
     y = array(df[target_column])
     if typeof(opts) <: RegressionModelOptions
         y *= 1.0

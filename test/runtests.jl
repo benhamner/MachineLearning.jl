@@ -5,6 +5,7 @@ tests = [
     "classification",
     "common",
     "decision_tree",
+    "importance",
     "metrics",
     "neural_net",
     "pipeline",
