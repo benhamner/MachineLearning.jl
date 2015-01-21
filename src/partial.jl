@@ -26,12 +26,16 @@ function partials(model::DataFrameModel, data::DataFrame, feature::Symbol)
     responses = zeros(length(values))
     for i=1:length(values)
         data_copy[feature] = values[i]
-        responses[i] = mean(predict_probs(model, data_copy)[:,2])
+        if typeof(model.model)<:ClassificationModel
+            responses[i] = mean(predict_probs(model, data_copy)[:,2])
+        elseif typeof(model.model)<:RegressionModel
+            responses[i] = mean(predict(model, data_copy))
+        end
     end
     PartialFeatureResults(string(feature), values, responses)
 end
 
-function partials(data::DataFrame, target::Symbol, feature::Symbol, opts::ClassificationModelOptions)
+function partials(data::DataFrame, target::Symbol, feature::Symbol, opts::SupervisedModelOptions)
     model = fit(data, target, opts)
     partials(model, data, feature)
 end
