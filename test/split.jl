@@ -19,7 +19,7 @@ for i=1:size(test_data.x, 1)
     @test x_map[test_data.x[i,:]]==test_data.y[i]
 end
 
-@test evaluate(split, regression_tree_options(), mean_squared_error)>0.0
+@test evaluate(split, regression_tree_options(), mse)>0.0
 
 split = split_train_test(x, vec(int(x[:,1]+x[:,2].>0.0)))
 acc = evaluate(split, classification_tree_options(), accuracy)
