@@ -114,6 +114,7 @@ module MachineLearning
         regression_tree_options,
         rmse,
         sample,
+        sensitivities,
         sigmoid,
         split_cross_valid,
         split_train_test,
@@ -140,6 +141,7 @@ module MachineLearning
     include("partial.jl")
     include("pipeline.jl")
     include("random_forest.jl")
+    include("sensitivity.jl")
     include("split.jl")
     include("transform/zmuv.jl")
     include("transform/hash.jl")
