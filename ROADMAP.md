@@ -10,15 +10,16 @@ Longer term Roadmap
 Short-term TODO's
 =================
 
-1. More unit tests
+1. Partial/sensitivity refactor + unit tests
+2. More unit tests
    - likelihood under different observations for bart.jl
    - split.jl
-2. Graphical output for experiments
-3. Experiments with multiple datasets
-4. Support categorical predictors
-5. Track & optionally show metadata and state during training 
-6. Support minibatch sgd during neural net training
-7. Supervised regression support for neural nets
+3. Graphical output for experiments
+4. Experiments with multiple datasets
+5. Support categorical predictors
+6. Track & optionally show metadata and state during training 
+7. Support minibatch sgd during neural net training
+8. Supervised regression support for neural nets
 
 Experiments To Run
 ==================
