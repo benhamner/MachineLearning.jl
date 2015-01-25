@@ -1,5 +1,6 @@
 module MachineLearning
     using
+        Compose,
         DataFrames,
         Devectorize,
         Distributions,

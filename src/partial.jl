@@ -43,9 +43,10 @@ end
 function Gadfly.plot(results::PartialFeatureResults)
     df = DataFrame(Feature=results.values, Probability=results.responses)
 
-    plot(df,
-         x="Feature",
-         y="Probability",
-         Geom.line,
-         Guide.title(results.name))
+    p = plot(df,
+             x="Feature",
+             y="Value",
+             Geom.line,
+             Guide.title(results.name))
+    compose(render(p), compose(context(), rectangle(), fill("white")))
 end
