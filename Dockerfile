@@ -3,13 +3,15 @@
 #
 # https://github.com/benhamner/MachineLearning.jl/tree/master/Dockerfile
 #
+# docker build -t="benhamner/machine_learning" .
+# docker run -t -i benhamner/machine_learning /bin/bash
 
 # Pull base image.
 FROM ubuntu:14.04
 
 # Install Julia and clone MachineLearning.jl
 RUN  cd /
-RUN  apt-get install git software-properties-common -y
+RUN  apt-get install git software-properties-common curl wget gettext libcairo2 libpango1.0-0 -y
 RUN  add-apt-repository ppa:staticfloat/julia-deps -y
 RUN  add-apt-repository ppa:staticfloat/julianightlies -y
 RUN  apt-get update -qq -y
