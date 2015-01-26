@@ -21,3 +21,5 @@ RUN  julia -e 'Pkg.clone("https://github.com/dcjones/Showoff.jl")'
 RUN  julia -e 'Pkg.clone("https://github.com/benhamner/MachineLearning.jl"); Pkg.checkout("Gadfly"); Pkg.resolve()'
 RUN  julia -e 'Pkg.pin("MachineLearning")'
 RUN  julia -e 'using MachineLearning; @assert isdefined(:MachineLearning); @assert typeof(MachineLearning) === Module'
+
+CMD ["julia /root/.julia/v0.4/MachineLearning/test/runtests.jl"]
