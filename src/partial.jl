@@ -41,7 +41,7 @@ function partials(data::DataFrame, target::Symbol, feature::Symbol, opts::Superv
 end
 
 function Gadfly.plot(results::PartialFeatureResults)
-    df = DataFrame(Feature=results.values, Probability=results.responses)
+    df = DataFrame(Feature=results.values, Value=results.responses)
 
     p = plot(df,
              x="Feature",
