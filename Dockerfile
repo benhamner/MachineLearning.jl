@@ -17,9 +17,7 @@ RUN  add-apt-repository ppa:staticfloat/julianightlies -y
 RUN  apt-get update -qq -y
 RUN  apt-get install libpcre3-dev julia -y
 RUN  julia -e 'Pkg.init()'
-RUN  julia -e 'Pkg.clone("https://github.com/dcjones/Showoff.jl")'
-RUN  julia -e 'Pkg.clone("https://github.com/benhamner/MachineLearning.jl"); Pkg.checkout("Gadfly"); Pkg.resolve()'
-RUN  julia -e 'Pkg.pin("MachineLearning")'
+RUN  julia -e 'Pkg.clone("https://github.com/dcjones/Showoff.jl"); Pkg.clone("https://github.com/benhamner/MachineLearning.jl"); Pkg.checkout("Gadfly"); Pkg.checkout("MachineLearning"); Pkg.pin("MachineLearning"); Pkg.resolve();'
 RUN  julia -e 'using MachineLearning; @assert isdefined(:MachineLearning); @assert typeof(MachineLearning) === Module'
 
 CMD ["julia", "/root/.julia/v0.4/MachineLearning/test/runtests.jl"]
