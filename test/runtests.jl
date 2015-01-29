@@ -10,6 +10,7 @@ tests = [
     "neural_net",
     "pipeline",
     "regression",
+    "sensitivity",
     "split",
     "random_forest",
     "transform/zmuv",
