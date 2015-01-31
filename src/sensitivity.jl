@@ -40,10 +40,10 @@ function Gadfly.plot(results::SensitivityResults)
     rename!(data, :value, :Sensitivity)
     sort!(data, cols=:Feature)
     order = sortperm(aggregate(data, :Feature, median)[:Sensitivity_median], rev=true)
-    p = plot(data,
-             x="Feature",
-             y="Sensitivity",
-             Geom.boxplot(),
-             Scale.x_discrete(order=order))
-    compose(render(p), compose(context(), rectangle(), fill("white")))
+    plot(data,
+         x="Feature",
+         y="Sensitivity",
+         Geom.boxplot(),
+         Scale.x_discrete(order=order),
+         Theme(background_color=color("white")))
 end

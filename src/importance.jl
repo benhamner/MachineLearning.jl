@@ -71,12 +71,12 @@ function Gadfly.plot(results::ImportanceResults)
     importance = DataFrame(Feature=results.names, Importance=results.importances, Useful=[imp>0.0 ? "Yes":"No" for imp=results.importances])
     importance = sort(importance, cols=[:Feature])
     order = sortperm(importance[:Importance], rev=false)
-    p = plot(importance,
-             x="Importance",
-             y="Feature",
-             color="Useful",
-             Geom.bar(orientation=:horizontal),
-             Scale.y_discrete(order=order),
-             Guide.title(@sprintf("Best Score: %0.4f", results.best_score)))
-    compose(render(p), compose(context(), rectangle(), fill("white")))
+    plot(importance,
+         x="Importance",
+         y="Feature",
+         color="Useful",
+         Geom.bar(orientation=:horizontal),
+         Scale.y_discrete(order=order),
+         Guide.title(@sprintf("Best Score: %0.4f", results.best_score)),
+         Theme(background_color=color("white")))
 end

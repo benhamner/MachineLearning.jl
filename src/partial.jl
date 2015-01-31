@@ -43,10 +43,10 @@ end
 function Gadfly.plot(results::PartialFeatureResults)
     df = DataFrame(Feature=results.values, Value=results.responses)
 
-    p = plot(df,
-             x="Feature",
-             y="Value",
-             Geom.line,
-             Guide.title(results.name))
-    compose(render(p), compose(context(), rectangle(), fill("white")))
+    plot(df,
+         x="Feature",
+         y="Value",
+         Geom.line,
+         Guide.title(results.name),
+         Theme(background_color=color("white")))
 end
