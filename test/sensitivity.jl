@@ -3,7 +3,7 @@ using DataFrames
 using MachineLearning
 using RDatasets
 
-x = randn(200,3)
+x = randn(1000,3)
 model = [10.0;1.0;0.0]
 y = x*model
 
@@ -11,9 +11,9 @@ data = DataFrame(X1=vec(x[:,1]), X2=vec(x[:,2]), X3=vec(x[:,3]), Y=vec(y))
 
 res = sensitivities(data, :Y, regression_forest_options())
 
-println("X1: ", mean(res.data[:X1]))
-println("X2: ", mean(res.data[:X2]))
-println("X3: ", mean(res.data[:X3]))
+for fea=[:X1, :X2, :X3]
+    println(fea, ": ", mean(res.data[fea]), "\tSlope: ", mean(res.data[fea])/res.feature_ranges[fea])
+end
 
 @test mean(res.data[:X1])>mean(res.data[:X2])
 @test mean(res.data[:X2])>mean(res.data[:X3])

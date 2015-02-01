@@ -1,5 +1,6 @@
 type SensitivityResults
     data::DataFrame
+    feature_ranges::Dict{Symbol, Float64}
 end
 
 function sensitivities(model::DataFrameModel, data::DataFrame, feature::Symbol)
@@ -21,17 +22,18 @@ function sensitivities(model::DataFrameModel, data::DataFrame, feature::Symbol)
         mins[:]  = min(mins,  predictions)
         maxes[:] = max(maxes, predictions)
     end
-    maxes-mins
+    maxes-mins, maximum(values)-minimum(values)
 end
 
 function sensitivities(data::DataFrame, target::Symbol, opts::SupervisedModelOptions)
     model    = fit(data, target, opts)
     results  = DataFrame(Sample=[1:nrow(data)])
     features = filter(n->n!=target, names(data))
+    feature_ranges = Dict{Symbol, Float64}()
     for feature=features
-        results[feature] = sensitivities(model, data, feature)
+        results[feature], feature_ranges[feature] = sensitivities(model, data, feature)
     end
-    SensitivityResults(results)
+    SensitivityResults(results, feature_ranges)
 end
 
 function Gadfly.plot(results::SensitivityResults)
