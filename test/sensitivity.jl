@@ -17,3 +17,8 @@ end
 
 @test mean(res.data[:X1])>mean(res.data[:X2])
 @test mean(res.data[:X2])>mean(res.data[:X3])
+
+x1_slope = mean(res.data[:X1])/res.feature_ranges[:X1]
+
+@test x1_slope<15.0
+@test x1_slope>7.5
