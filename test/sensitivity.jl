@@ -22,3 +22,17 @@ x1_slope = mean(res.data[:X1])/res.feature_ranges[:X1]
 
 @test x1_slope<15.0
 @test x1_slope>7.5
+
+res = sensitivities(data, :Y, bart_options())
+
+for fea=[:X1, :X2, :X3]
+    println(fea, ": ", mean(res.data[fea]), "\tSlope: ", mean(res.data[fea])/res.feature_ranges[fea])
+end
+
+#@test mean(res.data[:X1])>mean(res.data[:X2])
+#@test mean(res.data[:X2])>mean(res.data[:X3])
+
+x1_slope = mean(res.data[:X1])/res.feature_ranges[:X1]
+
+#@test x1_slope<15.0
+#@test x1_slope>7.5
