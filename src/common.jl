@@ -59,19 +59,11 @@ function float_matrix(df::DataFrame)
 end
 
 data_set_x(data::SupervisedDataFrame) = float_matrix(data.df[data_frame_feature_columns(data)])
-function data_set_y(data::SupervisedDataFrame)
-    if eltype(data.df[data.target_column])<:Float64 
-        return array(data.df[data.target_column], 0.0)
-    end
-    return [y for y=data.df[data.target_column]]
-end
+data_set_y(data::SupervisedDataFrame) = array(data.df[data.target_column])
 data_set_x_y(data::SupervisedDataSet) = data_set_x(data), data_set_y(data)
 
 function StatsBase.fit(data::SupervisedDataFrame, opts::SupervisedModelOptions)
     x, y = data_set_x_y(data)
-    if typeof(opts) <: RegressionModelOptions
-        y *= 1.0
-    end
     columns = data_frame_feature_columns(data)
     DataFrameModel(fit(x, y, opts), columns)
 end
