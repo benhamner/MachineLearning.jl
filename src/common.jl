@@ -59,7 +59,7 @@ function float_matrix(df::DataFrame)
 end
 
 data_set_x(data::SupervisedDataFrame) = float_matrix(data.df[data_frame_feature_columns(data)])
-data_set_y(data::SupervisedDataFrame) = array(data.df[data.target_column])
+data_set_y(data::SupervisedDataFrame) = typeof(data.df[data.target_column]) <: Array ? data.df[data.target_column] : array(data.df[data.target_column])
 data_set_x_y(data::SupervisedDataSet) = data_set_x(data), data_set_y(data)
 
 function StatsBase.fit(data::SupervisedDataFrame, opts::SupervisedModelOptions)
