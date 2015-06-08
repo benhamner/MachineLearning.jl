@@ -37,7 +37,7 @@ end
 function float_dataframe(df::DataFrame)
     res = copy(df)
     for (i,(name,col)) = enumerate(eachcol(df))
-        res[name] = array(col, 0.0)*1.0
+        res[name] = convert(Array, col, 0.0)*1.0
     end
     res
 end
@@ -47,12 +47,12 @@ function float_matrix(df::DataFrame)
     res = Array(Float64, (nrow(df), ncol(df)))
     for (i,(name,col)) = enumerate(eachcol(df))
         if eltype(col)<:String
-            array_col = array(col, "missing")
+            array_col = convert(Array, col, "missing")
             classes = sort(unique(array_col))
             classes_map = Dict([zip(classes, 1:length(classes))...]) # TODO: cleanup post julia-0.3 compat
             res[:,i] = Float64[float(classes_map[v]) for v=array_col]
         else
-            res[:,i] = array(col, 0.0)
+            res[:,i] = convert(Array, col, 0.0)
         end
     end
     res
