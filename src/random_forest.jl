@@ -1,13 +1,15 @@
 type ClassificationForestOptions <: ClassificationModelOptions
     num_trees::Int
+    classes::Union(Vector, Nothing)
     tree_options::ClassificationTreeOptions
     display::Bool
 end
 
 function classification_forest_options(;num_trees::Int=100,
+                                       classes::Union(Vector, Nothing)=nothing,
                                        tree_options::ClassificationTreeOptions=classification_tree_options(features_per_split_fraction=0.5, minimum_split_size=2),
                                        display::Bool=false)
-    ClassificationForestOptions(num_trees, tree_options, display)
+    ClassificationForestOptions(num_trees, classes, tree_options, display)
 end
 
 type RegressionForestOptions <: RegressionModelOptions
@@ -38,7 +40,7 @@ function classes(forest::ClassificationForest)
 end
 
 function StatsBase.fit(x::Matrix{Float64}, y::Vector, opts::ClassificationForestOptions)
-    classes = sort(unique(y))
+    classes = typeof(opts.classes)<:Nothing ? sort(unique(y)) : opts.classes
     tree_opts = opts.tree_options
     tree_opts.classes = classes
     trees = Array(ClassificationTree, 0)
